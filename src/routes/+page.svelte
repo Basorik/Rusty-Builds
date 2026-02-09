@@ -32,6 +32,10 @@
     <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
     <button type="submit">Greet</button>
   </form>
+
+  <div class="row" style="margin-top: 1rem;">
+    <a href="/skilltree"><button>Open Skill Tree</button></a>
+  </div>
   <p>{greetMsg}</p>
 </main>
 
