@@ -43,7 +43,7 @@ async updateBuildInfo(level: number, characterClass: Class, bloodline: Bloodline
 
 /** user-defined types **/
 
-export type Bloodline = "None" | "Crusader" | "Redeemer" | "Hunter" | "Assassin" | "Champion"
+export type Bloodline = "None" | "Aul" | "Breachlord" | "Catarina" | "Delirious" | "Farrul" | "KingInTheMists" | "Lycia" | "Olroth" | "Oshabi" | "Primalist" | "Trialmaster" | "Warden" | "Warlock"
 export type BuildStats = { total_strength: number; total_dexterity: number; total_intelligence: number; node_count: number }
 export type Class = { class: "Marauder"; ascendancy: MarauderAscendancy | null } | { class: "Ranger"; ascendancy: RangerAscendancy | null } | { class: "Witch"; ascendancy: WitchAscendancy | null } | { class: "Duelist"; ascendancy: DuelistAscendancy | null } | { class: "Templar"; ascendancy: TemplarAscendancy | null } | { class: "Shadow"; ascendancy: ShadowAscendancy | null } | { class: "Scion"; ascendancy: ScionAscendancy | null }
 export type DuelistAscendancy = "Slayer" | "Gladiator" | "Champion"
