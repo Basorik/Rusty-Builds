@@ -7,6 +7,29 @@
 export const commands = {
 async greet(name: string) : Promise<string> {
     return await TAURI_INVOKE("greet", { name });
+},
+/**
+ * Receives the current set of selected node IDs from the frontend.
+ * Stores them and returns the total count (placeholder for future stat calculations).
+ */
+async updateSelectedNodes(nodeIds: number[]) : Promise<Result<BuildStats, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_selected_nodes", { nodeIds }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Receives the build info from the frontend.
+ */
+async updateBuildInfo(level: number, characterClass: Class, bloodline: Bloodline) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_build_info", { level, characterClass, bloodline }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -20,7 +43,16 @@ async greet(name: string) : Promise<string> {
 
 /** user-defined types **/
 
-
+export type Bloodline = "None" | "Crusader" | "Redeemer" | "Hunter" | "Assassin" | "Champion"
+export type BuildStats = { total_strength: number; total_dexterity: number; total_intelligence: number; node_count: number }
+export type Class = { class: "Marauder"; ascendancy: MarauderAscendancy | null } | { class: "Ranger"; ascendancy: RangerAscendancy | null } | { class: "Witch"; ascendancy: WitchAscendancy | null } | { class: "Duelist"; ascendancy: DuelistAscendancy | null } | { class: "Templar"; ascendancy: TemplarAscendancy | null } | { class: "Shadow"; ascendancy: ShadowAscendancy | null } | { class: "Scion"; ascendancy: ScionAscendancy | null }
+export type DuelistAscendancy = "Slayer" | "Gladiator" | "Champion"
+export type MarauderAscendancy = "Juggernaut" | "Berserker" | "Chieftain"
+export type RangerAscendancy = "Raider" | "Deadeye" | "Pathfinder"
+export type ScionAscendancy = "Ascendant"
+export type ShadowAscendancy = "Assassin" | "Saboteur" | "Trickster"
+export type TemplarAscendancy = "Inquisitor" | "Hierophant" | "Guardian"
+export type WitchAscendancy = "Necromancer" | "Occultist" | "Elementalist"
 
 /** tauri-specta globals **/
 
