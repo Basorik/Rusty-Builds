@@ -1,0 +1,204 @@
+{
+  "Aegis Tulgraft":{
+    "implicit":"+(3-6)% to all Elemental Resistances",
+    "implicitModTypes":[["elemental","resistance"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_tul":true,
+      "graft_tul_aegis":true
+    },
+    "type":"Graft"
+  },
+  "Battering Uulgraft":{
+    "implicit":"(4-12)% reduced Enemy Stun Threshold",
+    "implicitModTypes":[[]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_damaging_skill":true,
+      "graft_uulnetol":true,
+      "graft_uulnetol_hand_slam":true
+    },
+    "type":"Graft"
+  },
+  "Draining Eshgraft":{
+    "implicit":"Spell Skills have (5-10)% increased Area of Effect",
+    "implicitModTypes":[["caster"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_damaging_skill":true,
+      "graft_esh":true,
+      "graft_esh_lightning_hands":true
+    },
+    "type":"Graft"
+  },
+  "Erupting Xophgraft":{
+    "implicit":"(8-16)% increased Area Damage",
+    "implicitModTypes":[["damage"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_damaging_skill":true,
+      "graft_xoph":true,
+      "graft_xoph_cremations":true
+    },
+    "type":"Graft"
+  },
+  "Flamecaller Xophgraft":{
+    "implicit":"(8-16)% increased Elemental Damage with Attack Skills",
+    "implicitModTypes":[["elemental_damage","damage","elemental","attack"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_damaging_skill":true,
+      "graft_xoph":true,
+      "graft_xoph_flame_pillars":true
+    },
+    "type":"Graft"
+  },
+  "Freezing Tulgraft":{
+    "implicit":"(8-12)% chance to Freeze",
+    "implicitModTypes":[["elemental","cold","ailment"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_damaging_skill":true,
+      "graft_tul":true,
+      "graft_tul_ice_mortars":true
+    },
+    "type":"Graft"
+  },
+  "Hardening Uulgraft":{
+    "implicit":"(1-3)% additional Physical Damage Reduction",
+    "implicitModTypes":[["physical"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_uulnetol":true,
+      "graft_uulnetol_low_life_buff":true
+    },
+    "type":"Graft"
+  },
+  "Impaling Uulgraft":{
+    "implicit":"(4-12)% chance to Impale Enemies on Hit with Attacks",
+    "implicitModTypes":[["physical","attack"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_uulnetol":true,
+      "graft_uulnetol_impale_buff":true
+    },
+    "type":"Graft"
+  },
+  "Jolting Eshgraft":{
+    "implicit":"(4-12)% increased Global Critical Strike Chance",
+    "implicitModTypes":[["critical"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_esh":true,
+      "graft_esh_jolt_buff":true
+    },
+    "type":"Graft"
+  },
+  "Molten Xophgraft":{
+    "implicit":"(10-20)% increased Armour",
+    "implicitModTypes":[["defences","armour"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_damaging_skill":true,
+      "graft_xoph":true,
+      "graft_xoph_molten_shell":true
+    },
+    "type":"Graft"
+  },
+  "Replicating Eshgraft":{
+    "implicit":"(3-5)% increased Movement Speed",
+    "implicitModTypes":[["speed"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_damaging_skill":true,
+      "graft_esh":true,
+      "graft_esh_lightning_clones":true
+    },
+    "type":"Graft"
+  },
+  "Spiking Uulgraft":{
+    "implicit":"Attacks have (4-12)% chance to cause Bleeding",
+    "implicitModTypes":[["bleed","physical","attack","ailment"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_damaging_skill":true,
+      "graft_uulnetol":true,
+      "graft_uulnetol_bone_spires":true
+    },
+    "type":"Graft"
+  },
+  "Squalling Tulgraft":{
+    "implicit":"(8-16)% increased Projectile Damage",
+    "implicitModTypes":[["damage"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_damaging_skill":true,
+      "graft_tul":true,
+      "graft_tul_tornado":true
+    },
+    "type":"Graft"
+  },
+  "Stoking Xophgraft":{
+    "implicit":"(5-10)% increased Duration of Elemental Ailments on Enemies",
+    "implicitModTypes":[["elemental","fire","cold","lightning","ailment"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_xoph":true,
+      "graft_xoph_ailment_buff":true
+    },
+    "type":"Graft"
+  },
+  "Storming Eshgraft":{
+    "implicit":"Adds (1-4) to (18-20) Lightning Damage",
+    "implicitModTypes":[["elemental_damage","damage","elemental","lightning"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_damaging_skill":true,
+      "graft_esh":true,
+      "graft_esh_bolt_ring":true
+    },
+    "type":"Graft"
+  },
+  "Summoning Tulgraft":{
+    "implicit":"Minions have (4-8)% increased Attack and Cast Speed",
+    "implicitModTypes":[["attack","caster","speed","minion"]],
+    "req":[],
+    "tags":{
+      "default":true,
+      "graft":true,
+      "graft_tul":true,
+      "graft_tul_summon":true
+    },
+    "type":"Graft"
+  }
+}

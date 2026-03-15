@@ -254,8 +254,10 @@ pub fn run() {
             app.manage(storage_manager);
             app.manage(Mutex::new(BuildInfo::default()));
 
-            // Load tree data (node stats) from the embedded data.json
-            const TREE_JSON: &str = include_str!("../../src/data.json");
+            // Load tree data (node stats) from the active versioned tree file.
+            // Switch versions by updating the src-tauri/data/tree/active.json symlink
+            // (done automatically by `bun run tool:fetch-tree`).
+            const TREE_JSON: &str = include_str!("../data/tree/active.json");
             let tree_data = TreeData::from_json(TREE_JSON)
                 .expect("Failed to parse tree data");
             app.manage(tree_data);
