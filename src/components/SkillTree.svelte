@@ -7,11 +7,17 @@
     let {
         treeData,
         selectedCount = $bindable(0),
+        ascSelectedCount = $bindable(0),
         selectedClass = 0,
+        selectedAscendancy = "None",
+        selectedBloodline = "None",
     }: {
         treeData: any;
         selectedCount?: number;
+        ascSelectedCount?: number;
         selectedClass?: number;
+        selectedAscendancy?: string;
+        selectedBloodline?: string;
     } = $props();
 
     let containerDiv: HTMLDivElement;
@@ -45,6 +51,14 @@
     let adjacency: Map<number, Set<number>> = new Map();
     let classStartNodeId: number | null = null;
 
+    // --- Ascendency / Bloodline allocation ---
+    const MAX_ASC_POINTS = 8;
+    let selectedAscNodeIds: Set<number> = new Set();
+    let ascStartNodeId: number | null = null;       // class ascendancy start
+    let bloodlineStartNodeId: number | null = null;  // bloodline start
+    let ascAdjacency: Map<number, Set<number>> = new Map();
+    let ascNodeIds: Set<number> = new Set();  // all node IDs in the active ascendency+bloodline group
+
     // --- Spatial Grid for O(1) hit detection ---
     const GRID_CELL_SIZE = 300;
     let spatialGrid: Map<string, any[]> = new Map();
@@ -59,8 +73,26 @@
     $effect(() => {
         if (appReady && treeData) {
             // Re-process when treeData or selectedClass changes
-            const _class = selectedClass;
+            // const _class = selectedClass;
+            // const _asc = selectedAscendancy;
+            // const _bl = selectedBloodline;
             processGraph(treeData);
+        }
+    });
+
+    $effect(() => {
+        if (appReady) {
+            const _class = selectedClass;
+            syncSelectionToBackend();
+        }
+    });
+
+    // When ascendancy or bloodline selection changes, rebuild the allowed set and reset points
+    $effect(() => {
+        if (appReady && treeData) {
+            const _asc = selectedAscendancy;
+            const _bl = selectedBloodline;
+            rebuildAscendencyState();
         }
     });
 
@@ -100,88 +132,177 @@
         return null;
     }
 
-    // --- Selection Logic ---
-    function isConnectedToSelection(nodeId: number): boolean {
-        const neighbors = adjacency.get(nodeId);
+    // --- Count Helpers ---
+    function getAdjustedSelectedCount(): number {
+        let count = selectedNodeIds.size;
+        if (classStartNodeId !== null && selectedNodeIds.has(classStartNodeId)) {
+            count--;
+        }
+        return Math.max(0, count);
+    }
+
+    function getAdjustedAscSelectedCount(): number {
+        let count = selectedAscNodeIds.size;
+        if (ascStartNodeId !== null && selectedAscNodeIds.has(ascStartNodeId)) {
+            count--;
+        }
+        if (bloodlineStartNodeId !== null && selectedAscNodeIds.has(bloodlineStartNodeId)) {
+            count--;
+        }
+        return Math.max(0, count);
+    }
+
+    // --- Ascendency State Rebuild ---
+    function rebuildAscendencyState() {
+        // Clear previous ascendency selections
+        selectedAscNodeIds.clear();
+        ascStartNodeId = null;
+        bloodlineStartNodeId = null;
+        ascNodeIds = new Set();
+        ascAdjacency = new Map();
+
+        // Single pass: collect nodes belonging to the selected ascendancy and/or bloodline
+        const wantAsc = selectedAscendancy !== "None";
+        const wantBl  = selectedBloodline  !== "None";
+        if (wantAsc || wantBl) {
+            for (const node of renderNodes) {
+                if (wantAsc && node.ascendancyName === selectedAscendancy && !node.isBloodline) {
+                    ascNodeIds.add(node.id);
+                    if (node.isAscendancyStart) ascStartNodeId = node.id;
+                } else if (wantBl && node.ascendancyName === selectedBloodline && node.isBloodline) {
+                    ascNodeIds.add(node.id);
+                    if (node.isAscendancyStart) bloodlineStartNodeId = node.id;
+                }
+            }
+        }
+
+        // Build ascendency adjacency from renderConnections restricted to ascNodeIds
+        for (const conn of renderConnections) {
+            if (ascNodeIds.has(conn.sourceId) && ascNodeIds.has(conn.targetId)) {
+                if (!ascAdjacency.has(conn.sourceId)) ascAdjacency.set(conn.sourceId, new Set());
+                if (!ascAdjacency.has(conn.targetId)) ascAdjacency.set(conn.targetId, new Set());
+                ascAdjacency.get(conn.sourceId)!.add(conn.targetId);
+                ascAdjacency.get(conn.targetId)!.add(conn.sourceId);
+            }
+        }
+
+        // Auto-select the start nodes (they don't count against MAX unless we want them to)
+        if (ascStartNodeId !== null) {
+            selectedAscNodeIds.add(ascStartNodeId);
+        }
+        if (bloodlineStartNodeId !== null) {
+            selectedAscNodeIds.add(bloodlineStartNodeId);
+        }
+
+        ascSelectedCount = getAdjustedAscSelectedCount();
+        drawSelection();
+    }
+
+    // --- Shared Graph Helpers ---
+    /** Returns true if nodeId has at least one neighbor in the selected set. */
+    function hasSelectedNeighbor(
+        nodeId: number,
+        adj: Map<number, Set<number>>,
+        selected: Set<number>,
+    ): boolean {
+        const neighbors = adj.get(nodeId);
         if (!neighbors) return false;
         for (const nId of neighbors) {
-            if (selectedNodeIds.has(nId)) return true;
+            if (selected.has(nId)) return true;
         }
         return false;
     }
 
-    function toggleNodeSelection(nodeId: number) {
-        if (selectedNodeIds.has(nodeId)) {
-            // Don't allow deselecting the class start node
-            if (nodeId === classStartNodeId) return;
-            // Don't allow deselecting if it would disconnect other selected nodes.
-            // Temporarily remove the node, then BFS from the class start through
-            // remaining selected nodes using the adjacency map. If any selected
-            // node is unreachable, the removal would break connectivity — block it.
-            if (!canDeselect(nodeId)) return;
-            selectedNodeIds.delete(nodeId);
-        } else {
-            // Only allow selecting if connected to an already-selected node
-            if (selectedNodeIds.size > 0 && !isConnectedToSelection(nodeId))
-                return;
-            selectedNodeIds.add(nodeId);
-        }
-        selectedCount = selectedNodeIds.size;
-        drawSelection();
-        syncSelectionToBackend();
-    }
+    /**
+     * BFS from startIds through selected nodes (skipping removeId).
+     * Returns true only if every node in selected (except removeId) is reachable.
+     */
+    function isStillConnectedAfterRemoval(
+        startIds: (number | null)[],
+        selected: Set<number>,
+        adj: Map<number, Set<number>>,
+        removeId: number,
+    ): boolean {
+        if (selected.size <= 2) return true;
 
-    function canDeselect(nodeId: number): boolean {
-        // If removing this node leaves only the start node (or nothing), it's safe
-        if (selectedNodeIds.size <= 2) return true;
-
-        // BFS from classStartNodeId through selected nodes, skipping nodeId
         const visited = new Set<number>();
         const queue: number[] = [];
 
-        if (classStartNodeId !== null && classStartNodeId !== nodeId) {
-            queue.push(classStartNodeId);
-            visited.add(classStartNodeId);
+        for (const sid of startIds) {
+            if (sid !== null && sid !== removeId && !visited.has(sid)) {
+                queue.push(sid);
+                visited.add(sid);
+            }
         }
 
         while (queue.length > 0) {
             const current = queue.shift()!;
-            const neighbors = adjacency.get(current);
+            const neighbors = adj.get(current);
             if (!neighbors) continue;
             for (const neighbor of neighbors) {
-                // Skip the node we're trying to remove, and only traverse selected nodes
-                if (neighbor === nodeId) continue;
-                if (!selectedNodeIds.has(neighbor)) continue;
-                if (visited.has(neighbor)) continue;
+                if (neighbor === removeId || !selected.has(neighbor) || visited.has(neighbor)) continue;
                 visited.add(neighbor);
                 queue.push(neighbor);
             }
         }
 
-        // Every selected node (except the one being removed) must be reachable
-        for (const id of selectedNodeIds) {
-            if (id === nodeId) continue;
-            if (!visited.has(id)) return false;
+        for (const id of selected) {
+            if (id !== removeId && !visited.has(id)) return false;
         }
         return true;
     }
 
-    function drawSelection() {
-        if (!selectionGraphics) return;
-        selectionGraphics.clear();
-        if (selectedNodeIds.size === 0) return;
+    // --- Selection Logic ---
+    function toggleNodeSelection(nodeId: number) {
+        // Route ascendency/bloodline nodes to separate handler
+        if (ascNodeIds.has(nodeId)) {
+            toggleAscNodeSelection(nodeId);
+            return;
+        }
 
-        // 1. Draw highlighted connections between two selected nodes
-        selectionGraphics.setStrokeStyle({
-            width: 24,
-            color: 0x4488ff,
-            alpha: 0.35,
-        });
+        if (selectedNodeIds.has(nodeId)) {
+            if (nodeId === classStartNodeId) return;
+            if (!isStillConnectedAfterRemoval([classStartNodeId], selectedNodeIds, adjacency, nodeId)) return;
+            selectedNodeIds.delete(nodeId);
+        } else {
+            if (selectedNodeIds.size > 0 && !hasSelectedNeighbor(nodeId, adjacency, selectedNodeIds))
+                return;
+            selectedNodeIds.add(nodeId);
+        }
+        selectedCount = getAdjustedSelectedCount();
+        drawSelection();
+        syncSelectionToBackend();
+    }
+
+    // --- Ascendency Node Selection ---
+    function toggleAscNodeSelection(nodeId: number) {
+        if (selectedAscNodeIds.has(nodeId)) {
+            if (nodeId === ascStartNodeId || nodeId === bloodlineStartNodeId) return;
+            if (!isStillConnectedAfterRemoval([ascStartNodeId, bloodlineStartNodeId], selectedAscNodeIds, ascAdjacency, nodeId)) return;
+            selectedAscNodeIds.delete(nodeId);
+        } else {
+            if (getAdjustedAscSelectedCount() >= MAX_ASC_POINTS) return;
+            if (selectedAscNodeIds.size > 0 && !hasSelectedNeighbor(nodeId, ascAdjacency, selectedAscNodeIds)) return;
+            selectedAscNodeIds.add(nodeId);
+        }
+        ascSelectedCount = getAdjustedAscSelectedCount();
+        drawSelection();
+        syncSelectionToBackend();
+    }
+
+    /** Draw connection highlights + glow + ring for a set of selected nodes. */
+    function drawSelectionRings(
+        selected: Set<number>,
+        connColor: number,
+        glowColor: number,
+        ringColor: number,
+    ) {
+        if (selected.size === 0) return;
+
+        // 1. Highlighted connections
+        selectionGraphics.setStrokeStyle({ width: 24, color: connColor, alpha: 0.35 });
         for (const conn of renderConnections) {
-            if (
-                selectedNodeIds.has(conn.sourceId) &&
-                selectedNodeIds.has(conn.targetId)
-            ) {
+            if (selected.has(conn.sourceId) && selected.has(conn.targetId)) {
                 selectionGraphics.moveTo(conn.x1, conn.y1);
                 selectionGraphics.lineTo(conn.x2, conn.y2);
             }
@@ -189,32 +310,27 @@
         selectionGraphics.stroke();
 
         // 2. Outer glow ring
-        selectionGraphics.setStrokeStyle({
-            width: 14,
-            color: 0x4488ff,
-            alpha: 0.25,
-        });
-        for (const id of selectedNodeIds) {
+        selectionGraphics.setStrokeStyle({ width: 14, color: glowColor, alpha: 0.25 });
+        for (const id of selected) {
             const node = nodeById.get(id);
-            if (node) {
-                selectionGraphics.circle(node.x, node.y, node.radius + 10);
-            }
+            if (node) selectionGraphics.circle(node.x, node.y, node.radius + 10);
         }
         selectionGraphics.stroke();
 
         // 3. Bright inner ring
-        selectionGraphics.setStrokeStyle({
-            width: 5,
-            color: 0x66aaff,
-            alpha: 1,
-        });
-        for (const id of selectedNodeIds) {
+        selectionGraphics.setStrokeStyle({ width: 5, color: ringColor, alpha: 1 });
+        for (const id of selected) {
             const node = nodeById.get(id);
-            if (node) {
-                selectionGraphics.circle(node.x, node.y, node.radius + 4);
-            }
+            if (node) selectionGraphics.circle(node.x, node.y, node.radius + 4);
         }
         selectionGraphics.stroke();
+    }
+
+    function drawSelection() {
+        if (!selectionGraphics) return;
+        selectionGraphics.clear();
+        drawSelectionRings(selectedNodeIds, 0x4488ff, 0x4488ff, 0x66aaff);
+        drawSelectionRings(selectedAscNodeIds, 0xc8a95e, 0xc8a95e, 0xe0c070);
     }
 
     let isSyncing = false;
@@ -224,7 +340,11 @@
             if (isSyncing) return; // Prevent overlapping calls
             try {
                 isSyncing = true;
-                const ids = Array.from(selectedNodeIds);
+                // Combine regular + ascendency selected nodes for the backend
+                const ids = [
+                    ...Array.from(selectedNodeIds),
+                    ...Array.from(selectedAscNodeIds),
+                ];
                 const result = await commands.updateSelectedNodes(ids);
                 // result is now the BuildStats object
                 console.log("Received stats from Rust:", result);
@@ -332,7 +452,7 @@
         ) {
             selectedNodeIds.clear();
             selectedNodeIds.add(classStartNodeId);
-            selectedCount = selectedNodeIds.size;
+            selectedCount = getAdjustedSelectedCount();
         }
 
         buildSpatialGrid();
@@ -488,28 +608,32 @@
     function resize() {
         width = containerDiv.clientWidth;
         height = containerDiv.clientHeight;
+        updateCachedRect();
         if (app) app.renderer.resize(width, height);
         updateTransform();
     }
 
-    function localX(e: MouseEvent): number {
-        return e.clientX - containerDiv.getBoundingClientRect().left;
+    // Cache bounding rect — recomputed on resize, avoids repeated layout reflows
+    let cachedRect: DOMRect | null = null;
+    function updateCachedRect() {
+        if (containerDiv) cachedRect = containerDiv.getBoundingClientRect();
     }
-    function localY(e: MouseEvent): number {
-        return e.clientY - containerDiv.getBoundingClientRect().top;
+    function localCoords(e: MouseEvent): { mx: number; my: number } {
+        if (!cachedRect) updateCachedRect();
+        return { mx: e.clientX - cachedRect!.left, my: e.clientY - cachedRect!.top };
     }
 
     function onMouseDown(e: MouseEvent) {
         isDragging = true;
         hasDragged = false;
-        startX = localX(e) - transform.x;
-        startY = localY(e) - transform.y;
-        dragStartPos = { x: localX(e), y: localY(e) };
+        const { mx, my } = localCoords(e);
+        startX = mx - transform.x;
+        startY = my - transform.y;
+        dragStartPos = { x: mx, y: my };
     }
 
     function onMouseMove(e: MouseEvent) {
-        const mx = localX(e);
-        const my = localY(e);
+        const { mx, my } = localCoords(e);
         if (isDragging) {
             const dx = mx - dragStartPos.x;
             const dy = my - dragStartPos.y;
@@ -532,15 +656,16 @@
                 hoveredNode = found || null;
                 drawHighlight();
             }
-            tooltipPosition = { x: e.clientX, y: e.clientY };
+            // Only update tooltip position when tooltip is visible
+            if (hoveredNode) {
+                tooltipPosition = { x: e.clientX, y: e.clientY };
+            }
         }
     }
 
     function onMouseUp(e: MouseEvent) {
         if (!hasDragged) {
-            // Click — toggle node selection
-            const mx = localX(e);
-            const my = localY(e);
+            const { mx, my } = localCoords(e);
             const tX = transform.x + width / 2;
             const tY = transform.y + height / 2;
             const worldX = (mx - tX) / transform.k;
@@ -561,8 +686,7 @@
         const newScale = Math.min(Math.max(transform.k * factor, 0.01), 2);
 
         // Zoom towards mouse pointer
-        const mx = localX(e);
-        const my = localY(e);
+        const { mx, my } = localCoords(e);
         const worldMouseX = (mx - (transform.x + width / 2)) / transform.k;
         const worldMouseY = (my - (transform.y + height / 2)) / transform.k;
 

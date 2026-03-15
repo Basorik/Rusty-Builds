@@ -5,9 +5,12 @@
     import treeData from "../../data.json";
 
     let selectedCount = $state(0);
+    let ascSelectedCount = $state(0);
 
     // Class name from the Header dropdown
     let characterClass = $state("Marauder");
+    let selectedAscendancy = $state("None");
+    let selectedBloodline = $state("None");
 
     // Map class name → classStartIndex used by the tree data
     const classNameToIndex: Record<string, number> = {
@@ -24,12 +27,12 @@
 </script>
 
 <main class="layout">
-    <Sidebar {selectedCount} />
+    <Sidebar {selectedCount} {ascSelectedCount} />
     <div class="tree-area">
         <div class="header-overlay">
-            <Header bind:characterClass />
+            <Header bind:characterClass bind:ascendancy={selectedAscendancy} bind:bloodline={selectedBloodline} />
         </div>
-        <SkillTree {treeData} bind:selectedCount {selectedClass} />
+        <SkillTree {treeData} bind:selectedCount bind:ascSelectedCount {selectedClass} selectedAscendancy={selectedAscendancy} selectedBloodline={selectedBloodline} />
     </div>
 </main>
 

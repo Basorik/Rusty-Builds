@@ -1,5 +1,5 @@
 <script lang="ts">
-    let { selectedCount = 0 }: { selectedCount?: number } = $props();
+    let { selectedCount = 0, ascSelectedCount = 0 }: { selectedCount?: number; ascSelectedCount?: number } = $props();
     import { goto } from "$app/navigation";
 
     function Menu() {
@@ -17,6 +17,11 @@
     <div class="stat-section">
         <div class="stat-label">Selected Nodes</div>
         <div class="stat-value">{selectedCount}</div>
+    </div>
+
+    <div class="stat-section">
+        <div class="stat-label">Ascendency Points</div>
+        <div class="stat-value asc-value">{ascSelectedCount} / 8</div>
     </div>
 
     <hr class="divider" />
@@ -66,6 +71,10 @@
         font-size: 1.4em;
         font-weight: bold;
         color: #4488ff;
+    }
+
+    .stat-value.asc-value {
+        color: #c8a95e;
     }
 
     .divider {

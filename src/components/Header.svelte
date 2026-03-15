@@ -2,13 +2,13 @@
     let {
         selectedCount = 0,
         characterClass = $bindable("Scion"),
-    }: { selectedCount?: number; characterClass?: string } = $props();
+        ascendancy = $bindable("None"),
+        bloodline = $bindable("None"),
+    }: { selectedCount?: number; characterClass?: string; ascendancy?: string; bloodline?: string } = $props();
     import { goto } from "$app/navigation";
     import { commands } from "../bindings";
 
     let level = $state(1);
-    let ascendancy = $state("None");
-    let bloodline = $state("None");
 
     const classData: Record<string, string[]> = {
         Scion: ["Ascendant"],
@@ -23,11 +23,19 @@
     const classes = Object.keys(classData);
     const bloodlines = [
         "None",
-        "Crusader",
-        "Redeemer",
-        "Hunter",
-        "Assassin",
-        "Champion",
+        "Aul",
+        "Breachlord",
+        "Catarina",
+        "Delirious",
+        "Farrul",
+        "KingInTheMists",
+        "Lycia",
+        "Olroth",
+        "Oshabi",
+        "Primalist",
+        "Trialmaster",
+        "Warden",
+        "Warlock",
     ];
 
     let availableAscendancies = $derived([
@@ -38,18 +46,14 @@
     $effect(() => {
         if (!availableAscendancies.includes(ascendancy)) {
             ascendancy = "None";
+        } else {
+            UpdateBuildInfo();
         }
     });
 
     function Menu() {
         goto("/");
     }
-
-    $effect(() => {
-        if (availableAscendancies.includes(ascendancy)) {
-            UpdateBuildInfo();
-        }
-    });
 
     async function UpdateBuildInfo() {
         const classArg = {
