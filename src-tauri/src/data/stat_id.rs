@@ -91,11 +91,11 @@ pub enum StatId {
     ColdPenetration = 80,
     ColdResist = 81,
     ColdResistMax = 82,
-    Condition:CanGainRage = 83,
-    Condition:CanWither = 84,
-    Condition:CannotBeDamaged = 85,
-    Condition:CannotRecallBrand = 86,
-    Condition:NonPoisonedOnly = 87,
+    ConditionCanGainRage = 83,
+    ConditionCanWither = 84,
+    ConditionCannotBeDamaged = 85,
+    ConditionCannotRecallBrand = 86,
+    ConditionNonPoisonedOnly = 87,
     ConsecratedGroundEffect = 88,
     CooldownRecovery = 89,
     CorpseLife = 90,
@@ -420,11 +420,11 @@ impl StatId {
             m.insert("ColdPenetration", Self::ColdPenetration);
             m.insert("ColdResist", Self::ColdResist);
             m.insert("ColdResistMax", Self::ColdResistMax);
-            m.insert("Condition:CanGainRage", Self::Condition:CanGainRage);
-            m.insert("Condition:CanWither", Self::Condition:CanWither);
-            m.insert("Condition:CannotBeDamaged", Self::Condition:CannotBeDamaged);
-            m.insert("Condition:CannotRecallBrand", Self::Condition:CannotRecallBrand);
-            m.insert("Condition:NonPoisonedOnly", Self::Condition:NonPoisonedOnly);
+            m.insert("Condition:CanGainRage", Self::ConditionCanGainRage);
+            m.insert("Condition:CanWither", Self::ConditionCanWither);
+            m.insert("Condition:CannotBeDamaged", Self::ConditionCannotBeDamaged);
+            m.insert("Condition:CannotRecallBrand", Self::ConditionCannotRecallBrand);
+            m.insert("Condition:NonPoisonedOnly", Self::ConditionNonPoisonedOnly);
             m.insert("ConsecratedGroundEffect", Self::ConsecratedGroundEffect);
             m.insert("CooldownRecovery", Self::CooldownRecovery);
             m.insert("CorpseLife", Self::CorpseLife);
