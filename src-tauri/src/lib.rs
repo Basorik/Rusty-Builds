@@ -1,13 +1,15 @@
 mod client;
+mod data;
 mod models;
 mod storage;
 
 use log::info;
+use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use specta_typescript::Typescript;
 use std::collections::{HashMap, HashSet};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex, RwLock};
 use tauri::Manager;
 use tauri_specta::{collect_commands, Builder};
 
@@ -120,41 +122,25 @@ pub struct BuildStats {
 /// Holds the parsed stat strings for every node, keyed by node ID.
 pub struct TreeData {
     /// node_id → vec of raw stat strings from data.json
-    pub node_stats: HashMap<u32, Vec<String>>,
+    pub node_stats: FxHashMap<u32, Vec<String>>,
 }
 
 impl TreeData {
-    /// Parse `data.json` content and extract each node's `stats` array.
-    pub fn from_json(json_str: &str) -> Result<Self, String> {
-        let root: serde_json::Value =
-            serde_json::from_str(json_str).map_err(|e| format!("JSON parse error: {e}"))?;
+    /// Build from an already-parsed `PassiveTree`, avoiding a second JSON parse.
+    pub fn from_passive_tree(tree: &data::PassiveTree) -> Self {
+        let mut node_stats: FxHashMap<u32, Vec<String>> =
+            FxHashMap::with_capacity_and_hasher(tree.nodes.len(), Default::default());
 
-        let nodes_obj = root
-            .get("nodes")
-            .and_then(|v| v.as_object())
-            .ok_or_else(|| "Missing 'nodes' object in tree data".to_string())?;
-
-        let mut node_stats: HashMap<u32, Vec<String>> = HashMap::with_capacity(nodes_obj.len());
-
-        for (id_str, node_val) in nodes_obj {
-            let id: u32 = match id_str.parse() {
-                Ok(n) => n,
-                Err(_) => continue, // skip "root" or other non-numeric keys
-            };
-
-            if let Some(stats_arr) = node_val.get("stats").and_then(|v| v.as_array()) {
-                let stats: Vec<String> = stats_arr
-                    .iter()
-                    .filter_map(|s| s.as_str().map(String::from))
-                    .collect();
-                if !stats.is_empty() {
-                    node_stats.insert(id, stats);
+        for node in tree.nodes.values() {
+            if let Some(id) = node.id {
+                if !node.stats.is_empty() {
+                    node_stats.insert(id, node.stats.clone());
                 }
             }
         }
 
         info!("Loaded stats for {} nodes", node_stats.len());
-        Ok(TreeData { node_stats })
+        TreeData { node_stats }
     }
 }
 
@@ -235,7 +221,9 @@ pub fn run() {
     let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
         greet,
         update_selected_nodes,
-        update_build_info
+        update_build_info,
+        get_available_tree_versions,
+        load_tree_version
     ]);
 
     #[cfg(debug_assertions)]
@@ -254,13 +242,36 @@ pub fn run() {
             app.manage(storage_manager);
             app.manage(Mutex::new(BuildInfo::default()));
 
-            // Load tree data (node stats) from the active versioned tree file.
-            // Switch versions by updating the src-tauri/data/tree/active.json symlink
-            // (done automatically by `bun run tool:fetch-tree`).
-            const TREE_JSON: &str = include_str!("../data/tree/active.json");
-            let tree_data = TreeData::from_json(TREE_JSON)
-                .expect("Failed to parse tree data");
-            app.manage(tree_data);
+            // Find the latest tree version to load by default
+            let resource_dir = handle
+                .path()
+                .resource_dir()
+                .expect("Failed to resolve resource directory");
+            let tree_base = resource_dir.join("data/tree");
+
+            let mut default_version = String::from("3.27.0g"); // Fallback
+            if let Ok(entries) = std::fs::read_dir(&tree_base) {
+                let mut versions: Vec<String> = entries
+                    .filter_map(Result::ok)
+                    .filter(|e| e.file_type().map(|t| t.is_dir()).unwrap_or(false))
+                    .filter_map(|e| e.file_name().into_string().ok())
+                    .collect();
+                versions.sort_by(|a, b| b.cmp(a)); // Sort descending
+                if let Some(latest) = versions.first() {
+                    default_version = latest.clone();
+                }
+            }
+
+            let tree_path = tree_base.join(&default_version).join("data.json");
+            let tree_json =
+                std::fs::read_to_string(&tree_path).expect("Failed to read default tree data");
+
+            let game_data =
+                data::GameData::load_from_json(&tree_json).expect("Failed to load game data");
+            let tree_data = TreeData::from_passive_tree(&game_data.tree);
+
+            app.manage(Arc::new(RwLock::new(game_data)));
+            app.manage(Arc::new(RwLock::new(tree_data)));
 
             builder.mount_events(app);
             Ok(())
@@ -306,10 +317,12 @@ fn update_build_info(
 fn update_selected_nodes(
     node_ids: Vec<u32>,
     state: tauri::State<'_, Mutex<BuildInfo>>,
-    tree_data: tauri::State<'_, TreeData>,
+    tree_data_state: tauri::State<'_, Arc<RwLock<TreeData>>>,
 ) -> Result<BuildStats, String> {
     let mut build_info = state.lock().map_err(|e| e.to_string())?;
     build_info.selected_nodes.selected_node_ids = node_ids.into_iter().collect();
+
+    let tree_data = tree_data_state.read().map_err(|e| e.to_string())?;
 
     // Accumulate stats from all selected nodes
     let mut acc = StatAccumulator::new();
@@ -336,4 +349,63 @@ fn update_selected_nodes(
         stats.stat_totals.len()
     );
     Ok(stats)
+}
+
+#[tauri::command]
+#[specta::specta]
+fn get_available_tree_versions(app: tauri::AppHandle) -> Result<Vec<String>, String> {
+    let tree_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to resolve resource dir: {}", e))?
+        .join("data/tree");
+
+    let entries = std::fs::read_dir(&tree_dir)
+        .map_err(|e| format!("Failed to read tree directory: {}", e))?;
+
+    let mut versions: Vec<String> = entries
+        .filter_map(Result::ok)
+        .filter(|e| e.file_type().map(|t| t.is_dir()).unwrap_or(false))
+        .filter_map(|e| e.file_name().into_string().ok())
+        .collect();
+    versions.sort_by(|a, b| b.cmp(a)); // Sort descending so newest is first
+    Ok(versions)
+}
+
+#[tauri::command]
+#[specta::specta]
+fn load_tree_version(
+    version: String,
+    app: tauri::AppHandle,
+    game_data_state: tauri::State<'_, Arc<RwLock<data::GameData>>>,
+    tree_data_state: tauri::State<'_, Arc<RwLock<TreeData>>>,
+) -> Result<(), String> {
+    // Validate version to prevent path traversal
+    if !version
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '.' || c == '-')
+    {
+        return Err("Invalid version string".to_string());
+    }
+
+    let tree_path = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("Failed to resolve resource dir: {}", e))?
+        .join("data/tree")
+        .join(&version)
+        .join("data.json");
+
+    let tree_json =
+        std::fs::read_to_string(&tree_path).map_err(|e| format!("Failed to read file: {}", e))?;
+
+    let game_data = data::GameData::load_from_json(&tree_json)
+        .map_err(|e| format!("Failed to load game data: {}", e))?;
+    let tree_data = TreeData::from_passive_tree(&game_data.tree);
+
+    *game_data_state.write().map_err(|e| e.to_string())? = game_data;
+    *tree_data_state.write().map_err(|e| e.to_string())? = tree_data;
+
+    info!("Successfully loaded tree version: {}", version);
+    Ok(())
 }
