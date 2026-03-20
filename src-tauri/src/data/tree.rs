@@ -10,6 +10,24 @@ pub struct PassiveTree {
     pub classes: Vec<ClassData>,
     #[serde(rename = "alternate_ascendancies")]
     pub bloodlines: Vec<BloodlineData>,
+    pub constants: Option<TreeConstants>,
+    pub points: Option<TreePoints>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct TreeConstants {
+    #[serde(rename = "skillsPerOrbit")]
+    pub skills_per_orbit: Option<Vec<u32>>,
+    #[serde(rename = "orbitRadii")]
+    pub orbit_radii: Option<Vec<u32>>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct TreePoints {
+    #[serde(rename = "totalPoints")]
+    pub total_points: u32,
+    #[serde(rename = "ascendancyPoints")]
+    pub ascendancy_points: u32,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -29,6 +47,20 @@ pub struct PassiveNode {
     pub is_mastery: bool,
     #[serde(rename = "isJewelSocket", default)]
     pub is_jewel_socket: bool,
+    #[serde(rename = "isAscendancyStart", default)]
+    pub is_ascendancy_start: bool,
+    #[serde(rename = "classStartIndex")]
+    pub class_start_index: Option<u32>,
+    #[serde(rename = "grantedStrength", default)]
+    pub granted_strength: u32,
+    #[serde(rename = "grantedDexterity", default)]
+    pub granted_dexterity: u32,
+    #[serde(rename = "grantedIntelligence", default)]
+    pub granted_intelligence: u32,
+    #[serde(rename = "grantedPassivePoints", default)]
+    pub granted_passive_points: u32,
+    #[serde(rename = "masteryEffects", default)]
+    pub mastery_effects: Vec<MasteryEffect>,
     #[serde(rename = "out", default)]
     pub out_connections: Vec<String>,
     #[serde(rename = "in", default)]
@@ -37,6 +69,12 @@ pub struct PassiveNode {
     pub orbit: Option<u32>,
     #[serde(rename = "orbitIndex")]
     pub orbit_index: Option<u32>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct MasteryEffect {
+    pub effect: u32,
+    pub stats: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -78,5 +116,26 @@ impl DataLoader for PassiveTree {
 
     fn load_from_json(json: &str) -> Result<Self, DataError> {
         Ok(serde_json::from_str(json)?)
+    }
+}
+
+impl PassiveTree {
+    /// Look up a node by its numeric skill ID.
+    pub fn get_node(&self, skill_id: u32) -> Option<&PassiveNode> {
+        self.nodes.get(&skill_id.to_string())
+    }
+
+    /// Write the entire PassiveTree debug output to a temp file.
+    /// Returns the path to the file so you can find it.
+    pub fn debug_dump(&self) -> std::io::Result<std::path::PathBuf> {
+        use std::io::Write;
+        let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("passive_tree_debug.txt");
+        let mut file = std::fs::File::create(&path)?;
+        write!(file, "{:#?}", self)?;
+        log::info!("PassiveTree debug dump written to {}", path.display());
+        Ok(path)
     }
 }

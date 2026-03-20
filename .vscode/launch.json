@@ -16,7 +16,7 @@
             "name": "(OSX) Launch",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceRoot}/target/debug/foo",
+            "program": "${workspaceRoot}/src-tauri/target/debug/rusty-builds",
             "args": [],
             "cwd": "${workspaceRoot}",
         }

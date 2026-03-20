@@ -4,7 +4,6 @@ mod models;
 mod storage;
 
 use log::info;
-use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use specta_typescript::Typescript;
@@ -113,35 +112,6 @@ pub struct BuildStats {
     /// e.g. "#% increased maximum Life" → 53.0
     /// Boolean/qualitative stats use the full string as key with value = count of sources.
     pub stat_totals: HashMap<String, f64>,
-}
-
-// ---------------------------------------------------------------------------
-// Tree data: node ID → list of stat strings, loaded once at startup
-// ---------------------------------------------------------------------------
-
-/// Holds the parsed stat strings for every node, keyed by node ID.
-pub struct TreeData {
-    /// node_id → vec of raw stat strings from data.json
-    pub node_stats: FxHashMap<u32, Vec<String>>,
-}
-
-impl TreeData {
-    /// Build from an already-parsed `PassiveTree`, avoiding a second JSON parse.
-    pub fn from_passive_tree(tree: &data::PassiveTree) -> Self {
-        let mut node_stats: FxHashMap<u32, Vec<String>> =
-            FxHashMap::with_capacity_and_hasher(tree.nodes.len(), Default::default());
-
-        for node in tree.nodes.values() {
-            if let Some(id) = node.id {
-                if !node.stats.is_empty() {
-                    node_stats.insert(id, node.stats.clone());
-                }
-            }
-        }
-
-        info!("Loaded stats for {} nodes", node_stats.len());
-        TreeData { node_stats }
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -268,10 +238,14 @@ pub fn run() {
 
             let game_data =
                 data::GameData::load_from_json(&tree_json).expect("Failed to load game data");
-            let tree_data = TreeData::from_passive_tree(&game_data.tree);
 
+            #[cfg(debug_assertions)]
+            if let Ok(path) = game_data.tree.debug_dump() {
+                info!("PassiveTree debug dump: {}", path.display());
+            }
+
+            info!("Loaded {} nodes from passive tree", game_data.tree.nodes.len());
             app.manage(Arc::new(RwLock::new(game_data)));
-            app.manage(Arc::new(RwLock::new(tree_data)));
 
             builder.mount_events(app);
             Ok(())
@@ -317,18 +291,18 @@ fn update_build_info(
 fn update_selected_nodes(
     node_ids: Vec<u32>,
     state: tauri::State<'_, Mutex<BuildInfo>>,
-    tree_data_state: tauri::State<'_, Arc<RwLock<TreeData>>>,
+    game_data_state: tauri::State<'_, Arc<RwLock<data::GameData>>>,
 ) -> Result<BuildStats, String> {
     let mut build_info = state.lock().map_err(|e| e.to_string())?;
     build_info.selected_nodes.selected_node_ids = node_ids.into_iter().collect();
 
-    let tree_data = tree_data_state.read().map_err(|e| e.to_string())?;
+    let game_data = game_data_state.read().map_err(|e| e.to_string())?;
 
     // Accumulate stats from all selected nodes
     let mut acc = StatAccumulator::new();
     for &node_id in &build_info.selected_nodes.selected_node_ids {
-        if let Some(stats) = tree_data.node_stats.get(&node_id) {
-            acc.add_all(stats);
+        if let Some(node) = game_data.tree.get_node(node_id) {
+            acc.add_all(&node.stats);
         }
     }
 
@@ -378,7 +352,6 @@ fn load_tree_version(
     version: String,
     app: tauri::AppHandle,
     game_data_state: tauri::State<'_, Arc<RwLock<data::GameData>>>,
-    tree_data_state: tauri::State<'_, Arc<RwLock<TreeData>>>,
 ) -> Result<(), String> {
     // Validate version to prevent path traversal
     if !version
@@ -401,10 +374,8 @@ fn load_tree_version(
 
     let game_data = data::GameData::load_from_json(&tree_json)
         .map_err(|e| format!("Failed to load game data: {}", e))?;
-    let tree_data = TreeData::from_passive_tree(&game_data.tree);
 
     *game_data_state.write().map_err(|e| e.to_string())? = game_data;
-    *tree_data_state.write().map_err(|e| e.to_string())? = tree_data;
 
     info!("Successfully loaded tree version: {}", version);
     Ok(())

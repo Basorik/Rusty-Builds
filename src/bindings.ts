@@ -30,6 +30,22 @@ async updateBuildInfo(level: number, characterClass: Class, bloodline: Bloodline
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async getAvailableTreeVersions() : Promise<Result<string[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_available_tree_versions") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async loadTreeVersion(version: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("load_tree_version", { version }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
