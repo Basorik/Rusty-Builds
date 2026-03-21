@@ -784,11 +784,13 @@ use crate::data::{StatId, SourceId};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ModType {
     Base,      // +X flat (e.g., "+20 to Strength")
-    Increase,  // X% increased (additive with other increases)
+    Inc,       // X% increased (additive with other increases) — PoB calls this "INC"
     More,      // X% more (multiplicative, applied separately)
     Flag,      // Boolean flag (e.g., "Cannot be Stunned")
     Override,  // Overrides the stat entirely
     List,      // List-type mod (appended, not summed)
+    Max,       // Only the highest value takes effect (e.g., "PoisonStackLimit")
+    Min,       // Only the lowest value takes effect
 }
 
 bitflags! {
@@ -913,11 +915,11 @@ impl ModDB {
             .unwrap_or(0.0)
     }
 
-    /// Sum all Increase-type mods for a stat (additive %)
-    pub fn sum_increase(&self, stat: StatId, ctx: &CalcContext) -> f64 {
+    /// Sum all Inc-type mods for a stat (additive %)
+    pub fn sum_inc(&self, stat: StatId, ctx: &CalcContext) -> f64 {
         self.mods.get(&stat)
             .map(|mods| mods.iter()
-                .filter(|m| m.mod_type == ModType::Increase)
+                .filter(|m| m.mod_type == ModType::Inc)
                 .filter(|m| self.matches_context(m, ctx))
                 .map(|m| m.value)
                 .sum())
@@ -942,10 +944,64 @@ impl ModDB {
             .unwrap_or(false)
     }
 
-    /// Calculate final value: (base) × (1 + sum_increase/100) × product_more
+    /// Return the first Override-type value for a stat, or None.
+    /// PoB's Override() — if an override exists, it takes absolute precedence.
+    pub fn get_override(&self, stat: StatId, ctx: &CalcContext) -> Option<f64> {
+        self.mods.get(&stat)
+            .and_then(|mods| mods.iter()
+                .find(|m| m.mod_type == ModType::Override && self.matches_context(m, ctx))
+                .map(|m| m.value))
+    }
+
+    /// Return the highest Max-type value for a stat, or None.
+    pub fn get_max(&self, stat: StatId, ctx: &CalcContext) -> Option<f64> {
+        self.mods.get(&stat)
+            .and_then(|mods| mods.iter()
+                .filter(|m| m.mod_type == ModType::Max && self.matches_context(m, ctx))
+                .map(|m| m.value)
+                .reduce(f64::max))
+    }
+
+    /// Return the lowest Min-type value for a stat, or None.
+    pub fn get_min(&self, stat: StatId, ctx: &CalcContext) -> Option<f64> {
+        self.mods.get(&stat)
+            .and_then(|mods| mods.iter()
+                .filter(|m| m.mod_type == ModType::Min && self.matches_context(m, ctx))
+                .map(|m| m.value)
+                .reduce(f64::min))
+    }
+
+    /// Return all matching mods as (value, &Modifier) pairs.
+    /// PoB's Tabulate() — used to inspect individual mods, extract sources,
+    /// and create derived mods (e.g., "ArmourIncreasedByUncappedFireRes").
+    /// Pass `mod_type: None` to match all types.
+    pub fn tabulate(
+        &self, mod_type: Option<ModType>, stat: StatId, ctx: &CalcContext
+    ) -> Vec<(f64, &Modifier)> {
+        self.mods.get(&stat)
+            .map(|mods| mods.iter()
+                .filter(|m| mod_type.map_or(true, |t| m.mod_type == t))
+                .filter(|m| self.matches_context(m, ctx))
+                .map(|m| (m.value, m))
+                .collect())
+            .unwrap_or_default()
+    }
+
+    /// Sum Base-type mods across multiple stats at once.
+    /// PoB's Sum("BASE", cfg, "stat1", "stat2", ...) accepts variadic stat names.
+    /// Example: `sum_base_multi(&[StatId::ActiveTotemLimit, StatId::ActiveBallistaLimit], &ctx)`
+    pub fn sum_base_multi(&self, stats: &[StatId], ctx: &CalcContext) -> f64 {
+        stats.iter().map(|s| self.sum_base(*s, ctx)).sum()
+    }
+
+    /// Calculate final value: Override check → (base) × (1 + sum_inc/100) × product_more
+    /// If an Override mod exists, it takes absolute precedence over the formula.
     pub fn calculate(&self, stat: StatId, ctx: &CalcContext) -> f64 {
+        if let Some(val) = self.get_override(stat, ctx) {
+            return val;
+        }
         let base = self.sum_base(stat, ctx);
-        let inc = self.sum_increase(stat, ctx);
+        let inc = self.sum_inc(stat, ctx);
         let more = self.product_more(stat, ctx);
         base * (1.0 + inc / 100.0) * more
     }
@@ -969,26 +1025,40 @@ impl ModDB {
 }
 ```
 
-**Key learning**: The `calculate()` method shows PoB's core formula: `base × (1 + sum_of_increases%) × product_of_mores`. This is how almost every stat works in POE. Note that every query takes `&CalcContext` — in Phase 2 you pass `CalcContext::empty()` everywhere, but the signature is locked in. When you implement conditional mods in Phase 5, you only change `matches_context()`, not every call site.
+**Key learning**: The `calculate()` method first checks for `Override` mods (e.g., Loreweave's resistance override) — if one exists, the formula is skipped entirely. Otherwise it applies PoB's core formula: `base × (1 + sum_of_increases%) × product_of_mores`. This is how almost every stat works in POE. The `tabulate()` method is critical for Phase 5+ — CalcPerform and CalcOffence use it to inspect individual mods and create derived modifiers. Note that every query takes `&CalcContext` — in Phase 2 you pass `CalcContext::empty()` everywhere, but the signature is locked in. When you implement conditional mods in Phase 5, you only change `matches_context()`, not every call site.
 
-#### 2.3 — Build the Mod Parser (`modifier/parser.rs`)
+> **PoB parity note**: PoB's `ModStore` also has `Max(cfg, ...)` and `Min(cfg, ...)` query methods for stats where only the highest or lowest value should take effect. These are included above as `get_max()` and `get_min()`. PoB also supports querying multiple stat names in a single call (`Sum("BASE", cfg, "stat1", "stat2")`) — `sum_base_multi()` covers this.
 
-This converts text strings like "+20 to Strength" into `Modifier` structs using `StatId`.
+> **Parent chain (Phase 5+)**: PoB's `ModDB` supports a `parent` pointer — queries walk the parent chain recursively. This is how actor composition works (minion ModDB inherits from player ModDB, totem from player). The flat `merge()` approach is correct for Phase 2, but by Phase 5 you'll need `parent: Option<Arc<ModDB>>` on `ModDB` to support minion/totem actor hierarchies without cloning the entire player ModDB.
+
+#### 2.3 — Build the Display Text Parser (`modifier/parser.rs`)
+
+This converts **display text** strings like "+20 to Strength" into `Modifier` structs using `StatId`.
+This is the equivalent of PoB's `ModParser.lua` — it parses human-readable stat text from passive
+nodes, items, and other sources that only provide display strings.
+
+> **Scope**: This parser handles *display text* only (passive node `stats[]` strings, item mod lines).
+> In Phase 3, skill/gem stats will use a separate **`SkillStatMap`-style direct mapping** path
+> that maps internal stat IDs directly to `Modifier` structs — no text parsing needed.
+> Both paths produce the same `Modifier` output and feed into the same `ModDB`.
 
 ```rust
 use crate::data::{StatId, SourceId};
 use super::types::*;
 use smallvec::smallvec;
 
-/// Parse a single mod line into a Modifier (if recognized).
+/// Parse a single display-text mod line into a Modifier (if recognized).
 /// Returns None for patterns not yet implemented — log a warning.
-pub fn parse_mod(text: &str, source: SourceId) -> Option<Modifier> {
+///
+/// This handles human-readable stat text from passive nodes and items.
+/// Gem/skill stats use the SkillStatMap direct mapping path instead (Phase 3).
+pub fn parse_display_text(text: &str, source: SourceId) -> Option<Modifier> {
     // Start with common patterns, expand over time.
     // The parser extracts (value, stat_text) then maps stat_text → StatId.
     //
     // Examples:
     //   "+10 to Strength"           → Base, StatId::Strength, value=10
-    //   "15% increased Attack Speed" → Increase, StatId::AttackSpeed, value=15
+    //   "15% increased Attack Speed" → Inc, StatId::AttackSpeed, value=15
     //   "10% more Spell Damage"      → More, StatId::SpellDamage, value=10
     //   "+50 to maximum Life"        → Base, StatId::Life, value=50
     //
@@ -1033,45 +1103,28 @@ Add more patterns as you need them in later phases.
 > **Current state**: `lib.rs` already has `Mutex<BuildInfo>` and `Arc<RwLock<GameData>>`.
 > The `update_selected_nodes` command computes STR/DEX/INT from `PassiveNode.granted_*` fields
 > and uses `StatAccumulator` (from `stats.rs`) for all other stats as text-template totals.
-> Phase 2 replaces `StatAccumulator` with `ModDB` + `ModParser` for typed stat accumulation,
-> and transitions from `Mutex<BuildInfo>` to `RwLock<BuildState>`.
+> Phase 2 replaces `StatAccumulator` with `ModDB` + `parse_display_text` for typed stat accumulation.
 
-Replace `Mutex<BuildInfo>` with a split state architecture. `GameData` is already read-only (`Arc<RwLock<GameData>>`). `BuildState` is mutable (`RwLock` or channel-based).
+Keep `Mutex<BuildInfo>` for now — there's no concurrent read pattern to justify `RwLock` yet.
+Node selection is the only write path and it runs on a single UI thread with debouncing.
+The `Mutex` → `RwLock<BuildState>` migration belongs in Phase 5 when background recalculation
+is introduced and multiple concurrent readers become a real pattern.
 
-**Option A: `RwLock` split state** (simpler, recommended for Phase 2)
+> **Keep `Arc<RwLock<GameData>>`** — do NOT simplify to `Arc<GameData>`. The `load_tree_version`
+> command mutates `GameData` at runtime, so the `RwLock` is required.
 
-```rust
-use std::sync::Arc;
-use tokio::sync::RwLock;
-
-/// Read-only game data — shared freely across threads.
-/// Already exists as Arc<RwLock<GameData>> — can simplify to Arc<GameData>
-/// since GameData is immutable after startup (only load_tree_version mutates it).
-pub type SharedGameData = Arc<GameData>;
-
-/// Mutable build state — use RwLock so calc reads don't block UI writes.
-pub type SharedBuildState = Arc<RwLock<BuildState>>;
-
-pub struct BuildState {
-    pub info: BuildInfo,
-    pub selected_nodes: BuildSelection,
-    pub stats: BuildStats,
-    // Phase 3+: pub skill_groups: Vec<SkillGroup>,
-    // Phase 4+: pub equipment: Equipment,
-}
-```
-
-Now update `update_selected_nodes` to use `ModDB` instead of `StatAccumulator`:
+Update `update_selected_nodes` to use `ModDB` instead of `StatAccumulator`:
 
 ```rust
 #[tauri::command]
 #[specta::specta]
-async fn update_selected_nodes(
+fn update_selected_nodes(
     node_ids: Vec<u32>,
-    game_data: tauri::State<'_, SharedGameData>,
-    state: tauri::State<'_, SharedBuildState>,
+    game_data: tauri::State<'_, Arc<RwLock<GameData>>>,
+    build_info: tauri::State<'_, Mutex<BuildInfo>>,
 ) -> Result<BuildStats, String> {
-    let mut build = state.write().await;
+    let game = game_data.read().map_err(|e| e.to_string())?;
+    let mut build = build_info.lock().map_err(|e| e.to_string())?;
     build.selected_nodes.selected_node_ids = node_ids.iter().cloned().collect();
 
     // Build a ModDB from all selected nodes
@@ -1079,10 +1132,10 @@ async fn update_selected_nodes(
     let ctx = CalcContext::empty(); // No conditions yet
 
     for &node_id in &node_ids {
-        if let Some(node) = game_data.tree.get_node(node_id) {
+        if let Some(node) = game.tree.get_node(node_id) {
             let source = SourceId(node_id);
             for stat_text in &node.stats {
-                if let Some(modifier) = modifier::parser::parse_mod(
+                if let Some(modifier) = modifier::parser::parse_display_text(
                     stat_text, source
                 ) {
                     mod_db.add_mod(modifier);
@@ -1128,7 +1181,7 @@ async fn update_selected_nodes(
 > not stat text strings. The current code already sums them directly. When migrating to ModDB,
 > add them as `ModType::Base` modifiers alongside the parsed stat text mods.
 
-**Key learning**: `RwLock` allows multiple simultaneous readers (calc queries) while only blocking when a writer (UI state update) is active. This is a massive concurrency win over `Mutex`, which blocks all access for every operation. The `async fn` + `.write().await` pattern works naturally with Tauri's async command system.
+**Key learning**: For now, `Mutex<BuildInfo>` is sufficient — there's only one writer (node selection via UI) and no concurrent readers. When Phase 5 introduces background DPS recalculation, you'll migrate to `tokio::sync::RwLock<BuildState>` which allows multiple simultaneous readers while only blocking when a writer is active. The key insight is: don't add concurrency complexity until you have a concrete concurrency pattern.
 
 #### 2.5 — Add Base Class Stats
 
@@ -1248,7 +1301,7 @@ impl ModDBLayers {
                 }
                 // Parse stat text lines into typed modifiers
                 for stat_text in &node.stats {
-                    if let Some(m) = modifier::parser::parse_mod(stat_text, source) {
+                    if let Some(m) = modifier::parser::parse_display_text(stat_text, source) {
                         self.tree.add_mod(m);
                     }
                 }
@@ -1266,8 +1319,14 @@ impl ModDBLayers {
 #### 2.8 — Tests
 
 Write comprehensive tests:
-- `parse_mod("+10 to Strength", source)` returns `Modifier { stat: StatId::Strength, mod_type: ModType::Base, value: 10.0, ... }`
+- `parse_display_text("+10 to Strength", source)` returns `Modifier { stat: StatId::Strength, mod_type: ModType::Base, value: 10.0, ... }`
 - `ModDB::calculate(StatId::Life, &ctx)` with known inputs returns expected value
+- `ModDB::calculate()` returns Override value when an Override mod exists (skips formula)
+- `ModDB::get_override()` returns `None` when no Override exists
+- `ModDB::get_max()` returns the highest Max-type value across multiple mods
+- `ModDB::get_min()` returns the lowest Min-type value across multiple mods
+- `ModDB::tabulate()` returns individual (value, mod) pairs for inspection
+- `ModDB::sum_base_multi()` sums Base across multiple StatIds
 - Selecting known Marauder start nodes gives stats matching PoB
 - `CalcContext::empty()` works with all query methods
 - Layered ModDB merges correctly
@@ -1277,15 +1336,17 @@ Write comprehensive tests:
 
 - [ ] Selecting nodes updates real stat values in the sidebar (not zeros)
 - [ ] Str/Dex/Int totals include class base stats (from `ClassData`, not hardcoded)
-- [ ] ModParser handles at least 10 common passive tree patterns
+- [ ] `parse_display_text()` handles at least 10 common passive tree patterns
 - [ ] `StatAccumulator` and `stats.rs` are deleted
-- [ ] `ModDB::calculate()` correctly applies Base + Increase + More formula
+- [ ] `ModType` has all 8 variants: `Base`, `Inc`, `More`, `Flag`, `Override`, `List`, `Max`, `Min`
+- [ ] `ModDB::calculate()` checks Override first, then applies Base + Inc + More formula
+- [ ] `ModDB` has `tabulate()`, `get_override()`, `get_max()`, `get_min()`, and `sum_base_multi()` methods
 - [ ] All `ModDB` query methods accept `&CalcContext` parameter
 - [ ] `Modifier` uses `StatId` (not String) and `SourceId` (not String)
 - [ ] `ModDB` uses `FxHashMap<StatId, Vec<Modifier>>` internally
-- [ ] `Mutex<BuildInfo>` is replaced with `RwLock<BuildState>` (or channel-based)
+- [ ] `Mutex<BuildInfo>` is kept (NOT replaced with `RwLock` — that's Phase 5)
 - [ ] `ModDBLayers` struct exists with at least a `tree` layer and `merged()` method
-- [ ] Tests cover ModParser patterns, ModDB queries with CalcContext, and layered merge
+- [ ] Tests cover `parse_display_text` patterns, ModDB queries (including Override/Max/Min/tabulate), and layered merge
 - [ ] Selecting the same nodes as a PoB build gives matching Str/Dex/Int
 
 ### Suggested Reading
