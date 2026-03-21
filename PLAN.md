@@ -1042,35 +1042,176 @@ nodes, items, and other sources that only provide display strings.
 > that maps internal stat IDs directly to `Modifier` structs — no text parsing needed.
 > Both paths produce the same `Modifier` output and feed into the same `ModDB`.
 
+##### Data Analysis (passive tree `data.json`)
+
+The passive tree contains 4,789 stat string occurrences across 2,501 unique strings.
+After replacing numbers with `#` placeholders, there are **1,444 unique templates**.
+Coverage follows a long-tail distribution:
+
+| Top N templates | % of all occurrences |
+|---|---|
+| 10 | 16.7% |
+| 25 | 27.4% |
+| 50 | 36.5% |
+| 100 | 47.7% |
+| 200 | 61.6% |
+| 500 | 79.7% |
+| 1,444 (all) | 100% |
+
+The 7 pattern categories by frequency:
+
+| Category | Templates | Occurrences | Example |
+|---|---|---|---|
+| **simple_inc** | 351 | 2,121 | `8% increased maximum Life` |
+| **simple_base** | 87 | 656 | `+30 to Strength` |
+| **conditional** | 275 | 474 | `6% increased Attack Speed while Dual Wielding` |
+| **flag** (no number) | 213 | 236 | `You can apply an additional Curse` |
+| **prefix_subject** | 40 | 214 | `Minions deal 25% increased Damage` |
+| **per_scaling** | 108 | 212 | `Regenerate 0.5% of Life per second` |
+| **multi_stat** (`and`) | 50 | 166 | `12% increased Evasion Rating and Armour` |
+| **simple_more** | 20 | 23 | `40% more Damage` |
+
+Key complications:
+- **Multi-stat expansion**: `"12% increased Evasion Rating and Armour"` → 2 separate modifiers
+- **Flag stats**: `"Cannot be Stunned"` → no number, boolean effect
+- **Multi-value**: `"1% increased AoE per 50 Unreserved Mana, up to 100%"` → 3 numbers with different roles
+- **Conditional suffixes**: `"6% increased Attack Speed while Dual Wielding"` → adds condition tag
+
+##### Architecture: Template → Handler Function
+
+A flat `FxHashMap<template, (ModType, StatId)>` cannot handle multi-stat expansion, flags, or
+multi-value stats. Instead, map each template to a **handler function** that receives the extracted
+numbers and returns `Vec<Modifier>` (zero, one, or multiple modifiers per stat line):
+
 ```rust
 use crate::data::{StatId, SourceId};
 use super::types::*;
+use rustc_hash::FxHashMap;
+use regex::Regex;
 use smallvec::smallvec;
+use std::sync::OnceLock;
 
-/// Parse a single display-text mod line into a Modifier (if recognized).
-/// Returns None for patterns not yet implemented — log a warning.
+/// Handler function type: receives extracted numbers + source, returns modifiers.
+/// Returns Vec because one stat line can expand to multiple modifiers
+/// (e.g. "12% increased Evasion Rating and Armour" → 2 modifiers).
+type ParseHandler = fn(values: &[f64], source: SourceId) -> Vec<Modifier>;
+
+/// Single regex for extracting all numbers from a stat string.
+/// Compiled once, used for every stat line.
+static RE_NUMBER: OnceLock<Regex> = OnceLock::new();
+
+fn re_number() -> &'static Regex {
+    RE_NUMBER.get_or_init(|| Regex::new(r"[+-]?\d+\.?\d*").unwrap())
+}
+
+/// The template lookup table. Built once at first call, lives forever.
+/// Key: stat text with all numbers replaced by `#` (e.g. "#% increased maximum Life")
+/// Value: handler function that builds Modifier(s) from the extracted numbers
+static TEMPLATE_MAP: OnceLock<FxHashMap<&'static str, ParseHandler>> = OnceLock::new();
+
+fn template_map() -> &'static FxHashMap<&'static str, ParseHandler> {
+    TEMPLATE_MAP.get_or_init(|| {
+        let mut m: FxHashMap<&'static str, ParseHandler> = FxHashMap::default();
+
+        // ── Simple Base: "+X to <Stat>" ──
+        m.insert("+# to Strength",     |v, s| vec![simple_mod(StatId::Strength, ModType::Base, v[0], s)]);
+        m.insert("+# to Dexterity",    |v, s| vec![simple_mod(StatId::Dexterity, ModType::Base, v[0], s)]);
+        m.insert("+# to Intelligence", |v, s| vec![simple_mod(StatId::Intelligence, ModType::Base, v[0], s)]);
+        m.insert("+# to maximum Life", |v, s| vec![simple_mod(StatId::Life, ModType::Base, v[0], s)]);
+        m.insert("+# to maximum Mana", |v, s| vec![simple_mod(StatId::Mana, ModType::Base, v[0], s)]);
+        m.insert("+# to maximum Energy Shield", |v, s| vec![simple_mod(StatId::EnergyShield, ModType::Base, v[0], s)]);
+        m.insert("+# to Accuracy Rating", |v, s| vec![simple_mod(StatId::Accuracy, ModType::Base, v[0], s)]);
+
+        // ── Simple Inc: "X% increased <Stat>" ──
+        m.insert("#% increased maximum Life",          |v, s| vec![simple_mod(StatId::Life, ModType::Inc, v[0], s)]);
+        m.insert("#% increased maximum Mana",          |v, s| vec![simple_mod(StatId::Mana, ModType::Inc, v[0], s)]);
+        m.insert("#% increased maximum Energy Shield", |v, s| vec![simple_mod(StatId::EnergyShield, ModType::Inc, v[0], s)]);
+        m.insert("#% increased Evasion Rating",        |v, s| vec![simple_mod(StatId::Evasion, ModType::Inc, v[0], s)]);
+        m.insert("#% increased Armour",                |v, s| vec![simple_mod(StatId::Armour, ModType::Inc, v[0], s)]);
+        m.insert("#% increased Attack Speed",          |v, s| vec![simple_mod(StatId::AttackSpeed, ModType::Inc, v[0], s)]);
+        m.insert("#% increased Cast Speed",            |v, s| vec![simple_mod(StatId::CastSpeed, ModType::Inc, v[0], s)]);
+        m.insert("#% increased Movement Speed",        |v, s| vec![simple_mod(StatId::MovementSpeed, ModType::Inc, v[0], s)]);
+        m.insert("#% increased Physical Damage",       |v, s| vec![simple_mod(StatId::PhysicalDamage, ModType::Inc, v[0], s)]);
+        m.insert("#% increased Spell Damage",          |v, s| vec![simple_mod(StatId::SpellDamage, ModType::Inc, v[0], s)]);
+        m.insert("#% increased Elemental Damage",      |v, s| vec![simple_mod(StatId::ElementalDamage, ModType::Inc, v[0], s)]);
+        m.insert("#% increased Critical Strike Chance", |v, s| vec![simple_mod(StatId::CritChance, ModType::Inc, v[0], s)]);
+        m.insert("#% increased Mana Regeneration Rate", |v, s| vec![simple_mod(StatId::ManaRegen, ModType::Inc, v[0], s)]);
+        m.insert("#% increased Projectile Damage",     |v, s| vec![simple_mod(StatId::ProjectileDamage, ModType::Inc, v[0], s)]);
+
+        // ── Resistances: "+X% to <Element> Resistance" ──
+        m.insert("+#% to Fire Resistance",      |v, s| vec![simple_mod(StatId::FireResist, ModType::Base, v[0], s)]);
+        m.insert("+#% to Cold Resistance",      |v, s| vec![simple_mod(StatId::ColdResist, ModType::Base, v[0], s)]);
+        m.insert("+#% to Lightning Resistance", |v, s| vec![simple_mod(StatId::LightningResist, ModType::Base, v[0], s)]);
+        m.insert("+#% to Chaos Resistance",     |v, s| vec![simple_mod(StatId::ChaosResist, ModType::Base, v[0], s)]);
+        // Expands to 3 modifiers
+        m.insert("+#% to all Elemental Resistances", |v, s| vec![
+            simple_mod(StatId::FireResist, ModType::Base, v[0], s),
+            simple_mod(StatId::ColdResist, ModType::Base, v[0], s),
+            simple_mod(StatId::LightningResist, ModType::Base, v[0], s),
+        ]);
+
+        // ── Multi-stat expansion: "X% increased A and B" ──
+        m.insert("#% increased Evasion Rating and Armour", |v, s| vec![
+            simple_mod(StatId::Evasion, ModType::Inc, v[0], s),
+            simple_mod(StatId::Armour, ModType::Inc, v[0], s),
+        ]);
+        m.insert("#% increased Attack and Cast Speed", |v, s| vec![
+            simple_mod(StatId::AttackSpeed, ModType::Inc, v[0], s),
+            simple_mod(StatId::CastSpeed, ModType::Inc, v[0], s),
+        ]);
+
+        // ── Dual-attribute: "+X to A and B" ──
+        m.insert("+# to Strength and Intelligence", |v, s| vec![
+            simple_mod(StatId::Strength, ModType::Base, v[0], s),
+            simple_mod(StatId::Intelligence, ModType::Base, v[0], s),
+        ]);
+        m.insert("+# to Strength and Dexterity", |v, s| vec![
+            simple_mod(StatId::Strength, ModType::Base, v[0], s),
+            simple_mod(StatId::Dexterity, ModType::Base, v[0], s),
+        ]);
+        m.insert("+# to Dexterity and Intelligence", |v, s| vec![
+            simple_mod(StatId::Dexterity, ModType::Base, v[0], s),
+            simple_mod(StatId::Intelligence, ModType::Base, v[0], s),
+        ]);
+
+        // ... expand table in later phases (see "Growing the table" below)
+        m
+    })
+}
+
+/// Parse a single display-text stat line into Modifier(s).
+/// Returns empty Vec for unrecognized patterns (logged as warning).
+///
+/// Pipeline:
+///   1. Extract all numbers from the text
+///   2. Replace numbers with `#` to form a template key
+///   3. Look up the template in the handler table (O(1) FxHashMap)
+///   4. Call the handler with the extracted numbers + source
 ///
 /// This handles human-readable stat text from passive nodes and items.
 /// Gem/skill stats use the SkillStatMap direct mapping path instead (Phase 3).
-pub fn parse_display_text(text: &str, source: SourceId) -> Option<Modifier> {
-    // Start with common patterns, expand over time.
-    // The parser extracts (value, stat_text) then maps stat_text → StatId.
-    //
-    // Examples:
-    //   "+10 to Strength"           → Base, StatId::Strength, value=10
-    //   "15% increased Attack Speed" → Inc, StatId::AttackSpeed, value=15
-    //   "10% more Spell Damage"      → More, StatId::SpellDamage, value=10
-    //   "+50 to maximum Life"        → Base, StatId::Life, value=50
-    //
-    // Strategy: extract (value, stat_text) via regex or manual matching,
-    // then call StatId::from_text(stat_text) to get the enum variant.
-    // If StatId::from_text returns None, the stat is unrecognized — skip it.
+pub fn parse_display_text(text: &str, source: SourceId) -> Vec<Modifier> {
+    let re = re_number();
 
-    // Tip: start with manual string matching, move to regex if patterns get complex
-    todo!("Implement pattern by pattern, starting with the most common")
+    // Step 1: extract all numbers
+    let values: Vec<f64> = re.find_iter(text)
+        .filter_map(|m| m.as_str().parse().ok())
+        .collect();
+
+    // Step 2: replace numbers with # to form template key
+    let template = re.replace_all(text, "#");
+
+    // Step 3: O(1) lookup
+    if let Some(handler) = template_map().get(template.as_ref()) {
+        // Step 4: call handler
+        handler(&values, source)
+    } else {
+        log::debug!("Unrecognized stat template: {:?} (from {:?})", template, text);
+        Vec::new()
+    }
 }
 
-/// Helper to build a simple unconditional modifier.
+/// Helper: build a simple unconditional modifier (no flags, no tags).
 fn simple_mod(stat: StatId, mod_type: ModType, value: f64, source: SourceId) -> Modifier {
     Modifier {
         stat,
@@ -1082,21 +1223,57 @@ fn simple_mod(stat: StatId, mod_type: ModType, value: f64, source: SourceId) -> 
         tags: smallvec![],
     }
 }
+
+/// Helper: build a modifier with condition tags (for Phase 5+ conditional stats).
+#[allow(dead_code)]
+fn tagged_mod(
+    stat: StatId, mod_type: ModType, value: f64, source: SourceId,
+    tags: smallvec::SmallVec<[ModTag; 2]>,
+) -> Modifier {
+    Modifier { stat, mod_type, value, flags: ModFlag::empty(), key_flags: KeywordFlag::empty(), source, tags }
+}
+
+/// Helper: build a flag modifier (no numeric value).
+#[allow(dead_code)]
+fn flag_mod(stat: StatId, source: SourceId) -> Modifier {
+    Modifier {
+        stat,
+        mod_type: ModType::Flag,
+        value: 1.0,
+        flags: ModFlag::empty(),
+        key_flags: KeywordFlag::empty(),
+        source,
+        tags: smallvec![],
+    }
+}
 ```
 
-**Strategy**: Don't try to parse all mod patterns at once. Start with these ~10 patterns that cover passive tree nodes:
-1. `+X to Strength/Dexterity/Intelligence`
-2. `+X to maximum Life/Mana/Energy Shield`
-3. `X% increased Attack Speed/Cast Speed`
-4. `X% increased maximum Life/Mana/Energy Shield`
-5. `+X% to Fire/Cold/Lightning/Chaos Resistance`
-6. `+X% to all Elemental Resistances`
-7. `X% increased Physical Damage`
-8. `X% increased Spell Damage`
-9. `X% more <stat>` patterns
-10. `Minions deal X% increased Damage`
+> **Return type is `Vec<Modifier>`** (not `Option<Modifier>`). This is a deliberate design decision:
+> one stat line can produce 0, 1, or multiple modifiers. `"+6% to all Elemental Resistances"` produces 3.
+> `"Cannot be Stunned"` produces 1 flag. An unrecognized stat produces 0.
 
-Add more patterns as you need them in later phases.
+> **Note**: The `parse_display_text` signature changed from `→ Option<Modifier>` to `→ Vec<Modifier>`.
+> Update call sites in `update_selected_nodes` accordingly (use `extend()` instead of `if let Some`).
+
+##### Growing the table over time
+
+Phase 2 seeds the table with ~40 entries covering the highest-frequency templates.
+These handle simple base, inc, resistance, and multi-stat expansion patterns — roughly
+the top 50 templates which cover **36.5% of all stat occurrences** in the passive tree.
+
+Add entries for new categories as they become needed:
+
+| Phase | Category | Entries to add | Approach |
+|---|---|---|---|
+| 2 | simple_base, simple_inc, resistances, multi-stat `and` | ~40 | `simple_mod()` one-liners |
+| 3 | simple_more, prefix_subject (Minions) | ~30 | `simple_mod()` with `key_flags` for minion |
+| 4 | leech, regen, chance | ~30 | `simple_mod()` targeting leech/regen StatIds |
+| 5 | conditional (`while`/`if`/`when`) | ~200+ | `tagged_mod()` with `ModTag::Condition` |
+| 5 | per_scaling (`per X`) | ~80 | `tagged_mod()` with `ModTag::Multiplier` |
+| 5 | flag (no number) | ~100+ | `flag_mod()` |
+| 5+ | multi-value (2-3 `#` slots) | ~30 | Custom handlers reading `v[0]`, `v[1]`, `v[2]` |
+
+To add a new stat, add **one line** to the `template_map()` initializer — no pipeline changes.
 
 #### 2.4 — Implement Passive Tree Stat Aggregation
 
@@ -1135,9 +1312,8 @@ fn update_selected_nodes(
         if let Some(node) = game.tree.get_node(node_id) {
             let source = SourceId(node_id);
             for stat_text in &node.stats {
-                if let Some(modifier) = modifier::parser::parse_display_text(
-                    stat_text, source
-                ) {
+                // parse_display_text returns Vec<Modifier> (0, 1, or many)
+                for modifier in modifier::parser::parse_display_text(stat_text, source) {
                     mod_db.add_mod(modifier);
                 }
             }
