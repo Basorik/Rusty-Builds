@@ -1,28 +1,26 @@
 mod client;
 mod data;
 mod models;
+mod stats;
 mod storage;
 
 use log::info;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use specta_typescript::Typescript;
+use stats::StatAccumulator;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, RwLock};
 use tauri::Manager;
 use tauri_specta::{collect_commands, Builder};
 
+/// The tree version loaded on startup and used as the default.
+pub const DEFAULT_TREE_VERSION: &str = "3.27.0g";
+
 /// Tracks which skill-tree nodes the user has selected for the current build.
 #[derive(Debug, Default, Serialize, Deserialize, Type)]
 pub struct BuildSelection {
     selected_node_ids: HashSet<u32>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Type)]
-pub enum NodeType {
-    Notable,
-    Keystone,
-    Regular,
 }
 
 #[derive(Debug, Serialize, Deserialize, Type)]
@@ -114,54 +112,6 @@ pub struct BuildStats {
     pub stat_totals: HashMap<String, f64>,
 }
 
-// ---------------------------------------------------------------------------
-// Stat accumulator: parses numbers from stat strings and sums by template
-// ---------------------------------------------------------------------------
-
-use regex::Regex;
-use std::sync::LazyLock;
-
-/// Matches signed integers and decimals like 50, +30, -5, 0.5, +12.3
-static NUM_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[+-]?\d+\.?\d*").unwrap());
-
-pub struct StatAccumulator {
-    totals: HashMap<String, f64>,
-}
-
-impl StatAccumulator {
-    pub fn new() -> Self {
-        Self {
-            totals: HashMap::new(),
-        }
-    }
-
-    /// Add a single stat string. Extracts the first number, replaces all numbers
-    /// with `#` to form a template key, and accumulates the value.
-    /// Stats with no number get stored with value += 1 (source count).
-    pub fn add(&mut self, stat: &str) {
-        if let Some(m) = NUM_RE.find(stat) {
-            let value: f64 = m.as_str().parse().unwrap_or(0.0);
-            let template = NUM_RE.replace_all(stat, "#").to_string();
-            *self.totals.entry(template).or_insert(0.0) += value;
-        } else {
-            // Boolean/qualitative stat — count occurrences
-            *self.totals.entry(stat.to_string()).or_insert(0.0) += 1.0;
-        }
-    }
-
-    /// Add all stats for a node.
-    pub fn add_all(&mut self, stats: &[String]) {
-        for s in stats {
-            self.add(s);
-        }
-    }
-
-    /// Consume and return the accumulated totals.
-    pub fn into_totals(self) -> HashMap<String, f64> {
-        self.totals
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize, Type)]
 pub struct BuildInfo {
     pub name: String,
@@ -193,7 +143,8 @@ pub fn run() {
         update_selected_nodes,
         update_build_info,
         get_available_tree_versions,
-        load_tree_version
+        load_tree_version,
+        get_tree_json
     ]);
 
     #[cfg(debug_assertions)]
@@ -212,39 +163,23 @@ pub fn run() {
             app.manage(storage_manager);
             app.manage(Mutex::new(BuildInfo::default()));
 
-            // Find the latest tree version to load by default
-            let resource_dir = handle
+            let tree_path = handle
                 .path()
                 .resource_dir()
-                .expect("Failed to resolve resource directory");
-            let tree_base = resource_dir.join("data/tree");
-
-            let mut default_version = String::from("3.27.0g"); // Fallback
-            if let Ok(entries) = std::fs::read_dir(&tree_base) {
-                let mut versions: Vec<String> = entries
-                    .filter_map(Result::ok)
-                    .filter(|e| e.file_type().map(|t| t.is_dir()).unwrap_or(false))
-                    .filter_map(|e| e.file_name().into_string().ok())
-                    .collect();
-                versions.sort_by(|a, b| b.cmp(a)); // Sort descending
-                if let Some(latest) = versions.first() {
-                    default_version = latest.clone();
-                }
-            }
-
-            let tree_path = tree_base.join(&default_version).join("data.json");
+                .expect("Failed to resolve resource directory")
+                .join("data/tree")
+                .join(DEFAULT_TREE_VERSION)
+                .join("data.json");
             let tree_json =
                 std::fs::read_to_string(&tree_path).expect("Failed to read default tree data");
 
             let game_data =
                 data::GameData::load_from_json(&tree_json).expect("Failed to load game data");
 
-            #[cfg(debug_assertions)]
-            if let Ok(path) = game_data.tree.debug_dump() {
-                info!("PassiveTree debug dump: {}", path.display());
-            }
-
-            info!("Loaded {} nodes from passive tree", game_data.tree.nodes.len());
+            info!(
+                "Loaded {} nodes from passive tree",
+                game_data.tree.nodes.len()
+            );
             app.manage(Arc::new(RwLock::new(game_data)));
 
             builder.mount_events(app);
@@ -300,9 +235,15 @@ fn update_selected_nodes(
 
     // Accumulate stats from all selected nodes
     let mut acc = StatAccumulator::new();
+    let mut total_strength: i32 = 0;
+    let mut total_dexterity: i32 = 0;
+    let mut total_intelligence: i32 = 0;
     for &node_id in &build_info.selected_nodes.selected_node_ids {
         if let Some(node) = game_data.tree.get_node(node_id) {
             acc.add_all(&node.stats);
+            total_strength += node.granted_strength as i32;
+            total_dexterity += node.granted_dexterity as i32;
+            total_intelligence += node.granted_intelligence as i32;
         }
     }
 
@@ -310,9 +251,9 @@ fn update_selected_nodes(
     let node_count = build_info.selected_nodes.selected_node_ids.len() as u32;
 
     let stats = BuildStats {
-        total_strength: 0,
-        total_dexterity: 0,
-        total_intelligence: 0,
+        total_strength,
+        total_dexterity,
+        total_intelligence,
         node_count,
         stat_totals,
     };
@@ -379,4 +320,17 @@ fn load_tree_version(
 
     info!("Successfully loaded tree version: {}", version);
     Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+fn get_tree_json(app: tauri::AppHandle) -> Result<String, String> {
+    let path = app
+        .path()
+        .resource_dir()
+        .map_err(|e| e.to_string())?
+        .join("data/tree")
+        .join(DEFAULT_TREE_VERSION)
+        .join("data.json");
+    std::fs::read_to_string(path).map_err(|e| e.to_string())
 }

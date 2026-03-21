@@ -124,18 +124,21 @@ impl PassiveTree {
     pub fn get_node(&self, skill_id: u32) -> Option<&PassiveNode> {
         self.nodes.get(&skill_id.to_string())
     }
+}
 
-    /// Write the entire PassiveTree debug output to a temp file.
-    /// Returns the path to the file so you can find it.
-    pub fn debug_dump(&self) -> std::io::Result<std::path::PathBuf> {
-        use std::io::Write;
-        let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .join("passive_tree_debug.txt");
-        let mut file = std::fs::File::create(&path)?;
-        write!(file, "{:#?}", self)?;
-        log::info!("PassiveTree debug dump written to {}", path.display());
-        Ok(path)
+#[cfg(test)]
+mod tests {
+    use super::*;
+    const TREE_JSON: &str = include_str!("../../data/tree/3.27.0g/data.json");
+
+    #[test]
+    fn test_load_tree() {
+        let tree: PassiveTree = serde_json::from_str(TREE_JSON).unwrap();
+        assert!(!tree.nodes.is_empty(), "Tree should have nodes");
+        assert!(!tree.classes.is_empty(), "Tree should have classes");
+        assert!(
+            !tree.bloodlines.is_empty(),
+            "Tree should have bloodline data"
+        );
     }
 }

@@ -74,8 +74,15 @@ Your starting point. Understand what's already built before changing anything.
 | File | Status | What's There |
 |---|---|---|
 | `main.rs` | ✅ Complete | Binary entry point, delegates to `lib::run()` |
-| `lib.rs` | ⚠️ Partial | 3 Tauri commands (`greet`, `update_build_info`, `update_selected_nodes`). Types: `BuildInfo`, `BuildSelection`, `BuildStats`, `Class` enum (7 classes + ascendancies), `Bloodline` enum, `NodeType` enum. Setup: initializes `StorageManager`, manages `Mutex<BuildInfo>`, exports TS bindings via tauri-specta |
-| `models.rs` | ⚠️ Minimal | `LiteNode` struct (id, x, y, icon) with rkyv serialization |
+| `lib.rs` | ⚠️ Partial | 6 Tauri commands (`greet`, `update_build_info`, `update_selected_nodes`, `get_available_tree_versions`, `load_tree_version`, `get_tree_json`). Types: `BuildInfo`, `BuildSelection`, `BuildStats`, `Class` enum (7 classes + ascendancies), `Bloodline` enum. `DEFAULT_TREE_VERSION` constant. Setup: initializes `StorageManager`, manages `Mutex<BuildInfo>` and `Arc<RwLock<GameData>>`, exports TS bindings via tauri-specta. STR/DEX/INT computed from `PassiveNode.granted_*` fields; other stats accumulated via `StatAccumulator` in `stats.rs` |
+| `stats.rs` | ✅ Complete | `StatAccumulator` — placeholder stat text parser. Extracts first number from stat strings, replaces numbers with `#` to form template keys, sums values. Will be replaced by `ModDB` + `ModParser` in Phase 2 |
+| `data/mod.rs` | ✅ Complete | `DataLoader` trait, `DataError` enum (thiserror), `GameData` struct (holds `PassiveTree` + `source_names`), `SourceId(u32)` newtype with `intern_source()` |
+| `data/tree.rs` | ✅ Complete | `PassiveTree`, `PassiveNode` (with `granted_strength/dexterity/intelligence`, `mastery_effects`, `out_connections`/`in_connections`, `is_ascendancy_start`, `class_start_index`), `PassiveGroup`, `ClassData` (with `base_str/base_dex/base_int`), `AscendancyData`, `BloodlineData`, `TreeConstants`, `TreePoints`, `MasteryEffect`. `get_node(skill_id)` helper. Unit tests with `include_str!` |
+| `data/stat_id.rs` | ✅ Complete | 320-variant `StatId` enum (`#[repr(u16)]`) generated from `SkillStatMap.json`. `from_name()` lookup via `OnceLock<FxHashMap>` |
+| `data/*.rs` (stubs) | ❌ Stubs | `bases.rs`, `gems.rs`, `mods.rs`, `skills.rs`, `uniques.rs` — empty, module structure only |
+| `models.rs` | ⚠️ Legacy | `LiteNode` struct (id, x, y, icon) with rkyv serialization — unused, to be removed |
+| `commands.rs` | ❌ Empty | Placeholder for future command extraction from `lib.rs` |
+| `tree.rs` (root) | ❌ Empty | Placeholder, unused |
 | `client/poe.rs` | ❌ Skeleton | `PoeClient` struct (empty), `PoeClientError` enum (only `Network` variant) |
 | `storage/manager.rs` | ❌ Stub | `StorageManager` struct with no-op `new()` |
 | `storage/file_system.rs` | ✅ Complete | `FileCache` with rkyv binary caching for `Vec<LiteNode>`, atomic writes via tempfile |
@@ -88,25 +95,25 @@ Your starting point. Understand what's already built before changing anything.
 | `components/Header.svelte` | ✅ Complete | Level/class/ascendancy/bloodline dropdowns, syncs to Rust via `updateBuildInfo` |
 | `components/Sidebar.svelte` | ⚠️ Partial | Shows node count only. "More stats coming soon" placeholder |
 | `routes/+page.svelte` | ⚠️ Partial | Home page with "New Build" button, save/load/delete UI scaffolding (not wired) |
-| `routes/skilltree/+page.svelte` | ✅ Complete | Composes Header + Sidebar + SkillTree |
+| `routes/skilltree/+page.svelte` | ✅ Complete | Composes Header + Sidebar + SkillTree. Fetches tree JSON from Rust via `commands.getTreeJson()` on mount, passes parsed data to SkillTree component |
 | `bindings.ts` | ✅ Auto-gen | TypeScript types for all Rust commands/types via tauri-specta |
-| `data.json` | ⚠️ Wrong data | Contains POE **2** tree data; needs to be replaced with POE 1 |
+| `data.json` | ⚠️ Unused | POE 1 tree data (~160k lines). No longer imported — frontend fetches from Rust via `get_tree_json` command. Can be deleted |
 
 ### Key Problems to Fix
 
-1. **Wrong game data** — `data.json` is POE 2; you need POE 1
-2. **Stats are all zeros** — `update_selected_nodes` returns hardcoded placeholder stats
+1. ~~**Wrong game data** — `data.json` is POE 2; you need POE 1~~ ✅ Fixed — POE 1 tree data fetched, versioned at `data/tree/3.27.0g/data.json`, loaded by Rust and served to frontend
+2. ~~**Stats are all zeros**~~ ⚠️ Partial — STR/DEX/INT now computed from `PassiveNode.granted_*` fields; other stats use placeholder `StatAccumulator` (text parsing, not `ModDB`). Phase 2 will replace this with proper typed modifiers
 3. **No persistence** — Builds exist only in RAM; lost on app close
 4. **Storage never called** — `StorageManager` and `FileCache` are initialized but never used
 5. **POE client empty** — No actual API methods implemented
-6. **No modifier system** — The heart of PoB's engine doesn't exist yet
-7. **No items, skills, config, or calc engine** — Only the passive tree viewer works
+6. **No modifier system** — The heart of PoB's engine doesn't exist yet. `StatAccumulator` is a stop-gap
+7. **No items, skills, config, or calc engine** — Only the passive tree viewer + basic stat accumulation works
 
 ### Dependencies Already Installed
 
-**Rust** (`Cargo.toml`): tauri 2, serde/serde_json, tokio, reqwest, governor, rkyv, tempfile, specta/tauri-specta/specta-typescript, thiserror, log/tauri-plugin-log
+**Rust** (`Cargo.toml`): tauri 2, serde/serde_json, tokio, reqwest, governor, rkyv, tempfile, specta/tauri-specta/specta-typescript, thiserror, log/tauri-plugin-log, rustc-hash, regex
 
-**To add in Phase 1**: `rustc-hash` (FxHashMap), `bitflags` (modifier flags), `smallvec` (compact modifier tags)
+**To add in Phase 2**: `bitflags` (modifier flags), `smallvec` (compact modifier tags)
 
 **Frontend** (`package.json`): @tauri-apps/api, pixi.js, svelte 5, sveltekit, vite, typescript
 
@@ -236,26 +243,32 @@ The core data structure that everything else feeds into.
 ```
 src-tauri/
 ├── data/                          # Bundled game data (JSON files)
-│   ├── tree.json                  # POE 1 passive tree
-│   ├── gems.json                  # All skill + support gems
-│   ├── bases.json                 # Base item types
-│   ├── uniques.json               # Unique items
-│   └── mods.json                  # Modifier pool data
+│   ├── tree/
+│   │   └── <version>/data.json    # Versioned POE 1 passive tree (e.g., 3.27.0g/)
+│   └── pob/                       # PoB game data from repoe-fork (123 files)
+│       ├── SkillStatMap.json
+│       ├── Gems.json
+│       ├── Bases/
+│       ├── Skills/
+│       ├── StatDescriptions/
+│       ├── Uniques/
+│       └── ...
 └── src/
     ├── main.rs                    # Binary entry (exists)
-    ├── lib.rs                     # App setup, command registration (exists, will grow)
+    ├── lib.rs                     # App setup, command registration, DEFAULT_TREE_VERSION (exists)
+    ├── stats.rs                   # StatAccumulator — placeholder (exists, Phase 2 replaces)
     │
     ├── data/                      # Game data loading & types
-    │   ├── mod.rs
-    │   ├── stat_id.rs             # StatId enum (u16) — all stat identifiers
-    │   ├── tree.rs                # PassiveTree, PassiveNode, PassiveGroup
-    │   ├── gems.rs                # GemData, GemLevel, GemTag, GemType
-    │   ├── bases.rs               # BaseItem, ItemClass
-    │   ├── uniques.rs             # UniqueItem, UniqueModRange
-    │   ├── mods.rs                # ModDefinition, ModDomain
-    │   ├── skills.rs              # SkillStatMap
-    │   ├── minions.rs             # MinionData, SpectreData
-    │   └── jewels.rs              # ClusterJewel, TimelessJewelData
+    │   ├── mod.rs                 # DataLoader trait, DataError, GameData, SourceId (exists)
+    │   ├── stat_id.rs             # StatId enum (u16, 320 variants) — all stat identifiers (exists)
+    │   ├── tree.rs                # PassiveTree, PassiveNode, PassiveGroup, etc. (exists)
+    │   ├── gems.rs                # GemData, GemLevel, GemTag, GemType (stub)
+    │   ├── bases.rs               # BaseItem, ItemClass (stub)
+    │   ├── uniques.rs             # UniqueItem, UniqueModRange (stub)
+    │   ├── mods.rs                # ModDefinition, ModDomain (stub)
+    │   ├── skills.rs              # SkillStatMap (stub)
+    │   ├── minions.rs             # MinionData, SpectreData (future)
+    │   └── jewels.rs              # ClusterJewel, TimelessJewelData (future)
     │
     ├── modifier/                  # Modifier database & parsing
     │   ├── mod.rs
@@ -306,8 +319,9 @@ src-tauri/
     │
     ├── trade.rs                   # Trade query generation
     │
-    ├── models.rs                  # LiteNode (exists, will be deprecated)
-    ├── client/                    # External API client (exists)
+    ├── models.rs                  # LiteNode (exists, legacy — to be removed)
+    ├── commands.rs                # Future: extracted commands (exists, empty)
+    ├── client/                    # External API client (exists, skeleton)
     │   ├── mod.rs
     │   └── poe.rs
     └── storage/                   # File storage (exists)
@@ -604,34 +618,51 @@ Then in `lib.rs` setup:
 
 **Key learning**: `Arc<T>` for shared ownership across threads, `include_str!` for compile-time file embedding, typed `DataError` instead of `Box<dyn Error>`. The `SourceId` / `intern_source` pattern is called *string interning* — it keeps the hot `Modifier` struct free of heap-allocated Strings.
 
-#### 1.6 — Add Tauri Command to Serve Tree Data
+#### 1.6 — Add Tauri Command to Serve Raw Tree JSON
+
+> **Do not** clone `PassiveTree` across the IPC boundary. That would require adding `Serialize`
+> back to all tree structs (undoing the cleanup), allocate a full second copy of the 5 MB tree, and
+> re-serialize it — only for JS to parse it again. Instead, serve the raw file bytes directly.
+> Rust just does one `fs::read_to_string`; JS does one `JSON.parse` — same cost as the static
+> import, but without bundling the file and with version-switching support built in.
 
 ```rust
 #[tauri::command]
 #[specta::specta]
-fn get_tree_data(
-    game_data: tauri::State<'_, Arc<GameData>>
-) -> PassiveTree {
-    // Clone the tree data for the frontend
-    // (Consider returning a reference or a lighter summary in the future)
-    game_data.tree.clone()
+fn get_tree_json(app: tauri::AppHandle) -> Result<String, String> {
+    let path = app
+        .path()
+        .resource_dir()
+        .map_err(|e| e.to_string())?
+        .join("data/tree")
+        .join(DEFAULT_TREE_VERSION)
+        .join("data.json");
+    std::fs::read_to_string(path).map_err(|e| e.to_string())
 }
 ```
 
-Register it alongside your existing commands in the specta builder.
+Register it alongside the existing commands in the specta builder.
 
 #### 1.7 — Update Frontend to Fetch Tree from Rust
 
-In `SkillTree.svelte` (or its parent), replace the direct `import data from '../data.json'` with:
+In `src/routes/skilltree/+page.svelte`, replace the static import with a call on mount, then
+delete `src/data.json` — it is no longer needed in the frontend bundle.
 
 ```typescript
-import { commands } from '../bindings';
+import { commands } from '../../bindings';
 
-// On mount:
-const treeData = await commands.getTreeData();
+let treeData = $state<any>(null);
+
+onMount(async () => {
+    const result = await commands.getTreeJson();
+    if (result.status === 'ok') {
+        treeData = JSON.parse(result.data);
+    }
+});
 ```
 
-This is the only frontend change in Phase 1.
+Pass `treeData` down to `<SkillTree>` as before; the component already guards on `treeData`
+being truthy before calling `processGraph`, so no changes are needed inside `SkillTree.svelte`.
 
 #### 1.8 — Stub Out Other Data Types
 
@@ -639,53 +670,76 @@ Create skeleton files for `gems.rs`, `bases.rs`, `uniques.rs`, `mods.rs`, `skill
 
 #### 1.9 — Write Unit Tests
 
+Tests live at the bottom of `src-tauri/src/data/tree.rs` in a `#[cfg(test)]` block.
+The `include_str!` path is relative to `tree.rs` (`src/data/tree.rs`), so `../../../data/tree/...`
+resolves to `src-tauri/data/tree/...`. Use `DEFAULT_TREE_VERSION` from `lib.rs` to keep the
+path in sync with the hardcoded default — or just hardcode the same version string directly.
+
 ```rust
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    const TREE_JSON: &str =
+        include_str!("../../../data/tree/3.27.0g/data.json");
+
     #[test]
     fn test_load_tree() {
-        let tree_json = include_str!("../../data/tree.json");
-        let tree: PassiveTree = serde_json::from_str(tree_json).unwrap();
+        let tree: PassiveTree = serde_json::from_str(TREE_JSON).unwrap();
         assert!(!tree.nodes.is_empty(), "Tree should have nodes");
         assert!(!tree.classes.is_empty(), "Tree should have classes");
     }
 
     #[test]
     fn test_node_connections() {
-        let tree_json = include_str!("../../data/tree.json");
-        let tree: PassiveTree = serde_json::from_str(tree_json).unwrap();
-
-        // Verify at least some nodes have connections
-        let connected_count = tree.nodes.values()
-            .filter(|n| !n.out.is_empty())
+        let tree: PassiveTree = serde_json::from_str(TREE_JSON).unwrap();
+        let connected_count = tree
+            .nodes
+            .values()
+            .filter(|n| !n.out_connections.is_empty())
             .count();
         assert!(connected_count > 100, "Many nodes should have connections");
     }
 
     #[test]
     fn test_class_data() {
-        let tree_json = include_str!("../../data/tree.json");
-        let tree: PassiveTree = serde_json::from_str(tree_json).unwrap();
+        let tree: PassiveTree = serde_json::from_str(TREE_JSON).unwrap();
         assert_eq!(tree.classes.len(), 7, "Should have 7 classes");
+    }
+
+    #[test]
+    fn test_get_node() {
+        let tree: PassiveTree = serde_json::from_str(TREE_JSON).unwrap();
+        // Every non-root node has a numeric skill ID; get_node must find it
+        let any_id = tree.nodes.values().find_map(|n| n.id).unwrap();
+        assert!(tree.get_node(any_id).is_some());
+    }
+
+    #[test]
+    fn test_bloodlines() {
+        let tree: PassiveTree = serde_json::from_str(TREE_JSON).unwrap();
+        assert!(!tree.bloodlines.is_empty(), "Tree should have bloodline data");
     }
 }
 ```
 
 ### How to Verify Phase 1 is Complete
 
-- [ ] `cargo test` passes — all data deserialization tests green
-- [ ] `cargo clippy` — no warnings
-- [ ] App launches and renders the POE 1 passive tree (not POE 2)
-- [ ] Tree data is loaded from Rust, not from `src/data.json` import
-- [ ] Module structure `data/{mod,tree,gems,bases,uniques,mods,skills,stat_id}.rs` exists
-- [ ] `GameData` is managed as `Arc<GameData>` in Tauri state
-- [ ] `StatId` enum exists with at least the core stats (Str/Dex/Int, Life/Mana/ES, resistances, attack/cast speed)
-- [ ] `StatId::from_text()` resolves common stat names
-- [ ] All `HashMap` usage is `FxHashMap` (from `rustc-hash`)
-- [ ] `DataError` enum exists and is used instead of `Box<dyn Error>` or raw `String`
-- [ ] `SourceId` newtype and `GameData::intern_source()` work
+- [x] `cargo test` passes — all data deserialization tests green
+- [x] `cargo clippy` — no warnings
+- [x] App launches and renders the POE 1 passive tree (not POE 2)
+- [x] Tree data is loaded from Rust via `get_tree_json`, not from `src/data.json` import
+- [x] Module structure `data/{mod,tree,gems,bases,uniques,mods,skills,stat_id}.rs` exists
+- [x] `GameData` is managed as `Arc<RwLock<GameData>>` in Tauri state
+- [x] `StatId` enum exists with 320 variants generated from `SkillStatMap.json`
+- [x] `StatId::from_name()` resolves stat names via `OnceLock<FxHashMap>`
+- [x] `FxHashMap` used in tree deserialization (`rustc-hash` installed)
+- [x] `DataError` enum exists and is used instead of `Box<dyn Error>` or raw `String`
+- [x] `SourceId` newtype and `GameData::intern_source()` work
+- [x] `DEFAULT_TREE_VERSION` constant replaces symlinks; `tools/fetch_data.ts` prints reminder to update it
+- [x] STR/DEX/INT computed from `PassiveNode.granted_*` fields in `update_selected_nodes`
+- [x] `StatAccumulator` in `stats.rs` accumulates other stat text into template-keyed totals
+- [x] `PassiveTree` unit tests pass (load tree, node connections, class data, get_node, bloodlines)
 
 ### Suggested Reading
 
@@ -976,7 +1030,13 @@ Add more patterns as you need them in later phases.
 
 #### 2.4 — Implement Passive Tree Stat Aggregation
 
-Replace `Mutex<BuildInfo>` with a split state architecture. `GameData` is read-only (`Arc`). `BuildState` is mutable (`RwLock` or channel-based).
+> **Current state**: `lib.rs` already has `Mutex<BuildInfo>` and `Arc<RwLock<GameData>>`.
+> The `update_selected_nodes` command computes STR/DEX/INT from `PassiveNode.granted_*` fields
+> and uses `StatAccumulator` (from `stats.rs`) for all other stats as text-template totals.
+> Phase 2 replaces `StatAccumulator` with `ModDB` + `ModParser` for typed stat accumulation,
+> and transitions from `Mutex<BuildInfo>` to `RwLock<BuildState>`.
+
+Replace `Mutex<BuildInfo>` with a split state architecture. `GameData` is already read-only (`Arc<RwLock<GameData>>`). `BuildState` is mutable (`RwLock` or channel-based).
 
 **Option A: `RwLock` split state** (simpler, recommended for Phase 2)
 
@@ -985,6 +1045,8 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 /// Read-only game data — shared freely across threads.
+/// Already exists as Arc<RwLock<GameData>> — can simplify to Arc<GameData>
+/// since GameData is immutable after startup (only load_tree_version mutates it).
 pub type SharedGameData = Arc<GameData>;
 
 /// Mutable build state — use RwLock so calc reads don't block UI writes.
@@ -999,7 +1061,7 @@ pub struct BuildState {
 }
 ```
 
-Now update `update_selected_nodes`:
+Now update `update_selected_nodes` to use `ModDB` instead of `StatAccumulator`:
 
 ```rust
 #[tauri::command]
@@ -1017,15 +1079,33 @@ async fn update_selected_nodes(
     let ctx = CalcContext::empty(); // No conditions yet
 
     for &node_id in &node_ids {
-        let id_str = node_id.to_string();
-        if let Some(node) = game_data.tree.nodes.get(&id_str) {
-            let source = SourceId(node_id); // or intern the node name
+        if let Some(node) = game_data.tree.get_node(node_id) {
+            let source = SourceId(node_id);
             for stat_text in &node.stats {
                 if let Some(modifier) = modifier::parser::parse_mod(
                     stat_text, source
                 ) {
                     mod_db.add_mod(modifier);
                 }
+            }
+            // granted_* fields are separate from stat text — add them directly
+            if node.granted_strength > 0 {
+                mod_db.add_mod(simple_mod(
+                    StatId::Strength, ModType::Base,
+                    node.granted_strength as f64, source
+                ));
+            }
+            if node.granted_dexterity > 0 {
+                mod_db.add_mod(simple_mod(
+                    StatId::Dexterity, ModType::Base,
+                    node.granted_dexterity as f64, source
+                ));
+            }
+            if node.granted_intelligence > 0 {
+                mod_db.add_mod(simple_mod(
+                    StatId::Intelligence, ModType::Base,
+                    node.granted_intelligence as f64, source
+                ));
             }
         }
     }
@@ -1036,7 +1116,7 @@ async fn update_selected_nodes(
         total_dexterity: mod_db.sum_base(StatId::Dexterity, &ctx) as i32,
         total_intelligence: mod_db.sum_base(StatId::Intelligence, &ctx) as i32,
         node_count: node_ids.len() as u32,
-        // Add more fields as you expand BuildStats
+        // Phase 2.6 adds life, mana, energy_shield, etc.
     };
 
     build.stats = stats.clone();
@@ -1044,30 +1124,58 @@ async fn update_selected_nodes(
 }
 ```
 
+> **Note**: `PassiveNode.granted_strength/dexterity/intelligence` are separate numeric fields,
+> not stat text strings. The current code already sums them directly. When migrating to ModDB,
+> add them as `ModType::Base` modifiers alongside the parsed stat text mods.
+
 **Key learning**: `RwLock` allows multiple simultaneous readers (calc queries) while only blocking when a writer (UI state update) is active. This is a massive concurrency win over `Mutex`, which blocks all access for every operation. The `async fn` + `.write().await` pattern works naturally with Tauri's async command system.
 
 #### 2.5 — Add Base Class Stats
 
-Each class starts with base attribute points. Add them:
+Each class starts with base attribute points. These are already available in the parsed tree data
+as `ClassData.base_str`, `ClassData.base_dex`, `ClassData.base_int` — no need to hardcode them.
 
 ```rust
-fn get_class_base_stats(class: &Class) -> (i32, i32, i32) {
-    // (str, dex, int) - values from POE 1
-    match class {
-        Class::Marauder { .. } => (32, 14, 14),
-        Class::Ranger { .. }  => (14, 32, 14),
-        Class::Witch { .. }   => (14, 14, 32),
-        Class::Duelist { .. }  => (23, 23, 14),
-        Class::Templar { .. }  => (23, 14, 23),
-        Class::Shadow { .. }   => (14, 23, 23),
-        Class::Scion { .. }   => (20, 20, 20),
+fn add_class_base_stats(mod_db: &mut ModDB, class: &Class, tree: &PassiveTree) {
+    // Map the Class enum to the class index in the tree data
+    let class_index = match class {
+        Class::Scion(_)   => 0,
+        Class::Marauder(_) => 1,
+        Class::Ranger(_)  => 2,
+        Class::Witch(_)   => 3,
+        Class::Duelist(_)  => 4,
+        Class::Templar(_)  => 5,
+        Class::Shadow(_)   => 6,
+    };
+
+    if let Some(class_data) = tree.classes.get(class_index) {
+        let source = SourceId(0); // class base stats source
+        mod_db.add_mod(simple_mod(
+            StatId::Strength, ModType::Base,
+            class_data.base_str as f64, source
+        ));
+        mod_db.add_mod(simple_mod(
+            StatId::Dexterity, ModType::Base,
+            class_data.base_dex as f64, source
+        ));
+        mod_db.add_mod(simple_mod(
+            StatId::Intelligence, ModType::Base,
+            class_data.base_int as f64, source
+        ));
     }
 }
 ```
 
-Add base stats to the calculation before tree stats.
+Call `add_class_base_stats()` in `update_selected_nodes` before adding tree node mods, so class base attributes are included in the total.
+
+> **Note**: The class-to-index mapping may vary between tree versions. Verify the order
+> by checking `tree.classes[i].name` against your `Class` enum variants.
 
 #### 2.6 — Expand `BuildStats` and Update Sidebar
+
+> **Current state**: `BuildStats` already has `total_strength/dexterity/intelligence`, `node_count`,
+> and `stat_totals: HashMap<String, f64>` (from `StatAccumulator`). Phase 2 replaces `stat_totals`
+> with typed fields computed from `ModDB`.
 
 Expand `BuildStats` to include more fields:
 
@@ -1082,6 +1190,9 @@ pub struct BuildStats {
     pub node_count: u32,
 }
 ```
+
+Remove the `stat_totals: HashMap<String, f64>` field — it was the `StatAccumulator` placeholder.
+Delete `stats.rs` entirely once `ModDB` replaces it.
 
 Update `Sidebar.svelte` to display all these stats.
 
@@ -1114,9 +1225,28 @@ impl ModDBLayers {
     pub fn rebuild_tree(&mut self, node_ids: &[u32], game_data: &GameData) {
         self.tree = ModDB::new();
         for &node_id in node_ids {
-            let id_str = node_id.to_string();
-            if let Some(node) = game_data.tree.nodes.get(&id_str) {
+            if let Some(node) = game_data.tree.get_node(node_id) {
                 let source = SourceId(node_id);
+                // Add granted attributes as Base mods
+                if node.granted_strength > 0 {
+                    self.tree.add_mod(simple_mod(
+                        StatId::Strength, ModType::Base,
+                        node.granted_strength as f64, source
+                    ));
+                }
+                if node.granted_dexterity > 0 {
+                    self.tree.add_mod(simple_mod(
+                        StatId::Dexterity, ModType::Base,
+                        node.granted_dexterity as f64, source
+                    ));
+                }
+                if node.granted_intelligence > 0 {
+                    self.tree.add_mod(simple_mod(
+                        StatId::Intelligence, ModType::Base,
+                        node.granted_intelligence as f64, source
+                    ));
+                }
+                // Parse stat text lines into typed modifiers
                 for stat_text in &node.stats {
                     if let Some(m) = modifier::parser::parse_mod(stat_text, source) {
                         self.tree.add_mod(m);
@@ -1128,6 +1258,9 @@ impl ModDBLayers {
 }
 ```
 
+> **Note**: `get_node(node_id)` does the `u32` → `String` key lookup internally.
+> `PassiveNode.granted_*` fields are separate from `stats` text — both must be processed.
+
 **Key learning**: Layered composition means that when you equip a new item in Phase 4, you only rebuild the `items` layer and re-merge — you don't re-parse every passive node. This is PoB's approach and it's critical for responsive recalculation.
 
 #### 2.8 — Tests
@@ -1138,12 +1271,14 @@ Write comprehensive tests:
 - Selecting known Marauder start nodes gives stats matching PoB
 - `CalcContext::empty()` works with all query methods
 - Layered ModDB merges correctly
+- Class base stats from `tree.classes[i].base_str/base_dex/base_int` feed into ModDB
 
 ### How to Verify Phase 2 is Complete
 
 - [ ] Selecting nodes updates real stat values in the sidebar (not zeros)
-- [ ] Str/Dex/Int totals include class base stats
+- [ ] Str/Dex/Int totals include class base stats (from `ClassData`, not hardcoded)
 - [ ] ModParser handles at least 10 common passive tree patterns
+- [ ] `StatAccumulator` and `stats.rs` are deleted
 - [ ] `ModDB::calculate()` correctly applies Base + Increase + More formula
 - [ ] All `ModDB` query methods accept `&CalcContext` parameter
 - [ ] `Modifier` uses `StatId` (not String) and `SourceId` (not String)
@@ -1182,7 +1317,9 @@ A skill group system: players create socket groups, add active + support gems, a
 
 #### 3.1 — Bundle Gem Data
 
-You need gem JSON data. Source from PoB's `src/Data/Gems.lua` and `src/Data/Skills/` directory, or from the RePoE project (which exports POE data as JSON). Convert to JSON and save as `src-tauri/data/gems.json`.
+Gem data is already downloaded by `tools/fetch_data.ts` and lives at `src-tauri/data/pob/Gems.json`.
+Per-skill stat data is in `src-tauri/data/pob/Skills/` (subdivided by attribute: `act_str.json`, `act_dex.json`, etc.).
+No additional data fetching is needed.
 
 #### 3.2 — Create Gem Types (`data/gems.rs`)
 
@@ -1347,10 +1484,12 @@ Start with just Tree and Skills functional; others show "Coming Soon" placeholde
 
 #### 4.1 — Bundle Item Data
 
-Source base item and unique item data from PoB or RePoE. Save as:
-- `src-tauri/data/bases.json` — all base item types
-- `src-tauri/data/uniques.json` — all unique items
-- `src-tauri/data/mods.json` — mod pools (prefix/suffix definitions)
+Item data is already downloaded by `tools/fetch_data.ts` and organized under `src-tauri/data/pob/`:
+- `Bases/*.json` — all base item types (by category: `Amulet.json`, `Body Armour.json`, `Bow.json`, etc.)
+- `Uniques/*.json` — unique items (by slot type + `Special/` for special uniques)
+- `ModItem.json`, `ModJewel.json`, `ModFlask.json`, `ModJewelAbyss.json`, etc. — mod pools (prefix/suffix definitions)
+
+No additional data fetching is needed — load these from the bundled `pob/` directory.
 
 #### 4.2 — Create Item Types (`item/types.rs`)
 
@@ -1442,8 +1581,8 @@ pub fn setup_moddb(build: &Build, game_data: &GameData) -> ModDB {
     // CalcSetup merges them and adds class base stats.
     let mut db = build.mod_layers.merged();
 
-    // 1. Class base stats (always added fresh)
-    add_class_base_stats(&mut db, &build.info.class);
+    // 1. Class base stats (from tree.classes[i].base_str/base_dex/base_int)
+    add_class_base_stats(&mut db, &build.info.class, &game_data.tree);
 
     // Layers already contain:
     // 2. Tree node mods      (build.mod_layers.tree   — Phase 2)
@@ -1479,15 +1618,15 @@ pub struct DefenceResult {
     // ... many more
 }
 
-pub fn calc_defence(db: &ModDB, level: u32) -> DefenceResult {
+pub fn calc_defence(db: &ModDB, level: u32, ctx: &CalcContext) -> DefenceResult {
     // Life = (base_life_at_level + flat_life) * (1 + increased/100) * mores
     // Base life at level = 38 + (level * 12) for POE 1
     let base_life = 38.0 + (level as f64 * 12.0);
-    let flat_life = db.sum_base("Life");
+    let flat_life = db.sum_base(StatId::Life, ctx);
     // Strength gives +1 life per 2 str
-    let str_life = db.sum_base("Strength") / 2.0;
-    let inc_life = db.sum_increase("Life");
-    let more_life = db.product_more("Life");
+    let str_life = db.sum_base(StatId::Strength, ctx) / 2.0;
+    let inc_life = db.sum_increase(StatId::Life, ctx);
+    let more_life = db.product_more(StatId::Life, ctx);
 
     let life = (base_life + flat_life + str_life) * (1.0 + inc_life / 100.0) * more_life;
 
@@ -1755,12 +1894,14 @@ This is complex. Timeless jewels alone are a significant sub-project.
 #### 8.3 — Performance Optimization
 
 Many critical optimizations are already baked in from Phase 1-2 (see "Performance Decisions" at the top of this document):
-- ✅ `StatId` enum — no string hashing in modifier lookups
-- ✅ `FxHashMap` — faster hashing everywhere
+- ✅ `StatId` enum (320 variants, `#[repr(u16)]`) — no string hashing in modifier lookups
+- ✅ `FxHashMap` — faster hashing in tree deserialization and all internal maps
 - ✅ `CalcContext` — conditional mod evaluation without API changes
 - ✅ Compact `Modifier` — `SourceId(u32)`, `SmallVec<[ModTag; 2]>`
 - ✅ `RwLock` split state — calc reads don't block UI writes
 - ✅ Layered `ModDB` — targeted cache invalidation per source
+- ✅ `DEFAULT_TREE_VERSION` constant — no symlink resolution overhead at startup
+- ✅ Raw JSON string for tree IPC — no double serialize/deserialize of 5 MB tree
 
 **Remaining optimizations for Phase 8:**
 - Profile with `cargo flamegraph` to find actual bottlenecks
@@ -1813,7 +1954,7 @@ Summary of what you'll learn in each phase:
 
 | Phase | Primary Rust Concepts | Key Crates |
 |-------|----------------------|------------|
-| **1. Data** | Structs, Enums, Serde, Traits, Pattern Matching, Modules, FxHashMap, Option/Result, Newtype (StatId), Typed Errors (thiserror) | serde, serde_json, thiserror, rustc-hash |
+| **1. Data** ✅ | Structs, Enums, Serde, Traits, Pattern Matching, Modules, FxHashMap, Option/Result, Newtype (StatId), Typed Errors (thiserror) | serde, serde_json, thiserror, rustc-hash |
 | **2. Modifiers** | Generics, Lifetimes, Iterators, Arc, RwLock, Closures, From/Into, Builder, SmallVec, Layered Composition, Channels | bitflags, smallvec |
 | **3. Skills** | Trait Objects, Dynamic Dispatch, Type State, Complex Enums | — |
 | **4. Items** | Ownership, Borrowing, RefCell, String Parsing, TryFrom, Display | — |
@@ -1828,21 +1969,21 @@ Summary of what you'll learn in each phase:
 
 When implementing a feature, look at the corresponding PoB Lua source for reference. The repo is at [github.com/PathOfBuildingCommunity/PathOfBuilding](https://github.com/PathOfBuildingCommunity/PathOfBuilding) (branch: `dev`).
 
-| Your Module | PoB Reference File(s) | Line Count (approx) |
-|---|---|---|
-| `modifier/mod_db.rs` | `src/Classes/ModDB.lua` | ~400 |
-| `modifier/parser.rs` | `src/Modules/ModParser.lua` | ~2500 |
-| `calc/offence.rs` | `src/Modules/CalcOffence.lua` | ~4000 |
-| `calc/defence.rs` | `src/Modules/CalcDefence.lua` | ~2500 |
-| `calc/active.rs` | `src/Modules/CalcActiveSkill.lua` | ~1500 |
-| `calc/perform.rs` | `src/Modules/CalcPerform.lua` | ~900 |
-| `calc/setup.rs` | `src/Modules/CalcSetup.lua` | ~1200 |
-| `calc/triggers.rs` | `src/Modules/CalcTriggers.lua` | ~800 |
-| `item/parser.rs` | `src/Classes/Item.lua` | ~2000 |
-| `item/crafting.rs` | `src/Classes/ItemsTab.lua` | ~3000 |
-| `build/codec.rs` | `src/Classes/Build.lua` (encode/decode sections) | ~500 |
-| `data/tree.rs` | `src/Classes/PassiveTree.lua` | ~1500 |
-| `config/options.rs` | `src/Modules/ConfigOptions.lua` | ~1200 |
+| Your Module | PoB Reference File(s) | Line Count (approx) | Status |
+|---|---|---|---|
+| `data/tree.rs` | `src/Classes/PassiveTree.lua` | ~1500 | ✅ Implemented |
+| `modifier/mod_db.rs` | `src/Classes/ModDB.lua` | ~400 | ❌ Phase 2 |
+| `modifier/parser.rs` | `src/Modules/ModParser.lua` | ~2500 | ❌ Phase 2 |
+| `calc/offence.rs` | `src/Modules/CalcOffence.lua` | ~4000 | ❌ Phase 5 |
+| `calc/defence.rs` | `src/Modules/CalcDefence.lua` | ~2500 | ❌ Phase 5 |
+| `calc/active.rs` | `src/Modules/CalcActiveSkill.lua` | ~1500 | ❌ Phase 5 |
+| `calc/perform.rs` | `src/Modules/CalcPerform.lua` | ~900 | ❌ Phase 5 |
+| `calc/setup.rs` | `src/Modules/CalcSetup.lua` | ~1200 | ❌ Phase 5 |
+| `calc/triggers.rs` | `src/Modules/CalcTriggers.lua` | ~800 | ❌ Phase 5 |
+| `item/parser.rs` | `src/Classes/Item.lua` | ~2000 | ❌ Phase 4 |
+| `item/crafting.rs` | `src/Classes/ItemsTab.lua` | ~3000 | ❌ Phase 4 |
+| `build/codec.rs` | `src/Classes/Build.lua` (encode/decode sections) | ~500 | ❌ Phase 6 |
+| `config/options.rs` | `src/Modules/ConfigOptions.lua` | ~1200 | ❌ Phase 7 |
 
 **Total PoB calc engine**: ~15,000+ lines of Lua. Your Rust will likely be similar or slightly more compact due to stronger types.
 
@@ -1862,7 +2003,7 @@ When implementing a feature, look at the corresponding PoB Lua source for refere
 
 6. **Use `cargo clippy` religiously.** It teaches you idiomatic Rust better than any tutorial.
 
-7. **The heavy optimizations are already in.** Because you baked in `StatId`, `FxHashMap`, `CalcContext`, compact `Modifier`, `RwLock`, and layered `ModDB` from Phase 1-2, you won't need a painful optimization pass. Phase 8 performance work is for profiling and fine-tuning, not architectural rework.
+7. **The heavy optimizations are already in.** Because you baked in `StatId`, `FxHashMap`, `CalcContext`, compact `Modifier`, `RwLock`, layered `ModDB`, and raw JSON IPC from Phase 1-2, you won't need a painful optimization pass. Phase 8 performance work is for profiling and fine-tuning, not architectural rework.
 
 8. **The modifier system is everything.** If `ModDB` and `ModParser` are solid, the calc engine is just arithmetic on top of it. Invest the most time here (Phase 2).
 

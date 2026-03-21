@@ -1,16 +1,25 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import SkillTree from "../../components/SkillTree.svelte";
     import Sidebar from "../../components/Sidebar.svelte";
     import Header from "../../components/Header.svelte";
-    import treeData from "../../data.json";
+    import { commands } from "../../bindings";
 
     let selectedCount = $state(0);
     let ascSelectedCount = $state(0);
+    let treeData = $state<any>(null);
 
     // Class name from the Header dropdown
     let characterClass = $state("Marauder");
     let selectedAscendancy = $state("None");
     let selectedBloodline = $state("None");
+
+    onMount(async () => {
+        const result = await commands.getTreeJson();
+        if (result.status === "ok") {
+            treeData = JSON.parse(result.data);
+        }
+    });
 
     // Map class name → classStartIndex used by the tree data
     const classNameToIndex: Record<string, number> = {
@@ -30,9 +39,20 @@
     <Sidebar {selectedCount} {ascSelectedCount} />
     <div class="tree-area">
         <div class="header-overlay">
-            <Header bind:characterClass bind:ascendancy={selectedAscendancy} bind:bloodline={selectedBloodline} />
+            <Header
+                bind:characterClass
+                bind:ascendancy={selectedAscendancy}
+                bind:bloodline={selectedBloodline}
+            />
         </div>
-        <SkillTree {treeData} bind:selectedCount bind:ascSelectedCount {selectedClass} selectedAscendancy={selectedAscendancy} selectedBloodline={selectedBloodline} />
+        <SkillTree
+            {treeData}
+            bind:selectedCount
+            bind:ascSelectedCount
+            {selectedClass}
+            {selectedAscendancy}
+            {selectedBloodline}
+        />
     </div>
 </main>
 

@@ -15,7 +15,7 @@
  *   bun run tool:fetch-data              # package.json alias
  */
 
-import { mkdirSync, existsSync, symlinkSync, unlinkSync, lstatSync } from "node:fs";
+import { mkdirSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 // ── Configuration ───────────────────────────────────────────────────
@@ -124,22 +124,6 @@ async function downloadPobData() {
     console.log(`\n   Written to ${pobDir}/`);
 }
 
-/** Update the `tree/active.json` symlink to point at the given versioned file. */
-function setActiveTree(treeDir: string, tag: string) {
-    const activePath = join(treeDir, "active.json");
-    const target = join(tag, "data.json"); // relative symlink
-
-    try {
-        lstatSync(activePath); // throws if missing
-        unlinkSync(activePath);
-    } catch {
-        // didn't exist — that's fine
-    }
-
-    symlinkSync(target, activePath);
-    console.log(`   🔗 active.json → ${target}`);
-}
-
 async function downloadSkillTree() {
     console.log("\n🌲 Fetching PoE 1 passive skill tree…");
     const { url, tag } = await fetchSkillTreeUrl();
@@ -151,8 +135,8 @@ async function downloadSkillTree() {
 
     const destPath = join(versionDir, "data.json");
     await downloadFile(url, destPath, `data.json (${tag})`);
-    setActiveTree(treeDir, tag);
     console.log(`\n   Written to ${versionDir}/`);
+    console.log(`   ℹ️  Update DEFAULT_TREE_VERSION in lib.rs to "${tag}" if this is a new version.`);
 }
 
 // ── Main ─────────────────────────────────────────────────────────────
