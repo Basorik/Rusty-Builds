@@ -1,13 +1,14 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import { Application, Container, Graphics, Sprite } from "pixi.js";
-    import { commands } from "../bindings";
+    import { commands, type BuildStats } from "../bindings";
 
     // --- Svelte 5: Props ---
     let {
         treeData,
         selectedCount = $bindable(0),
         ascSelectedCount = $bindable(0),
+        buildStats = $bindable<BuildStats | null>(null),
         selectedClass = 0,
         selectedAscendancy = "None",
         selectedBloodline = "None",
@@ -15,6 +16,7 @@
         treeData: any;
         selectedCount?: number;
         ascSelectedCount?: number;
+        buildStats?: BuildStats | null;
         selectedClass?: number;
         selectedAscendancy?: string;
         selectedBloodline?: string;
@@ -346,8 +348,9 @@
                     ...Array.from(selectedAscNodeIds),
                 ];
                 const result = await commands.updateSelectedNodes(ids);
-                // result is now the BuildStats object
-                console.log("Received stats from Rust:", result);
+                if (result.status === "ok") {
+                    buildStats = result.data;
+                }
             } catch (e) {
                 console.error("Failed to sync selection:", e);
             } finally {

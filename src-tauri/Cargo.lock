@@ -3685,6 +3685,7 @@ dependencies = [
  "rustc-hash",
  "serde",
  "serde_json",
+ "smallvec",
  "specta",
  "specta-typescript",
  "tauri",

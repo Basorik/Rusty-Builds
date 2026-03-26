@@ -1,5 +1,14 @@
 <script lang="ts">
-    let { selectedCount = 0, ascSelectedCount = 0 }: { selectedCount?: number; ascSelectedCount?: number } = $props();
+    import type { BuildStats } from "../bindings";
+    let {
+        selectedCount = 0,
+        ascSelectedCount = 0,
+        buildStats = null,
+    }: {
+        selectedCount?: number;
+        ascSelectedCount?: number;
+        buildStats?: BuildStats | null;
+    } = $props();
     import { goto } from "$app/navigation";
 
     function Menu() {
@@ -26,9 +35,35 @@
 
     <hr class="divider" />
 
-    <div class="placeholder">
-        <span class="placeholder-text">More stats coming soon…</span>
-    </div>
+    {#if buildStats}
+        <h3 class="stat-group-title">Resources</h3>
+        <div class="stat-section">
+            <div class="stat-label life-label">Life</div>
+            <div class="stat-value life-value">{buildStats.life}</div>
+        </div>
+        <div class="stat-section">
+            <div class="stat-label mana-label">Mana</div>
+            <div class="stat-value mana-value">{buildStats.mana}</div>
+        </div>
+
+        <h3 class="stat-group-title" style="margin-top: 12px">Attributes</h3>
+        <div class="stat-section">
+            <div class="stat-label str-label">Strength</div>
+            <div class="stat-value str-value">{buildStats.total_strength}</div>
+        </div>
+        <div class="stat-section">
+            <div class="stat-label dex-label">Dexterity</div>
+            <div class="stat-value dex-value">{buildStats.total_dexterity}</div>
+        </div>
+        <div class="stat-section">
+            <div class="stat-label int-label">Intelligence</div>
+            <div class="stat-value int-value">{buildStats.total_intelligence}</div>
+        </div>
+    {:else}
+        <div class="placeholder">
+            <span class="placeholder-text">Select nodes to see stats…</span>
+        </div>
+    {/if}
 </aside>
 
 <style>
@@ -82,6 +117,26 @@
         border-top: 1px solid #2a2a2a;
         margin: 16px 0;
     }
+
+    .stat-group-title {
+        margin: 4px 0 8px 0;
+        font-size: 0.75em;
+        color: #777;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-weight: 600;
+    }
+
+    .life-label { color: #e05030; }
+    .mana-label { color: #5b9bd5; }
+    .life-value { color: #e05030; }
+    .mana-value { color: #5b9bd5; }
+    .str-label { color: #c87448; }
+    .dex-label { color: #5cb85c; }
+    .int-label { color: #5b9bd5; }
+    .str-value { color: #c87448; }
+    .dex-value { color: #5cb85c; }
+    .int-value { color: #5b9bd5; }
 
     .placeholder {
         flex: 1;

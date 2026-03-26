@@ -1,18 +1,20 @@
 mod client;
 mod data;
 mod models;
-mod stats;
 mod storage;
+mod modifier;
 
 use log::info;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use specta_typescript::Typescript;
-use stats::StatAccumulator;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, RwLock};
 use tauri::Manager;
 use tauri_specta::{collect_commands, Builder};
+
+use crate::data::SourceId;
+use crate::modifier::{ModDB, mod_db};
 
 /// The tree version loaded on startup and used as the default.
 pub const DEFAULT_TREE_VERSION: &str = "3.27.0g";
@@ -100,16 +102,18 @@ pub enum ScionAscendancy {
     Ascendant,
 }
 
-#[derive(Default, Debug, Serialize, Deserialize, Type)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize, Type)]
 pub struct BuildStats {
     pub total_strength: i32,
     pub total_dexterity: i32,
     pub total_intelligence: i32,
     pub node_count: u32,
-    /// Accumulated stats: template key → summed numeric value.
-    /// e.g. "#% increased maximum Life" → 53.0
-    /// Boolean/qualitative stats use the full string as key with value = count of sources.
-    pub stat_totals: HashMap<String, f64>,
+    pub life: u32,
+    pub mana: u32,
+    // Accumulated stats: template key → summed numeric value.
+    // e.g. "#% increased maximum Life" → 53.0
+    // Boolean/qualitative stats use the full string as key with value = count of sources.
+    // pub stat_totals: HashMap<String, f64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Type)]
@@ -225,45 +229,109 @@ fn update_build_info(
 #[specta::specta]
 fn update_selected_nodes(
     node_ids: Vec<u32>,
-    state: tauri::State<'_, Mutex<BuildInfo>>,
-    game_data_state: tauri::State<'_, Arc<RwLock<data::GameData>>>,
+    game_data: tauri::State<'_, Arc<RwLock<data::GameData>>>,
+    build_info: tauri::State<'_, Mutex<BuildInfo>>,
 ) -> Result<BuildStats, String> {
-    let mut build_info = state.lock().map_err(|e| e.to_string())?;
-    build_info.selected_nodes.selected_node_ids = node_ids.into_iter().collect();
+    let mut build = build_info.lock().map_err(|e| e.to_string())?;
+    build.selected_nodes.selected_node_ids = node_ids.iter().cloned().collect();
 
-    let game_data = game_data_state.read().map_err(|e| e.to_string())?;
+    let game = game_data.read().map_err(|e| e.to_string())?;
 
-    // Accumulate stats from all selected nodes
-    let mut acc = StatAccumulator::new();
-    let mut total_strength: i32 = 0;
-    let mut total_dexterity: i32 = 0;
-    let mut total_intelligence: i32 = 0;
-    for &node_id in &build_info.selected_nodes.selected_node_ids {
-        if let Some(node) = game_data.tree.get_node(node_id) {
-            acc.add_all(&node.stats);
-            total_strength += node.granted_strength as i32;
-            total_dexterity += node.granted_dexterity as i32;
-            total_intelligence += node.granted_intelligence as i32;
+    let mut mod_db = modifier::ModDB::new();
+    let ctx = modifier::CalcContext::empty();
+
+    for &node_id in &node_ids {
+        if let Some(node) = game.tree.get_node(node_id) {
+            let source = SourceId(node_id);
+            for stat_text in &node.stats {
+                for modifier in modifier::parser::parse_display_text(stat_text, source) {
+                    mod_db.add_mod(modifier);
+                }
+            }
+            // granted_* fields are separate from stat text — add them directly
+            if node.granted_strength > 0 {
+                mod_db.add_mod(modifier::parser::simple_mod(
+                    data::StatId::Strength, modifier::ModType::Base,
+                    node.granted_strength as f64, source
+                ));
+            }
+            if node.granted_dexterity > 0 {
+                mod_db.add_mod(modifier::parser::simple_mod(
+                    data::StatId::Dexterity, modifier::ModType::Base,
+                    node.granted_dexterity as f64, source
+                ));
+            }
+            if node.granted_intelligence > 0 {
+                mod_db.add_mod(modifier::parser::simple_mod(
+                    data::StatId::Intelligence, modifier::ModType::Base,
+                    node.granted_intelligence as f64, source
+                ));
+            }
         }
     }
+    add_class_base_stats(&mut mod_db, &build.class, &game.tree);
 
-    let stat_totals = acc.into_totals();
-    let node_count = build_info.selected_nodes.selected_node_ids.len() as u32;
+    let total_str = mod_db.sum_base(data::StatId::Strength, &ctx);
+    let total_dex = mod_db.sum_base(data::StatId::Dexterity, &ctx);
+    let total_int = mod_db.sum_base(data::StatId::Intelligence, &ctx);
+
+    // Life = floor((base + level*12 + tree flat) * (1 + inc%) * more) + floor(Str/2)
+    // Per PoB CalcSetup.lua: base=38, life_per_level=12
+    let life_base = 38.0 + (build.level as f64 * 12.0) + mod_db.sum_base(data::StatId::Life, &ctx);
+    let life_inc  = mod_db.sum_inc(data::StatId::Life, &ctx);
+    let life_more = mod_db.product_more(data::StatId::Life, &ctx);
+    let life = (life_base * (1.0 + life_inc / 100.0) * life_more).floor() as i64
+        + (total_str / 2.0).floor() as i64;
+
+    // Mana = floor((base + level*6 + tree flat) * (1 + inc%) * more) + floor(Int/2)
+    // Per PoB CalcSetup.lua: base=34, mana_per_level=6
+    let mana_base = 34.0 + (build.level as f64 * 6.0) + mod_db.sum_base(data::StatId::Mana, &ctx);
+    let mana_inc  = mod_db.sum_inc(data::StatId::Mana, &ctx);
+    let mana_more = mod_db.product_more(data::StatId::Mana, &ctx);
+    let mana = (mana_base * (1.0 + mana_inc / 100.0) * mana_more).floor() as i64
+        + (total_int / 2.0).floor() as i64;
 
     let stats = BuildStats {
-        total_strength,
-        total_dexterity,
-        total_intelligence,
-        node_count,
-        stat_totals,
+        total_dexterity: total_dex as i32,
+        total_intelligence: total_int as i32,
+        total_strength: total_str as i32,
+        node_count: node_ids.len() as u32,
+        life: life as u32,
+        mana: mana as u32,
     };
 
-    info!(
-        "Build selection updated: {} nodes, {} unique stat lines",
-        stats.node_count,
-        stats.stat_totals.len()
-    );
+    build.stats = stats.clone();
     Ok(stats)
+
+}
+
+fn add_class_base_stats(mod_db: &mut ModDB, class: &Class, tree: &data::PassiveTree) {
+    // Map the Class enum to the class index in the tree data
+    let class_index = match class {
+        Class::Scion(_)   => 0,
+        Class::Marauder(_) => 1,
+        Class::Ranger(_)  => 2,
+        Class::Witch(_)   => 3,
+        Class::Duelist(_)  => 4,
+        Class::Templar(_)  => 5,
+        Class::Shadow(_)   => 6,
+    };
+
+    if let Some(class_data) = tree.classes.get(class_index) {
+        let source = SourceId(0); // class base stats source
+        mod_db.add_mod(modifier::parser::simple_mod(
+            data::StatId::Strength, modifier::ModType::Base,
+            class_data.base_str as f64, source
+        ));
+        mod_db.add_mod(modifier::parser::simple_mod(
+            data::StatId::Dexterity, modifier::ModType::Base,
+            class_data.base_dex as f64, source
+        ));
+        mod_db.add_mod(modifier::parser::simple_mod(
+            data::StatId::Intelligence, modifier::ModType::Base,
+            class_data.base_int as f64, source
+        ));
+    }
 }
 
 #[tauri::command]

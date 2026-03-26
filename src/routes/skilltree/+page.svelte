@@ -5,8 +5,11 @@
     import Header from "../../components/Header.svelte";
     import { commands } from "../../bindings";
 
+    import type { BuildStats } from "../../bindings";
+
     let selectedCount = $state(0);
     let ascSelectedCount = $state(0);
+    let buildStats = $state<BuildStats | null>(null);
     let treeData = $state<any>(null);
 
     // Class name from the Header dropdown
@@ -36,7 +39,7 @@
 </script>
 
 <main class="layout">
-    <Sidebar {selectedCount} {ascSelectedCount} />
+    <Sidebar {selectedCount} {ascSelectedCount} {buildStats} />
     <div class="tree-area">
         <div class="header-overlay">
             <Header
@@ -49,6 +52,7 @@
             {treeData}
             bind:selectedCount
             bind:ascSelectedCount
+            bind:buildStats
             {selectedClass}
             {selectedAscendancy}
             {selectedBloodline}

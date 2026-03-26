@@ -68,13 +68,7 @@ async getTreeJson() : Promise<Result<string, string>> {
 /** user-defined types **/
 
 export type Bloodline = "None" | "Aul" | "Breachlord" | "Catarina" | "Delirious" | "Farrul" | "KingInTheMists" | "Lycia" | "Olroth" | "Oshabi" | "Primalist" | "Trialmaster" | "Warden" | "Warlock"
-export type BuildStats = { total_strength: number; total_dexterity: number; total_intelligence: number; node_count: number; 
-/**
- * Accumulated stats: template key → summed numeric value.
- * e.g. "#% increased maximum Life" → 53.0
- * Boolean/qualitative stats use the full string as key with value = count of sources.
- */
-stat_totals: Partial<{ [key in string]: number }> }
+export type BuildStats = { total_strength: number; total_dexterity: number; total_intelligence: number; node_count: number; life: number; mana: number }
 export type Class = { class: "Marauder"; ascendancy: MarauderAscendancy | null } | { class: "Ranger"; ascendancy: RangerAscendancy | null } | { class: "Witch"; ascendancy: WitchAscendancy | null } | { class: "Duelist"; ascendancy: DuelistAscendancy | null } | { class: "Templar"; ascendancy: TemplarAscendancy | null } | { class: "Shadow"; ascendancy: ShadowAscendancy | null } | { class: "Scion"; ascendancy: ScionAscendancy | null }
 export type DuelistAscendancy = "Slayer" | "Gladiator" | "Champion"
 export type MarauderAscendancy = "Juggernaut" | "Berserker" | "Chieftain"

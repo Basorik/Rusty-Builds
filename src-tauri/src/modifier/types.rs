@@ -1,5 +1,6 @@
 use bitflags::bitflags;
-use smallvec::Smallvec;
+use smallvec::SmallVec;
+use crate::data::{StatId, SourceId};
 
 // General type for mod - controls how the mod is accumulated
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -19,16 +20,17 @@ bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct ModFlag: u32 {
         const ATTACK    = 1 << 0;
-        const SPELL     = 1 << 1;
-        const HIT       = 1 << 2;
-        const DOT       = 1 << 3;
-        const MELEE     = 1 << 4;
-        const RANGED    = 1 << 5;
-        const AREA      = 1 << 6;
-        const PROJECTILE = 1 << 7;
-        const MINE      = 1 << 8;
-        const TRAP      = 1 << 9;
-        const TOTEM     = 1 << 10;
+        const CAST      = 1 << 1;  // cast speed / cast-only mods (PoB: ModFlag.Cast)
+        const SPELL     = 1 << 2;
+        const HIT       = 1 << 3;
+        const DOT       = 1 << 4;
+        const MELEE     = 1 << 5;
+        const RANGED    = 1 << 6;
+        const AREA      = 1 << 7;
+        const PROJECTILE = 1 << 8;
+        const MINE      = 1 << 9;
+        const TRAP      = 1 << 10;
+        const TOTEM     = 1 << 11;
     }
 }
 
@@ -64,7 +66,7 @@ pub struct Modifier {
     pub flags: ModFlag,
     pub keywords: KeywordFlag,
     pub source: SourceId,
-    pub tags: Smallvec<[ModTag; 2]>
+    pub tags: SmallVec<[ModTag; 2]>
 }
 
 /// Context passed to every ModDB query.

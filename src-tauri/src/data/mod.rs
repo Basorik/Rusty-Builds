@@ -7,9 +7,9 @@ pub mod tree;
 pub mod uniques;
 
 pub use stat_id::StatId;
+pub use tree::{ PassiveTree, PassiveNode};
 use std::path::Path;
 use thiserror::Error;
-pub use tree::PassiveTree;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SourceId(pub u32);

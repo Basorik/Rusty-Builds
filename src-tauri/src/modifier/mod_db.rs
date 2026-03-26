@@ -1,4 +1,4 @@
-use rustc::FxHashMap;
+use rustc_hash::FxHashMap;
 use super::types::*;
 use crate::data::StatId;
 
@@ -19,7 +19,7 @@ impl ModDB {
         self.mods.get(&stat)
             .map(|mods| mods.iter()
                 .filter(|m| m.mod_type == ModType::Base)
-                .filter(|m| m.matches_context(m, ctx))
+                .filter(|m| self.matches_context(m, ctx))
                 .map(|m| m.value)
                 .sum())
             .unwrap_or(0.0)
@@ -29,7 +29,7 @@ impl ModDB {
         self.mods.get(&stat)
             .map(|mods| mods.iter()
                 .filter(|m| m.mod_type == ModType::Inc)
-                .filter(|m| m.matches_context(m, ctx))
+                .filter(|m| self.matches_context(m, ctx))
                 .map(|m| m.value)
                 .sum())
             .unwrap_or(0.0)
@@ -44,7 +44,7 @@ impl ModDB {
             .unwrap_or(1.0)
     }
 
-    pub fn has_flag(&self, stat: StatId, ctx: &CalcContext) -> Option<f64> {
+    pub fn has_flag(&self, stat: StatId, ctx: &CalcContext) -> bool {
         self.mods.get(&stat)
             .map(|mods| mods.iter()
                 .any(|m| m.mod_type == ModType::Flag && self.matches_context(m, ctx)))
@@ -99,7 +99,7 @@ impl ModDB {
     }
 
     pub fn merge(&mut self, other: &ModDB) {
-        for (stat, mods) in &other.mods {
+        for (_stat, mods) in &other.mods {
             for m in mods {
                 self.add_mod(m.clone());
             }
