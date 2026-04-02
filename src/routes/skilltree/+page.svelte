@@ -4,23 +4,16 @@
     import Sidebar from "../../components/Sidebar.svelte";
     import Header from "../../components/Header.svelte";
     import { commands } from "../../bindings";
+    import { getBuildState } from "$lib/buildState.svelte";
 
-    import type { BuildStats } from "../../bindings";
-
-    let selectedCount = $state(0);
-    let ascSelectedCount = $state(0);
-    let buildStats = $state<BuildStats | null>(null);
-    let treeData = $state<any>(null);
-
-    // Class name from the Header dropdown
-    let characterClass = $state("Marauder");
-    let selectedAscendancy = $state("None");
-    let selectedBloodline = $state("None");
+    const build = getBuildState();
 
     onMount(async () => {
-        const result = await commands.getTreeJson();
-        if (result.status === "ok") {
-            treeData = JSON.parse(result.data);
+        if (!build.treeData) {
+            const result = await commands.getTreeJson();
+            if (result.status === "ok") {
+                build.treeData = JSON.parse(result.data);
+            }
         }
     });
 
@@ -35,27 +28,34 @@
         Shadow: 6,
     };
 
-    let selectedClass = $derived(classNameToIndex[characterClass] ?? 0);
+    let selectedClass = $derived(classNameToIndex[build.characterClass] ?? 0);
 </script>
 
 <main class="layout">
-    <Sidebar {selectedCount} {ascSelectedCount} {buildStats} />
+    <Sidebar
+        selectedCount={build.selectedCount}
+        ascSelectedCount={build.ascSelectedCount}
+        buildStats={build.buildStats}
+    />
     <div class="tree-area">
         <div class="header-overlay">
             <Header
-                bind:characterClass
-                bind:ascendancy={selectedAscendancy}
-                bind:bloodline={selectedBloodline}
+                bind:characterClass={build.characterClass}
+                bind:ascendancy={build.ascendancy}
+                bind:bloodline={build.bloodline}
+                bind:level={build.level}
             />
         </div>
         <SkillTree
-            {treeData}
-            bind:selectedCount
-            bind:ascSelectedCount
-            bind:buildStats
+            treeData={build.treeData}
+            bind:selectedCount={build.selectedCount}
+            bind:ascSelectedCount={build.ascSelectedCount}
+            bind:buildStats={build.buildStats}
             {selectedClass}
-            {selectedAscendancy}
-            {selectedBloodline}
+            selectedAscendancy={build.ascendancy}
+            selectedBloodline={build.bloodline}
+            selectedNodeIds={build.selectedNodeIds}
+            selectedAscNodeIds={build.selectedAscNodeIds}
         />
     </div>
 </main>

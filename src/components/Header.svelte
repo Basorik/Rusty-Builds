@@ -4,11 +4,18 @@
         characterClass = $bindable("Scion"),
         ascendancy = $bindable("None"),
         bloodline = $bindable("None"),
-    }: { selectedCount?: number; characterClass?: string; ascendancy?: string; bloodline?: string } = $props();
+        level = $bindable(1),
+    }: {
+        selectedCount?: number;
+        characterClass?: string;
+        ascendancy?: string;
+        bloodline?: string;
+        level?: number;
+    } = $props();
     import { goto } from "$app/navigation";
+    import { page } from "$app/stores";
     import { commands } from "../bindings";
-
-    let level = $state(1);
+    import { resetBuildState } from "$lib/buildState.svelte";
 
     const classData: Record<string, string[]> = {
         Scion: ["Ascendant"],
@@ -43,15 +50,34 @@
         ...(classData[characterClass] || []),
     ]);
 
+    // Track previous values to avoid re-sending on mount
+    let prevClass = characterClass;
+    let prevAsc = ascendancy;
+    let prevBlood = bloodline;
+    let prevLevel = level;
+
     $effect(() => {
         if (!availableAscendancies.includes(ascendancy)) {
             ascendancy = "None";
-        } else {
+        }
+
+        const changed =
+            characterClass !== prevClass ||
+            ascendancy !== prevAsc ||
+            bloodline !== prevBlood ||
+            level !== prevLevel;
+
+        if (changed) {
+            prevClass = characterClass;
+            prevAsc = ascendancy;
+            prevBlood = bloodline;
+            prevLevel = level;
             UpdateBuildInfo();
         }
     });
 
     function Menu() {
+        resetBuildState();
         goto("/");
     }
 
@@ -72,6 +98,27 @@
 <header class="ribbon">
     <div class="left">
         <button class="brand" onclick={Menu}>Rusty Builds</button>
+        <nav class="tabs">
+            <button
+                class="tab"
+                class:active={$page.url.pathname === "/skilltree"}
+                onclick={() => goto("/skilltree")}>Tree</button
+            >
+            <button
+                class="tab"
+                class:active={$page.url.pathname === "/skills"}
+                onclick={() => goto("/skills")}>Skills</button
+            >
+            <button class="tab disabled" disabled title="Coming soon"
+                >Items</button
+            >
+            <button class="tab disabled" disabled title="Coming soon"
+                >Config</button
+            >
+            <button class="tab disabled" disabled title="Coming soon"
+                >Calcs</button
+            >
+        </nav>
     </div>
 
     <div class="selectors">
@@ -127,6 +174,12 @@
         pointer-events: auto;
     }
 
+    .left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
     .brand {
         background: none;
         border: none;
@@ -136,6 +189,38 @@
         cursor: pointer;
         padding: 0;
         white-space: nowrap;
+    }
+
+    .tabs {
+        display: flex;
+        gap: 2px;
+    }
+
+    .tab {
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: #8a8578;
+        font-size: 0.82rem;
+        cursor: pointer;
+        padding: 6px 12px;
+        transition:
+            color 0.15s,
+            border-color 0.15s;
+    }
+
+    .tab:hover:not(.disabled) {
+        color: #e0d6c2;
+    }
+
+    .tab.active {
+        color: #c8a95e;
+        border-bottom-color: #c8a95e;
+    }
+
+    .tab.disabled {
+        color: #4a4540;
+        cursor: default;
     }
 
     .selectors {

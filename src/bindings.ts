@@ -54,6 +54,83 @@ async getTreeJson() : Promise<Result<string, string>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Returns a lightweight summary of every gem for the frontend selector.
+ */
+async getGemList() : Promise<Result<GemSummary[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_gem_list") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns all skill groups for the current build.
+ */
+async getSkillGroups() : Promise<Result<SkillGroup[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_skill_groups") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Creates a new empty skill group and returns it.
+ */
+async createSkillGroup(label: string) : Promise<Result<SkillGroup, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_skill_group", { label }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Deletes a skill group by ID.
+ */
+async deleteSkillGroup(groupId: number) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_skill_group", { groupId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Adds a gem to a skill group. Validates the gem ID exists, builds a GemInstance with computed stats.
+ */
+async addGemToGroup(groupId: number, gemId: string) : Promise<Result<SkillGroup, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("add_gem_to_group", { groupId, gemId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Removes a gem from a skill group by its index in the gem list.
+ */
+async removeGemFromGroup(groupId: number, gemIndex: number) : Promise<Result<SkillGroup, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("remove_gem_from_group", { groupId, gemIndex }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns the skill group with up-to-date effects and compatibility.
+ */
+async getGroupEffects(groupId: number) : Promise<Result<SkillGroup, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_group_effects", { groupId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -71,10 +148,38 @@ export type Bloodline = "None" | "Aul" | "Breachlord" | "Catarina" | "Delirious"
 export type BuildStats = { total_strength: number; total_dexterity: number; total_intelligence: number; node_count: number; life: number; mana: number }
 export type Class = { class: "Marauder"; ascendancy: MarauderAscendancy | null } | { class: "Ranger"; ascendancy: RangerAscendancy | null } | { class: "Witch"; ascendancy: WitchAscendancy | null } | { class: "Duelist"; ascendancy: DuelistAscendancy | null } | { class: "Templar"; ascendancy: TemplarAscendancy | null } | { class: "Shadow"; ascendancy: ShadowAscendancy | null } | { class: "Scion"; ascendancy: ScionAscendancy | null }
 export type DuelistAscendancy = "Slayer" | "Gladiator" | "Champion"
+/**
+ * Gem color based on attribute tags.
+ */
+export type GemColor = "red" | "green" | "blue" | "white"
+/**
+ * A gem placed in a socket group — tracks identity, level, quality, and computed stats.
+ */
+export type GemInstance = { gem_id: string; name: string; is_support: boolean; level: number; quality: number; enabled: boolean; 
+/**
+ * Computed stats at the current level/quality (stat_id → value).
+ */
+stats: Partial<{ [key in string]: number }>; mana_cost: number | null; crit_chance: number | null; damage_effectiveness: number | null; mana_multiplier: number | null; cooldown: number | null; attack_speed_multiplier: number | null }
+/**
+ * Lightweight summary for the frontend gem selector dropdown.
+ */
+export type GemSummary = { id: string; name: string; tag_string: string; is_support: boolean; color: GemColor; description: string | null }
 export type MarauderAscendancy = "Juggernaut" | "Berserker" | "Chieftain"
 export type RangerAscendancy = "Raider" | "Deadeye" | "Pathfinder"
 export type ScionAscendancy = "Ascendant"
 export type ShadowAscendancy = "Assassin" | "Saboteur" | "Trickster"
+/**
+ * A group of linked gems — one active skill plus its supports.
+ */
+export type SkillGroup = { id: number; label: string; gems: GemInstance[]; enabled: boolean; 
+/**
+ * Support compatibility entries (only populated on analysis).
+ */
+compatibility: SupportCompatEntry[] }
+/**
+ * Whether a support gem is compatible with a specific active gem.
+ */
+export type SupportCompatEntry = { support_gem_id: string; active_gem_id: string; compatible: boolean }
 export type TemplarAscendancy = "Inquisitor" | "Hierophant" | "Guardian"
 export type WitchAscendancy = "Necromancer" | "Occultist" | "Elementalist"
 

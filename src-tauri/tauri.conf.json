@@ -25,7 +25,8 @@
     "active": true,
     "targets": "all",
     "resources": [
-      "data/tree/**/*"
+      "data/tree/**/*",
+      "data/pob/**/*"
     ],
     "icon": [
       "icons/32x32.png",

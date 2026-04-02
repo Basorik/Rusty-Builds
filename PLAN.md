@@ -74,7 +74,7 @@ Your starting point. Understand what's already built before changing anything.
 | File | Status | What's There |
 |---|---|---|
 | `main.rs` | ✅ Complete | Binary entry point, delegates to `lib::run()` |
-| `lib.rs` | ⚠️ Partial | 6 Tauri commands (`greet`, `update_build_info`, `update_selected_nodes`, `get_available_tree_versions`, `load_tree_version`, `get_tree_json`). Types: `BuildInfo`, `BuildSelection`, `BuildStats`, `Class` enum (7 classes + ascendancies), `Bloodline` enum. `DEFAULT_TREE_VERSION` constant. Setup: initializes `StorageManager`, manages `Mutex<BuildInfo>` and `Arc<RwLock<GameData>>`, exports TS bindings via tauri-specta. STR/DEX/INT computed from `PassiveNode.granted_*` fields; other stats accumulated via `StatAccumulator` in `stats.rs` |
+| `lib.rs` | ⚠️ Partial | 6 Tauri commands (`greet`, `update_build_info`, `update_selected_nodes`, `get_available_tree_versions`, `load_tree_version`, `get_tree_json`). Types: `BuildInfo`, `BuildSelection`, `BuildStats`, `Class` enum (7 classes + ascendancies), `Bloodline` enum. `DEFAULT_TREE_VERSION` constant. Setup: initializes `StorageManager`, manages `Mutex<BuildInfo>` and `Arc<RwLock<GameData>>`, exports TS bindings via tauri-specta. STR/DEX/INT computed via `parse_display_text` from node `stats` text; other stats accumulated via `StatAccumulator` in `stats.rs` |
 | `stats.rs` | ✅ Complete | `StatAccumulator` — placeholder stat text parser. Extracts first number from stat strings, replaces numbers with `#` to form template keys, sums values. Will be replaced by `ModDB` + `ModParser` in Phase 2 |
 | `data/mod.rs` | ✅ Complete | `DataLoader` trait, `DataError` enum (thiserror), `GameData` struct (holds `PassiveTree` + `source_names`), `SourceId(u32)` newtype with `intern_source()` |
 | `data/tree.rs` | ✅ Complete | `PassiveTree`, `PassiveNode` (with `granted_strength/dexterity/intelligence`, `mastery_effects`, `out_connections`/`in_connections`, `is_ascendancy_start`, `class_start_index`), `PassiveGroup`, `ClassData` (with `base_str/base_dex/base_int`), `AscendancyData`, `BloodlineData`, `TreeConstants`, `TreePoints`, `MasteryEffect`. `get_node(skill_id)` helper. Unit tests with `include_str!` |
@@ -737,7 +737,7 @@ mod tests {
 - [x] `DataError` enum exists and is used instead of `Box<dyn Error>` or raw `String`
 - [x] `SourceId` newtype and `GameData::intern_source()` work
 - [x] `DEFAULT_TREE_VERSION` constant replaces symlinks; `tools/fetch_data.ts` prints reminder to update it
-- [x] STR/DEX/INT computed from `PassiveNode.granted_*` fields in `update_selected_nodes`
+- [x] STR/DEX/INT computed via `parse_display_text` from node `stats` text in `update_selected_nodes`
 - [x] `StatAccumulator` in `stats.rs` accumulates other stat text into template-keyed totals
 - [x] `PassiveTree` unit tests pass (load tree, node connections, class data, get_node, bloodlines)
 
@@ -1317,25 +1317,6 @@ fn update_selected_nodes(
                     mod_db.add_mod(modifier);
                 }
             }
-            // granted_* fields are separate from stat text — add them directly
-            if node.granted_strength > 0 {
-                mod_db.add_mod(simple_mod(
-                    StatId::Strength, ModType::Base,
-                    node.granted_strength as f64, source
-                ));
-            }
-            if node.granted_dexterity > 0 {
-                mod_db.add_mod(simple_mod(
-                    StatId::Dexterity, ModType::Base,
-                    node.granted_dexterity as f64, source
-                ));
-            }
-            if node.granted_intelligence > 0 {
-                mod_db.add_mod(simple_mod(
-                    StatId::Intelligence, ModType::Base,
-                    node.granted_intelligence as f64, source
-                ));
-            }
         }
     }
 
@@ -1352,10 +1333,6 @@ fn update_selected_nodes(
     Ok(stats)
 }
 ```
-
-> **Note**: `PassiveNode.granted_strength/dexterity/intelligence` are separate numeric fields,
-> not stat text strings. The current code already sums them directly. When migrating to ModDB,
-> add them as `ModType::Base` modifiers alongside the parsed stat text mods.
 
 **Key learning**: For now, `Mutex<BuildInfo>` is sufficient — there's only one writer (node selection via UI) and no concurrent readers. When Phase 5 introduces background DPS recalculation, you'll migrate to `tokio::sync::RwLock<BuildState>` which allows multiple simultaneous readers while only blocking when a writer is active. The key insight is: don't add concurrency complexity until you have a concrete concurrency pattern.
 
@@ -1456,29 +1433,9 @@ impl ModDBLayers {
         for &node_id in node_ids {
             if let Some(node) = game_data.tree.get_node(node_id) {
                 let source = SourceId(node_id);
-                // Add granted attributes as Base mods
-                if node.granted_strength > 0 {
-                    self.tree.add_mod(simple_mod(
-                        StatId::Strength, ModType::Base,
-                        node.granted_strength as f64, source
-                    ));
-                }
-                if node.granted_dexterity > 0 {
-                    self.tree.add_mod(simple_mod(
-                        StatId::Dexterity, ModType::Base,
-                        node.granted_dexterity as f64, source
-                    ));
-                }
-                if node.granted_intelligence > 0 {
-                    self.tree.add_mod(simple_mod(
-                        StatId::Intelligence, ModType::Base,
-                        node.granted_intelligence as f64, source
-                    ));
-                }
-                // Parse stat text lines into typed modifiers
                 for stat_text in &node.stats {
-                    if let Some(m) = modifier::parser::parse_display_text(stat_text, source) {
-                        self.tree.add_mod(m);
+                    for modifier in modifier::parser::parse_display_text(stat_text, source) {
+                        self.tree.add_mod(modifier);
                     }
                 }
             }
@@ -1488,7 +1445,6 @@ impl ModDBLayers {
 ```
 
 > **Note**: `get_node(node_id)` does the `u32` → `String` key lookup internally.
-> `PassiveNode.granted_*` fields are separate from `stats` text — both must be processed.
 
 **Key learning**: Layered composition means that when you equip a new item in Phase 4, you only rebuild the `items` layer and re-merge — you don't re-parse every passive node. This is PoB's approach and it's critical for responsive recalculation.
 
@@ -1539,152 +1495,554 @@ Write comprehensive tests:
 
 ### Rust Concepts You'll Learn
 
-- **Trait objects** (`Box<dyn Skill>`, `&dyn GemEffect`)
-- **Dynamic dispatch** vs static dispatch and when to use each
-- **Type state pattern** (model gem states: Socketed → Linked → Active)
+- **Multi-source deserialization** — loading two JSON schemas (Gems.json + Skills/*.json) into linked Rust structs
+- **`FxHashMap` composite lookups** — keyed by `(String, u32)` or `&str → Arc<T>` for fast gem/skill resolution
+- **Postfix expression evaluation** — a stack machine for SkillType boolean expressions
 - **Complex enum variants** with struct-like data
-- **`Vec<Box<dyn T>>`** collections
-- **`PartialOrd`/`Ord`** for gem sorting/priority
+- **Multi-pass algorithms** — iterative support resolution where supports add skill types that enable other supports
+- **Index-based stat interpolation** — mapping positional array values to named stat IDs
 
 ### What You're Building
 
-A skill group system: players create socket groups, add active + support gems, and the system auto-resolves which supports apply to which actives.
+A two-layer gem/skill system that mirrors PoB's data model:
+1. **Gem data** (`Gems.json`): item-level metadata — name, tags, stat requirements, granted effect IDs
+2. **Granted effects** (`Skills/*.json`): the actual skill mechanics — levels, stats, stat maps, skill types, support matching criteria
+
+Players create socket groups, add gems, and the system resolves which supports apply using PoB's SkillType postfix expression matching — not simple tag checks.
+
+### Data Model (PoB Architecture)
+
+PoB has a clear two-layer split that we must replicate:
+
+```
+Gems.json (gem items)                     Skills/*.json (granted effects)
+┌─────────────────────────┐              ┌──────────────────────────────────┐
+│ name: "Fireball"        │──────────────│ grantedEffectId: "Fireball"     │
+│ grantedEffectId         │              │ support: false                   │
+│ tags: {spell, fire, ..} │              │ skillTypes: {2: true, 3: true..} │
+│ reqStr, reqDex, reqInt  │              │ requireSkillTypes: []            │
+│ naturalMaxLevel: 20     │              │ excludeSkillTypes: []            │
+│                         │              │ levels: [{cost, crit, "1", ..}]  │
+│ secondaryGrantedEffectId│──(Vaal)──────│ stats: ["base_fire_damage_min",  │
+│ VaalGem: true/false     │              │         "base_fire_damage_max"]  │
+└─────────────────────────┘              │ statMap: {stat_id -> [Modifier]} │
+                                         │ qualityStats, constantStats      │
+                                         │ baseMods, baseFlags, castTime    │
+                                         └──────────────────────────────────┘
+```
+
+**Support matching** uses `requireSkillTypes`/`excludeSkillTypes` — arrays of SkillType integer IDs arranged as **postfix boolean expressions** with `OR(83)`, `AND(84)`, `NOT(85)` operators. Example: `[10, 1]` = "has Damage OR Attack". This is evaluated by a stack machine (`doesTypeExpressionMatch`), NOT by comparing gem tags.
 
 ### Steps
 
-#### 3.1 — Bundle Gem Data
+#### 3.1 — Data Files (Already Bundled)
 
-Gem data is already downloaded by `tools/fetch_data.ts` and lives at `src-tauri/data/pob/Gems.json`.
-Per-skill stat data is in `src-tauri/data/pob/Skills/` (subdivided by attribute: `act_str.json`, `act_dex.json`, etc.).
+Gem data is already downloaded by `tools/fetch_data.ts`:
+- `src-tauri/data/pob/Gems.json` — gem item metadata (name, tags, stat requirements, grantedEffectId)
+- `src-tauri/data/pob/Skills/` — granted effect data, split by attribute:
+  - `act_str.json`, `act_dex.json`, `act_int.json` — active skills
+  - `sup_str.json`, `sup_dex.json`, `sup_int.json` — support skills
+  - `other.json`, `minion.json`, `spectre.json`, `glove.json` — special skills
+- `src-tauri/data/pob/SkillStatMap.json` — global stat ID → modifier mapping (fallback for stats not in a skill's own `statMap`)
+
 No additional data fetching is needed.
 
-#### 3.2 — Create Gem Types (`data/gems.rs`)
+#### 3.2 — Create Gem Item Type (`data/gems.rs`)
+
+This represents the **gem as an inventory item** (from Gems.json). It does NOT contain per-level stats — those live on the GrantedEffect.
 
 ```rust
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GemData {
-    pub id: String,
+use rustc_hash::FxHashMap;
+
+/// A gem item from Gems.json — metadata about the gem, not the skill mechanics.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GemItem {
     pub name: String,
-    pub gem_type: GemType,
-    pub tags: Vec<String>,           // "Spell", "AoE", "Fire", "Duration", etc.
-    pub levels: Vec<GemLevel>,       // stats per gem level
-    pub required_level: u32,
-    pub stat_requirements: StatRequirements,
+    pub base_type_name: String,
+    pub game_id: String,                // e.g. "Metadata/Items/Gems/SkillGemFireball"
+    pub granted_effect_id: String,      // key into GrantedEffect map
+    #[serde(default)]
+    pub secondary_granted_effect_id: Option<String>,  // Vaal gems have a secondary
+    pub natural_max_level: u32,
+    pub req_str: u32,
+    pub req_dex: u32,
+    pub req_int: u32,
+    pub tag_string: String,             // "Spell, Projectile, AoE, Fire" — display only
+    pub tags: FxHashMap<String, bool>,  // {"spell": true, "fire": true, ...} — for gem selector filtering
+    #[serde(default)]
+    pub variant_id: Option<String>,
+    #[serde(default, rename = "VaalGem")]
+    pub vaal_gem: bool,
+    #[serde(default)]
+    pub secondary_effect_name: Option<String>,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
-pub enum GemType {
-    Active,
-    Support,
+/// Lightweight summary for the frontend gem selector dropdown.
+/// Sent over IPC — derives specta::Type.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct GemSummary {
+    pub id: String,           // Gems.json key (e.g. "Metadata/Items/Gems/SkillGemFireball")
+    pub name: String,
+    pub tag_string: String,
+    pub is_support: bool,
+}
+```
+
+**Loading**: Deserialize `Gems.json` as `FxHashMap<String, GemItem>`. Store in `GameData`.
+
+#### 3.3 — Create Granted Effect Types (`data/skills.rs`)
+
+This is the **skill mechanics** layer (from Skills/*.json). Each entry represents what a gem (or item-granted skill) actually does.
+
+```rust
+use rustc_hash::FxHashMap;
+use serde_json::Value;
+
+/// SkillType IDs from PoB's Global.lua — used in requireSkillTypes / excludeSkillTypes.
+/// Stored as raw u32 values, not an enum, because there are 141 values and they appear
+/// in postfix boolean expressions evaluated at runtime.
+pub mod skill_type {
+    pub const ATTACK: u32 = 1;
+    pub const SPELL: u32 = 2;
+    pub const PROJECTILE: u32 = 3;
+    pub const MINION: u32 = 9;
+    pub const DAMAGE: u32 = 10;
+    pub const AREA: u32 = 11;
+    pub const DURATION: u32 = 12;
+    pub const MELEE: u32 = 24;
+    pub const FIRE: u32 = 32;
+    pub const COLD: u32 = 33;
+    pub const LIGHTNING: u32 = 34;
+    pub const TRIGGERED: u32 = 41;
+    pub const VAAL: u32 = 42;
+    pub const AURA: u32 = 43;
+    pub const CHANNEL: u32 = 57;
+    pub const WARCRY: u32 = 73;
+    pub const BRAND: u32 = 75;
+    pub const PHYSICAL: u32 = 86;
+    // Operators for postfix expressions:
+    pub const OR: u32 = 83;
+    pub const AND: u32 = 84;
+    pub const NOT: u32 = 85;
+    // ... add others as needed
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GemLevel {
-    pub level: u32,
-    pub mana_cost: Option<f64>,
-    pub cooldown: Option<f64>,
+/// A granted effect — the actual skill data from Skills/*.json.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GrantedEffect {
+    pub name: String,
+    #[serde(default)]
+    pub base_type_name: Option<String>,
+    pub cast_time: f64,
+    pub color: u32,                                     // 1=STR, 2=DEX, 3=INT
+    #[serde(default)]
+    pub description: Option<String>,
+
+    // Support-only fields
+    #[serde(default)]
+    pub support: bool,
+    #[serde(default)]
+    pub require_skill_types: Vec<u32>,                  // postfix boolean expression
+    #[serde(default)]
+    pub exclude_skill_types: Vec<u32>,                  // postfix boolean expression
+    #[serde(default)]
+    pub add_skill_types: Vec<u32>,                      // types added to supported active
+    #[serde(default)]
+    pub add_flags: FxHashMap<String, bool>,              // e.g. {"totem": true, "mine": true}
+    #[serde(default)]
+    pub support_gems_only: bool,
+    #[serde(default)]
+    pub is_trigger: bool,
+    #[serde(default)]
+    pub weapon_types: Option<FxHashMap<String, bool>>,
+    #[serde(default)]
+    pub has_global_effect: bool,
+
+    // Skill type set — numeric SkillType IDs → true
+    #[serde(default)]
+    pub skill_types: FxHashMap<u32, bool>,
+
+    // Stat system
+    #[serde(default)]
+    pub stats: Vec<String>,                             // ordered stat ID names (index corresponds to level values)
+    #[serde(default)]
+    pub constant_stats: Vec<(String, f64)>,             // stats with fixed values: [["stat_id", value], ...]
+    #[serde(default)]
+    pub quality_stats: QualityStats,                    // keyed by quality type
+    #[serde(default)]
+    pub stat_map: FxHashMap<String, Value>,              // stat_id → modifier template(s) (complex, keep as Value for now)
+    #[serde(default)]
+    pub base_mods: Vec<Value>,                          // pre-built modifier objects
+
+    // Damage scaling (for effectiveness interpolation)
+    #[serde(default)]
+    pub base_effectiveness: Option<f64>,
+    #[serde(default)]
+    pub incremental_effectiveness: Option<f64>,
+
+    // Flags
+    #[serde(default)]
+    pub base_flags: FxHashMap<String, bool>,             // {"spell": true, "area": true, ...}
+
+    // Levels — per-level data (see GrantedEffectLevel)
+    pub levels: Vec<GrantedEffectLevel>,
+
+    // Other fields used by PoB
+    #[serde(default)]
+    pub stat_description_scope: Option<String>,
+    #[serde(default)]
+    pub minion_list: Option<Vec<String>>,
+    #[serde(default)]
+    pub plus_version_of: Option<String>,                // exceptional (transfigured) gems
+    #[serde(default)]
+    pub legacy: bool,
+}
+
+/// Per-level data for a granted effect.
+/// Stat values are stored positionally ("1", "2", etc.) matching the `stats` array.
+/// Use `serde_json::Value` for flexible deserialization, then extract values by index.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GrantedEffectLevel {
+    pub level_requirement: Option<u32>,
+    #[serde(default)]
+    pub cost: Option<FxHashMap<String, f64>>,           // {"Mana": 9, "Life": 5, ...}
+    #[serde(default)]
+    pub crit_chance: Option<f64>,
+    #[serde(default)]
     pub damage_effectiveness: Option<f64>,
-    pub stats: Vec<GemStat>,
+    #[serde(default)]
+    pub mana_multiplier: Option<f64>,                    // support gems: cost multiplier
+    #[serde(default)]
+    pub cooldown: Option<f64>,
+    #[serde(default)]
+    pub stored_uses: Option<u32>,
+    #[serde(default)]
+    pub attack_speed_multiplier: Option<f64>,
+    #[serde(default)]
+    pub attack_time: Option<f64>,
+    #[serde(default)]
+    pub base_multiplier: Option<f64>,
+    #[serde(default)]
+    pub stat_interpolation: Option<Vec<u32>>,            // 1=static, 2=linear, 3=effectiveness
+    /// Positional stat values. Key is the string index ("1", "2", etc.).
+    /// Corresponds to the parent GrantedEffect's `stats` array.
+    #[serde(flatten)]
+    pub stat_values: FxHashMap<String, Value>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GemStat {
-    pub id: String,
-    pub value: f64,
-}
+/// Quality stats, keyed by quality type.
+/// "Default" is standard quality. "Alternate1"/"Alternate2"/"Alternate3" are alt qualities.
+/// Each value is a list of [stat_id, value_per_quality_point] tuples.
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct QualityStats(pub FxHashMap<String, Vec<(String, f64)>>);
 ```
 
-#### 3.3 — Create Skill Module (`skill/`)
+**Loading**: Deserialize all 10 `Skills/*.json` files, merge into a single `FxHashMap<String, GrantedEffect>`. Store in `GameData`.
+
+**Key design note**: `stat_values` in `GrantedEffectLevel` uses `#[serde(flatten)]` with a `FxHashMap<String, Value>` to capture the positional stat fields ("1", "2", "3", etc.) that coexist with named fields. Extract stat value for index `i` via `stat_values.get(&i.to_string())`.
+
+#### 3.4 — SkillType Expression Evaluator (`data/skills.rs`)
+
+PoB's support matching uses postfix boolean expressions over SkillType IDs. For example, Ancestral Call's `excludeSkillTypes: [60, 41, 42]` means "exclude if has InbuiltTrigger(60) OR Triggered(41) OR Vaal(42)" (implicit OR between remaining stack items).
 
 ```rust
-// skill/gem.rs
-pub struct ActiveGem {
-    pub data: Arc<GemData>,
-    pub level: u32,
-    pub quality: u32,
-    pub enabled: bool,
-}
-
-pub struct SupportGem {
-    pub data: Arc<GemData>,
-    pub level: u32,
-    pub quality: u32,
-    pub enabled: bool,
-}
-
-impl SupportGem {
-    /// Check if this support can apply to an active skill based on tags
-    pub fn can_support(&self, active: &ActiveGem) -> bool {
-        // Check gem tags for compatibility
-        // e.g., "Spell Echo" requires the active to have "Spell" tag
-        todo!("Implement tag matching logic from CalcActiveSkill.lua")
+/// Evaluate a postfix boolean expression over skill types.
+/// Returns true if the expression matches the given active skill's types.
+///
+/// Operators (from PoB Global.lua):
+///   OR (83)  — pops two, pushes a OR b
+///   AND (84) — pops two, pushes a AND b
+///   NOT (85) — pops one, pushes !a
+///   Any other value — pushes (skill_types contains this value)
+///
+/// After evaluation, returns true if ANY value on the stack is true.
+pub fn does_type_expression_match(
+    check_types: &[u32],
+    skill_types: &FxHashMap<u32, bool>,
+    minion_types: Option<&FxHashMap<u32, bool>>,
+) -> bool {
+    let mut stack: Vec<bool> = Vec::with_capacity(check_types.len());
+    for &st in check_types {
+        match st {
+            skill_type::OR => {
+                let b = stack.pop().unwrap_or(false);
+                if let Some(top) = stack.last_mut() {
+                    *top = *top || b;
+                }
+            }
+            skill_type::AND => {
+                let b = stack.pop().unwrap_or(false);
+                if let Some(top) = stack.last_mut() {
+                    *top = *top && b;
+                }
+            }
+            skill_type::NOT => {
+                if let Some(top) = stack.last_mut() {
+                    *top = !*top;
+                }
+            }
+            _ => {
+                let has = skill_types.get(&st).copied().unwrap_or(false)
+                    || minion_types.map_or(false, |m| m.get(&st).copied().unwrap_or(false));
+                stack.push(has);
+            }
+        }
     }
+    stack.iter().any(|&v| v)
+}
+
+/// Check if a support granted effect can support an active skill.
+/// Mirrors PoB's `calcLib.canGrantedEffectSupportActiveSkill()`.
+pub fn can_support(
+    support: &GrantedEffect,
+    active_skill_types: &FxHashMap<u32, bool>,
+    active_is_gem: bool,
+) -> bool {
+    // unsupported / cannotBeSupported checks (handled at a higher level)
+
+    if support.support_gems_only && !active_is_gem {
+        return false;
+    }
+
+    // Exclude check
+    if !support.exclude_skill_types.is_empty()
+        && does_type_expression_match(&support.exclude_skill_types, active_skill_types, None)
+    {
+        return false;
+    }
+
+    // Require check — empty means "supports everything"
+    support.require_skill_types.is_empty()
+        || does_type_expression_match(&support.require_skill_types, active_skill_types, None)
 }
 ```
 
+#### 3.5 — Stat Computation from Levels (`data/skills.rs`)
+
+PoB computes stat values per level using three interpolation modes. Implement `build_skill_instance_stats()`:
+
 ```rust
-// skill/group.rs
+/// Build the stat table for a skill at a given level and quality.
+/// Returns a map of stat_id → computed value.
+///
+/// Mirrors PoB's `calcLib.buildSkillInstanceStats()`.
+pub fn build_skill_instance_stats(
+    effect: &GrantedEffect,
+    level: u32,
+    quality: u32,
+    quality_id: &str,    // "Default", "Alternate1", etc.
+) -> FxHashMap<String, f64> {
+    let mut stats: FxHashMap<String, f64> = FxHashMap::default();
+    let level_idx = (level as usize).saturating_sub(1);  // 0-indexed
+    let level_data = match effect.levels.get(level_idx) {
+        Some(ld) => ld,
+        None => return stats,
+    };
+
+    // 1. Quality stats
+    if quality > 0 {
+        if let Some(qs) = effect.quality_stats.0.get(quality_id)
+            .or_else(|| effect.quality_stats.0.get("Default"))
+        {
+            for (stat_id, value_per_point) in qs {
+                let val = (value_per_point * quality as f64).trunc();
+                *stats.entry(stat_id.clone()).or_default() += val;
+            }
+        }
+    }
+
+    // 2. Per-level stats (indexed by position in effect.stats)
+    let actor_level = level_data.level_requirement.unwrap_or(1) as f64;
+    for (index, stat_id) in effect.stats.iter().enumerate() {
+        let key = (index + 1).to_string();  // "1", "2", "3", ...
+        let raw_value = level_data.stat_values.get(&key)
+            .and_then(|v| v.as_f64())
+            .unwrap_or(1.0);
+
+        let interp_mode = level_data.stat_interpolation
+            .as_ref()
+            .and_then(|si| si.get(index))
+            .copied()
+            .unwrap_or(1);
+
+        let stat_value = match interp_mode {
+            3 => {
+                // Effectiveness interpolation
+                let base_eff = effect.base_effectiveness.unwrap_or(1.0);
+                let inc_eff = effect.incremental_effectiveness.unwrap_or(0.0);
+                let effectiveness = base_eff * (1.0 + inc_eff).powf(actor_level - 1.0);
+                (effectiveness * raw_value).round()
+            }
+            2 => {
+                // Linear interpolation between level brackets
+                // Simplified: use raw_value (full interpolation needs adjacent levels)
+                raw_value.round()
+            }
+            _ => raw_value,  // Static (mode 1): use as-is
+        };
+
+        *stats.entry(stat_id.clone()).or_default() += stat_value;
+    }
+
+    // 3. Constant stats
+    for (stat_id, value) in &effect.constant_stats {
+        *stats.entry(stat_id.clone()).or_default() += value;
+    }
+
+    stats
+}
+```
+
+**Note**: Full linear interpolation (mode 2) requires access to adjacent level data. The simplified version above works for most cases. Mode 3 (effectiveness) is critical for attack/spell gems — it computes damage values from `baseEffectiveness` and `incrementalEffectiveness`.
+
+#### 3.6 — Gem Instance & Skill Group (`data/skills.rs`)
+
+Runtime state for gems the player has selected:
+
+```rust
+/// A gem instance in a socket group — runtime state (level, quality, enabled).
+#[derive(Debug, Clone)]
+pub struct GemInstance {
+    pub gem_id: String,                     // key into GameData.gems
+    pub granted_effect_id: String,          // key into GameData.granted_effects
+    pub level: u32,
+    pub quality: u32,
+    pub quality_id: String,                 // "Default", "Alternate1", etc.
+    pub enabled: bool,
+    pub is_support: bool,
+}
+
+/// A socket group — a set of linked gems.
 pub struct SkillGroup {
     pub label: String,
-    pub slot: Option<ItemSlot>,
+    pub slot: Option<String>,               // equipment slot name, if any
     pub gems: Vec<GemInstance>,
     pub enabled: bool,
 }
+```
 
-pub enum GemInstance {
-    Active(ActiveGem),
-    Support(SupportGem),
-}
+#### 3.7 — Multi-Pass Support Resolution (`data/skills.rs`)
 
-impl SkillGroup {
-    /// Resolve which supports apply to which actives
-    pub fn resolve(&self) -> Vec<ResolvedSkill> {
-        let actives: Vec<&ActiveGem> = self.gems.iter()
-            .filter_map(|g| match g {
-                GemInstance::Active(a) if a.enabled => Some(a),
-                _ => None,
-            })
-            .collect();
+PoB's support resolution uses **two passes** because supports can add skill types that enable other supports. For example, Spell Totem adds `totem` flag which might make another support applicable.
 
-        let supports: Vec<&SupportGem> = self.gems.iter()
-            .filter_map(|g| match g {
-                GemInstance::Support(s) if s.enabled => Some(s),
-                _ => None,
-            })
-            .collect();
+```rust
+/// Resolve which supports apply to an active gem within a skill group.
+/// Returns the list of applicable support GrantedEffect IDs.
+///
+/// Mirrors PoB's `calcs.createActiveSkill()` two-pass logic:
+/// Pass 1: Check compatibility and accumulate addSkillTypes from compatible supports.
+///         Repeat until no new supports are added (handles cross-dependencies).
+/// Pass 2: Build final list of compatible supports.
+pub fn resolve_supports(
+    active_effect: &GrantedEffect,
+    supports: &[(String, &GrantedEffect)],  // (effect_id, effect)
+    active_is_gem: bool,
+) -> Vec<String> {
+    // Start with the active skill's own skill types
+    let mut effective_types = active_effect.skill_types.clone();
 
-        actives.iter().map(|active| {
-            let applicable: Vec<_> = supports.iter()
-                .filter(|s| s.can_support(active))
-                .cloned()
-                .collect();
-            ResolvedSkill {
-                active: (*active).clone(),
-                supports: applicable,
+    // Pass 1: iteratively add skill types from compatible supports
+    let mut added_new = true;
+    let mut compatible: Vec<bool> = vec![false; supports.len()];
+    while added_new {
+        added_new = false;
+        for (i, (_, support)) in supports.iter().enumerate() {
+            if compatible[i] || !support.support {
+                continue;
             }
-        }).collect()
+            if can_support(support, &effective_types, active_is_gem) {
+                compatible[i] = true;
+                added_new = true;
+                for &st in &support.add_skill_types {
+                    effective_types.insert(st, true);
+                }
+            }
+        }
     }
+
+    // Pass 2: re-check all supports against the final type set
+    supports.iter().enumerate()
+        .filter(|(i, (_, support))| {
+            support.support && can_support(support, &effective_types, active_is_gem)
+        })
+        .map(|(_, (id, _))| id.clone())
+        .collect()
 }
 ```
 
-#### 3.4 — Add Tauri Commands
+#### 3.8 — Load Gem & Skill Data into GameData
 
-- `get_gem_list() -> Vec<GemSummary>` — all gems for the selector dropdown
-- `add_skill_group() -> SkillGroupSummary`
-- `add_gem_to_group(group_index, gem_id, level, quality)`
-- `remove_gem_from_group(group_index, gem_index)`
-- `set_gem_enabled(group_index, gem_index, enabled)`
-- `set_main_skill(group_index, skill_index)` — which skill shows in DPS
+Extend `GameData` to hold gem items and granted effects:
 
-#### 3.5 — Create `SkillsTab.svelte`
+```rust
+// In data/mod.rs — extend GameData:
+pub struct GameData {
+    pub tree: PassiveTree,
+    pub gems: FxHashMap<String, GemItem>,                   // Gems.json
+    pub granted_effects: FxHashMap<String, GrantedEffect>,  // merged Skills/*.json
+    pub skill_stat_map: FxHashMap<String, Value>,           // SkillStatMap.json (global fallback)
+    pub source_names: Vec<String>,
+}
+```
+
+Load during `setup`:
+1. Deserialize `Gems.json` into `FxHashMap<String, GemItem>`
+2. Deserialize all 10 `Skills/*.json` files, merge into `FxHashMap<String, GrantedEffect>`
+3. Deserialize `SkillStatMap.json` into `FxHashMap<String, Value>`
+
+#### 3.9 — Add Tauri Commands
+
+```rust
+#[tauri::command]
+#[specta::specta]
+fn get_gem_list(game_data: State<Arc<RwLock<GameData>>>) -> Result<Vec<GemSummary>, String> {
+    // Return lightweight summaries for the frontend gem selector
+}
+
+#[tauri::command]
+#[specta::specta]
+fn add_skill_group(build: State<Mutex<BuildInfo>>) -> Result<u32, String> {
+    // Create new empty skill group, return its index
+}
+
+#[tauri::command]
+#[specta::specta]
+fn add_gem_to_group(
+    group_index: u32, gem_id: String, level: u32, quality: u32,
+    build: State<Mutex<BuildInfo>>,
+    game_data: State<Arc<RwLock<GameData>>>,
+) -> Result<(), String> {
+    // Validate gem_id exists, create GemInstance, add to group
+}
+
+#[tauri::command]
+#[specta::specta]
+fn remove_gem_from_group(group_index: u32, gem_index: u32, build: State<Mutex<BuildInfo>>) -> Result<(), String> { }
+
+#[tauri::command]
+#[specta::specta]
+fn set_gem_level_quality(
+    group_index: u32, gem_index: u32, level: u32, quality: u32,
+    build: State<Mutex<BuildInfo>>,
+) -> Result<(), String> { }
+
+#[tauri::command]
+#[specta::specta]
+fn set_gem_enabled(group_index: u32, gem_index: u32, enabled: bool, build: State<Mutex<BuildInfo>>) -> Result<(), String> { }
+```
+
+#### 3.10 — Create `SkillsTab.svelte`
 
 Frontend tab with:
 - List of skill groups (add/remove)
-- Gem selector dropdown with search
-- Each group shows: active gem name, support gems auto-resolved, DPS preview
-- Enable/disable toggle per gem
+- Gem selector dropdown with search (filter by name and tags via `GemSummary.tag_string`)
+- Each group shows: active gem name, auto-resolved support gems, enable/disable toggles
+- Gem level/quality sliders
 
-#### 3.6 — Add Tab Navigation
+#### 3.11 — Add Tab Navigation
 
 Update `src/routes/skilltree/+page.svelte` to add tab buttons: Tree | Skills | Items | Calcs | Config | Import | Notes
 
@@ -1692,17 +2050,20 @@ Start with just Tree and Skills functional; others show "Coming Soon" placeholde
 
 ### How to Verify Phase 3 is Complete
 
-- [ ] Can add a skill group with Fireball (Active) + Spell Echo (Support)
-- [ ] Spell Echo correctly identifies it can support Fireball (Spell tag)
-- [ ] Adding a non-spell active gem (e.g., Double Strike) → Spell Echo doesn't apply
-- [ ] Gem level/quality can be changed
+- [ ] `Gems.json` and all `Skills/*.json` loaded into `GameData` at startup
+- [ ] `does_type_expression_match` correctly evaluates postfix boolean expressions (unit tests)
+- [ ] `can_support` correctly filters: Added Fire Damage supports Fireball (requireSkillTypes: [10, 1] matches Damage+Spell); does NOT support Ancestral Cry (no Damage skill type)
+- [ ] `resolve_supports` handles multi-pass: Spell Totem adds `totem` skill type enabling Ballista Totem interactions
+- [ ] `build_skill_instance_stats` computes damage values using effectiveness interpolation (mode 3)
+- [ ] Can add a skill group with gems, toggle enable/disable, change level/quality
 - [ ] Skills tab renders correctly with tab navigation
-- [ ] Tests cover support matching logic
+- [ ] Unit tests cover: expression evaluation, support matching, stat computation, loading
 
 ### Suggested Reading
 
-- [The Rust Programming Language, Ch 17: Trait Objects](https://doc.rust-lang.org/book/ch17-02-trait-objects.html)
-- [Rust Design Patterns: Type State](https://rust-unofficial.github.io/patterns/patterns/behavioural/typestate.html)
+- PoB `CalcActiveSkill.lua` — `createActiveSkill()` for support resolution flow
+- PoB `CalcTools.lua` — `canGrantedEffectSupportActiveSkill()`, `doesTypeExpressionMatch()`, `buildSkillInstanceStats()`
+- PoB `Global.lua` — `SkillType` enum values, `ModFlag`, `KeywordFlag`
 
 ---
 

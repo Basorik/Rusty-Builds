@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
+    import { resetBuildState } from "$lib/buildState.svelte";
 
     // Placeholder saved builds — will be replaced with actual load logic later
     interface SavedBuild {
@@ -17,6 +18,7 @@
     ]);
 
     function newBuild() {
+        resetBuildState();
         goto("/skilltree");
     }
 

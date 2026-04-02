@@ -12,6 +12,8 @@
         selectedClass = 0,
         selectedAscendancy = "None",
         selectedBloodline = "None",
+        selectedNodeIds = new Set<number>(),
+        selectedAscNodeIds = new Set<number>(),
     }: {
         treeData: any;
         selectedCount?: number;
@@ -20,6 +22,8 @@
         selectedClass?: number;
         selectedAscendancy?: string;
         selectedBloodline?: string;
+        selectedNodeIds?: Set<number>;
+        selectedAscNodeIds?: Set<number>;
     } = $props();
 
     let containerDiv: HTMLDivElement;
@@ -46,7 +50,7 @@
     let nodeById: Map<number, any> = new Map();
 
     // --- Node Selection ---
-    let selectedNodeIds: Set<number> = new Set();
+    // selectedNodeIds comes from props (shared build state)
     let syncTimer: ReturnType<typeof setTimeout> | null = null;
 
     // --- Adjacency map for connectivity checks ---
@@ -55,11 +59,11 @@
 
     // --- Ascendency / Bloodline allocation ---
     const MAX_ASC_POINTS = 8;
-    let selectedAscNodeIds: Set<number> = new Set();
-    let ascStartNodeId: number | null = null;       // class ascendancy start
-    let bloodlineStartNodeId: number | null = null;  // bloodline start
+    // selectedAscNodeIds comes from props (shared build state)
+    let ascStartNodeId: number | null = null; // class ascendancy start
+    let bloodlineStartNodeId: number | null = null; // bloodline start
     let ascAdjacency: Map<number, Set<number>> = new Map();
-    let ascNodeIds: Set<number> = new Set();  // all node IDs in the active ascendency+bloodline group
+    let ascNodeIds: Set<number> = new Set(); // all node IDs in the active ascendency+bloodline group
 
     // --- Spatial Grid for O(1) hit detection ---
     const GRID_CELL_SIZE = 300;
@@ -137,7 +141,10 @@
     // --- Count Helpers ---
     function getAdjustedSelectedCount(): number {
         let count = selectedNodeIds.size;
-        if (classStartNodeId !== null && selectedNodeIds.has(classStartNodeId)) {
+        if (
+            classStartNodeId !== null &&
+            selectedNodeIds.has(classStartNodeId)
+        ) {
             count--;
         }
         return Math.max(0, count);
@@ -148,7 +155,10 @@
         if (ascStartNodeId !== null && selectedAscNodeIds.has(ascStartNodeId)) {
             count--;
         }
-        if (bloodlineStartNodeId !== null && selectedAscNodeIds.has(bloodlineStartNodeId)) {
+        if (
+            bloodlineStartNodeId !== null &&
+            selectedAscNodeIds.has(bloodlineStartNodeId)
+        ) {
             count--;
         }
         return Math.max(0, count);
@@ -156,7 +166,9 @@
 
     // --- Ascendency State Rebuild ---
     function rebuildAscendencyState() {
-        // Clear previous ascendency selections
+        // Save previous selections to restore valid ones after rebuild
+        const prevAscSelections = new Set(selectedAscNodeIds);
+
         selectedAscNodeIds.clear();
         ascStartNodeId = null;
         bloodlineStartNodeId = null;
@@ -165,13 +177,21 @@
 
         // Single pass: collect nodes belonging to the selected ascendancy and/or bloodline
         const wantAsc = selectedAscendancy !== "None";
-        const wantBl  = selectedBloodline  !== "None";
+        const wantBl = selectedBloodline !== "None";
         if (wantAsc || wantBl) {
             for (const node of renderNodes) {
-                if (wantAsc && node.ascendancyName === selectedAscendancy && !node.isBloodline) {
+                if (
+                    wantAsc &&
+                    node.ascendancyName === selectedAscendancy &&
+                    !node.isBloodline
+                ) {
                     ascNodeIds.add(node.id);
                     if (node.isAscendancyStart) ascStartNodeId = node.id;
-                } else if (wantBl && node.ascendancyName === selectedBloodline && node.isBloodline) {
+                } else if (
+                    wantBl &&
+                    node.ascendancyName === selectedBloodline &&
+                    node.isBloodline
+                ) {
                     ascNodeIds.add(node.id);
                     if (node.isAscendancyStart) bloodlineStartNodeId = node.id;
                 }
@@ -180,11 +200,25 @@
 
         // Build ascendency adjacency from renderConnections restricted to ascNodeIds
         for (const conn of renderConnections) {
-            if (ascNodeIds.has(conn.sourceId) && ascNodeIds.has(conn.targetId)) {
-                if (!ascAdjacency.has(conn.sourceId)) ascAdjacency.set(conn.sourceId, new Set());
-                if (!ascAdjacency.has(conn.targetId)) ascAdjacency.set(conn.targetId, new Set());
+            if (
+                ascNodeIds.has(conn.sourceId) &&
+                ascNodeIds.has(conn.targetId)
+            ) {
+                if (!ascAdjacency.has(conn.sourceId))
+                    ascAdjacency.set(conn.sourceId, new Set());
+                if (!ascAdjacency.has(conn.targetId))
+                    ascAdjacency.set(conn.targetId, new Set());
                 ascAdjacency.get(conn.sourceId)!.add(conn.targetId);
                 ascAdjacency.get(conn.targetId)!.add(conn.sourceId);
+            }
+        }
+
+        // Restore previously selected nodes that are still valid in the new ascendancy set
+        if (prevAscSelections.size > 0) {
+            for (const id of prevAscSelections) {
+                if (ascNodeIds.has(id)) {
+                    selectedAscNodeIds.add(id);
+                }
             }
         }
 
@@ -242,7 +276,12 @@
             const neighbors = adj.get(current);
             if (!neighbors) continue;
             for (const neighbor of neighbors) {
-                if (neighbor === removeId || !selected.has(neighbor) || visited.has(neighbor)) continue;
+                if (
+                    neighbor === removeId ||
+                    !selected.has(neighbor) ||
+                    visited.has(neighbor)
+                )
+                    continue;
                 visited.add(neighbor);
                 queue.push(neighbor);
             }
@@ -264,10 +303,21 @@
 
         if (selectedNodeIds.has(nodeId)) {
             if (nodeId === classStartNodeId) return;
-            if (!isStillConnectedAfterRemoval([classStartNodeId], selectedNodeIds, adjacency, nodeId)) return;
+            if (
+                !isStillConnectedAfterRemoval(
+                    [classStartNodeId],
+                    selectedNodeIds,
+                    adjacency,
+                    nodeId,
+                )
+            )
+                return;
             selectedNodeIds.delete(nodeId);
         } else {
-            if (selectedNodeIds.size > 0 && !hasSelectedNeighbor(nodeId, adjacency, selectedNodeIds))
+            if (
+                selectedNodeIds.size > 0 &&
+                !hasSelectedNeighbor(nodeId, adjacency, selectedNodeIds)
+            )
                 return;
             selectedNodeIds.add(nodeId);
         }
@@ -279,12 +329,25 @@
     // --- Ascendency Node Selection ---
     function toggleAscNodeSelection(nodeId: number) {
         if (selectedAscNodeIds.has(nodeId)) {
-            if (nodeId === ascStartNodeId || nodeId === bloodlineStartNodeId) return;
-            if (!isStillConnectedAfterRemoval([ascStartNodeId, bloodlineStartNodeId], selectedAscNodeIds, ascAdjacency, nodeId)) return;
+            if (nodeId === ascStartNodeId || nodeId === bloodlineStartNodeId)
+                return;
+            if (
+                !isStillConnectedAfterRemoval(
+                    [ascStartNodeId, bloodlineStartNodeId],
+                    selectedAscNodeIds,
+                    ascAdjacency,
+                    nodeId,
+                )
+            )
+                return;
             selectedAscNodeIds.delete(nodeId);
         } else {
             if (getAdjustedAscSelectedCount() >= MAX_ASC_POINTS) return;
-            if (selectedAscNodeIds.size > 0 && !hasSelectedNeighbor(nodeId, ascAdjacency, selectedAscNodeIds)) return;
+            if (
+                selectedAscNodeIds.size > 0 &&
+                !hasSelectedNeighbor(nodeId, ascAdjacency, selectedAscNodeIds)
+            )
+                return;
             selectedAscNodeIds.add(nodeId);
         }
         ascSelectedCount = getAdjustedAscSelectedCount();
@@ -302,7 +365,11 @@
         if (selected.size === 0) return;
 
         // 1. Highlighted connections
-        selectionGraphics.setStrokeStyle({ width: 24, color: connColor, alpha: 0.35 });
+        selectionGraphics.setStrokeStyle({
+            width: 24,
+            color: connColor,
+            alpha: 0.35,
+        });
         for (const conn of renderConnections) {
             if (selected.has(conn.sourceId) && selected.has(conn.targetId)) {
                 selectionGraphics.moveTo(conn.x1, conn.y1);
@@ -312,15 +379,24 @@
         selectionGraphics.stroke();
 
         // 2. Outer glow ring
-        selectionGraphics.setStrokeStyle({ width: 14, color: glowColor, alpha: 0.25 });
+        selectionGraphics.setStrokeStyle({
+            width: 14,
+            color: glowColor,
+            alpha: 0.25,
+        });
         for (const id of selected) {
             const node = nodeById.get(id);
-            if (node) selectionGraphics.circle(node.x, node.y, node.radius + 10);
+            if (node)
+                selectionGraphics.circle(node.x, node.y, node.radius + 10);
         }
         selectionGraphics.stroke();
 
         // 3. Bright inner ring
-        selectionGraphics.setStrokeStyle({ width: 5, color: ringColor, alpha: 1 });
+        selectionGraphics.setStrokeStyle({
+            width: 5,
+            color: ringColor,
+            alpha: 1,
+        });
         for (const id of selected) {
             const node = nodeById.get(id);
             if (node) selectionGraphics.circle(node.x, node.y, node.radius + 4);
@@ -623,7 +699,10 @@
     }
     function localCoords(e: MouseEvent): { mx: number; my: number } {
         if (!cachedRect) updateCachedRect();
-        return { mx: e.clientX - cachedRect!.left, my: e.clientY - cachedRect!.top };
+        return {
+            mx: e.clientX - cachedRect!.left,
+            my: e.clientY - cachedRect!.top,
+        };
     }
 
     function onMouseDown(e: MouseEvent) {
