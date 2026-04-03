@@ -35,6 +35,7 @@ fn template_map() -> &'static FxHashMap<&'static str, ParseHandler> {
         m.insert("+# to maximum Mana", |v, s| vec![simple_mod(StatId::Mana, ModType::Base, v[0], s)]);
         m.insert("+# to maximum Energy Shield", |v, s| vec![simple_mod(StatId::EnergyShield, ModType::Base, v[0], s)]);
         m.insert("+# to Accuracy Rating", |v, s| vec![simple_mod(StatId::Accuracy, ModType::Base, v[0], s)]);
+        m.insert("+# to Armour", |v, s| vec![simple_mod(StatId::Armour, ModType::Base, v[0], s)]);
 
         // ── Simple Inc: "X% increased <Stat>" ──
         m.insert("#% increased maximum Life",          |v, s| vec![simple_mod(StatId::Life, ModType::Inc, v[0], s)]);

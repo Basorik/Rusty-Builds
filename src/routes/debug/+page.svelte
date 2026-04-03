@@ -13,7 +13,7 @@
     let debugData = $state<DebugStatsResponse | null>(null);
     let error = $state<string | null>(null);
     let loading = $state(false);
-    let activeTab = $state<"tree" | "class" | "computed">("computed");
+    let activeTab = $state<"tree" | "class" | "gems" | "computed">("computed");
     let filterText = $state("");
 
     async function refresh() {
@@ -28,9 +28,18 @@
         loading = false;
     }
 
-    // Load on mount
+    // Refresh whenever build-affecting state changes (class, level, bloodline).
+    // Reading build.characterClass / level / bloodline here makes $effect track them
+    // so the debug view re-loads every time the Header updates Rust state.
+    // A short debounce ensures updateBuildInfo() completes before getDebugStats() runs.
     $effect(() => {
-        refresh();
+        // Track reactive dependencies so this re-runs on any header change.
+        const _c = build.characterClass;
+        const _l = build.level;
+        const _b = build.bloodline;
+        const _a = build.ascendancy;
+        const timer = setTimeout(() => refresh(), 100);
+        return () => clearTimeout(timer);
     });
 
     let filteredTreeMods = $derived.by(() => {
@@ -59,9 +68,24 @@
             : debugData.class_mods;
     });
 
+    let filteredGemMods = $derived.by(() => {
+        if (!debugData) return [];
+        const f = filterText.toLowerCase();
+        return f
+            ? debugData.gem_mods.filter(
+                  (m) =>
+                      m.stat.toLowerCase().includes(f) ||
+                      m.source.toLowerCase().includes(f) ||
+                      m.mod_type.toLowerCase().includes(f),
+              )
+            : debugData.gem_mods;
+    });
+
     let filteredComputed = $derived.by((): [string, DebugComputedStat][] => {
         if (!debugData) return [];
-        const entries = Object.entries(debugData.computed);
+        const entries = (
+            Object.entries(debugData.computed) as [string, DebugComputedStat | undefined][]
+        ).filter((e): e is [string, DebugComputedStat] => e[1] !== undefined);
         entries.sort((a, b) => a[0].localeCompare(b[0]));
         const f = filterText.toLowerCase();
         return f
@@ -101,6 +125,10 @@
                     ></span
                 >
                 <span
+                    >Gem mods: <strong>{debugData.gem_mods.length}</strong
+                    ></span
+                >
+                <span
                     >Computed stats: <strong
                         >{Object.keys(debugData.computed).length}</strong
                     ></span
@@ -125,6 +153,12 @@
                     onclick={() => (activeTab = "class")}
                 >
                     Class Layer
+                </button>
+                <button
+                    class:active={activeTab === "gems"}
+                    onclick={() => (activeTab = "gems")}
+                >
+                    Gem Layer
                 </button>
             </div>
 
@@ -170,7 +204,11 @@
                 </table>
             {:else}
                 {@const mods =
-                    activeTab === "tree" ? filteredTreeMods : filteredClassMods}
+                    activeTab === "tree"
+                        ? filteredTreeMods
+                        : activeTab === "class"
+                          ? filteredClassMods
+                          : filteredGemMods}
                 <table class="debug-table">
                     <thead>
                         <tr>

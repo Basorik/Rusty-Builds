@@ -118,6 +118,11 @@
             <button class="tab disabled" disabled title="Coming soon"
                 >Calcs</button
             >
+            <button
+                class="tab"
+                class:active={$page.url.pathname === "/debug"}
+                onclick={() => goto("/debug")}>Debug</button
+            >
         </nav>
     </div>
 

@@ -15,8 +15,10 @@ use tauri_specta::{collect_commands, Builder};
 
 use crate::data::gems::GemSummary;
 use crate::data::skills::{self, GemInstance, SkillGroup, SupportCompatEntry};
-use crate::data::SourceId;
-use crate::modifier::ModDB;
+use crate::data::{
+    Bloodline, Class, DuelistAscendancy, MarauderAscendancy, RangerAscendancy, ScionAscendancy,
+    ShadowAscendancy, TemplarAscendancy, WitchAscendancy,
+};
 
 /// The tree version loaded on startup and used as the default.
 pub const DEFAULT_TREE_VERSION: &str = "3.27.0g";
@@ -25,83 +27,6 @@ pub const DEFAULT_TREE_VERSION: &str = "3.27.0g";
 #[derive(Debug, Default, Serialize, Deserialize, Type)]
 pub struct BuildSelection {
     selected_node_ids: HashSet<u32>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Type)]
-#[serde(tag = "class", content = "ascendancy")]
-pub enum Class {
-    Marauder(Option<MarauderAscendancy>),
-    Ranger(Option<RangerAscendancy>),
-    Witch(Option<WitchAscendancy>),
-    Duelist(Option<DuelistAscendancy>),
-    Templar(Option<TemplarAscendancy>),
-    Shadow(Option<ShadowAscendancy>),
-    Scion(Option<ScionAscendancy>),
-}
-
-#[derive(Debug, Serialize, Deserialize, Type)]
-pub enum Bloodline {
-    None,
-    Aul,
-    Breachlord,
-    Catarina,
-    Delirious,
-    Farrul,
-    KingInTheMists,
-    Lycia,
-    Olroth,
-    Oshabi,
-    Primalist,
-    Trialmaster,
-    Warden,
-    Warlock,
-}
-
-#[derive(Debug, Serialize, Deserialize, Type)]
-pub enum MarauderAscendancy {
-    Juggernaut,
-    Berserker,
-    Chieftain,
-}
-
-#[derive(Debug, Serialize, Deserialize, Type)]
-pub enum RangerAscendancy {
-    Raider,
-    Deadeye,
-    Pathfinder,
-}
-
-#[derive(Debug, Serialize, Deserialize, Type)]
-pub enum WitchAscendancy {
-    Necromancer,
-    Occultist,
-    Elementalist,
-}
-
-#[derive(Debug, Serialize, Deserialize, Type)]
-pub enum DuelistAscendancy {
-    Slayer,
-    Gladiator,
-    Champion,
-}
-
-#[derive(Debug, Serialize, Deserialize, Type)]
-pub enum TemplarAscendancy {
-    Inquisitor,
-    Hierophant,
-    Guardian,
-}
-
-#[derive(Debug, Serialize, Deserialize, Type)]
-pub enum ShadowAscendancy {
-    Assassin,
-    Saboteur,
-    Trickster,
-}
-
-#[derive(Debug, Serialize, Deserialize, Type)]
-pub enum ScionAscendancy {
-    Ascendant,
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, Type)]
@@ -128,6 +53,12 @@ pub struct BuildInfo {
     pub selected_nodes: BuildSelection,
     pub skill_groups: Vec<SkillGroup>,
     next_group_id: u32,
+    /// Persisted layered modifier database. Not serialized to the frontend —
+    /// it's rebuilt from the other fields and serves as the authoritative source
+    /// for all stat queries including the debug view.
+    #[serde(skip)]
+    #[specta(skip)]
+    pub mod_db_layers: modifier::ModDBLayers,
 }
 
 impl Default for BuildInfo {
@@ -136,11 +67,14 @@ impl Default for BuildInfo {
             name: "Unsaved Build".to_string(),
             level: 1,
             stats: BuildStats::default(),
-            class: Class::Scion(None),
+            // Must match buildState.svelte.ts default ("Marauder") so Rust state
+            // is consistent before the first updateBuildInfo call from the frontend.
+            class: Class::Marauder(None),
             bloodline: Bloodline::None,
             selected_nodes: BuildSelection::default(),
             skill_groups: Vec::new(),
             next_group_id: 1,
+            mod_db_layers: modifier::ModDBLayers::new(),
         }
     }
 }
@@ -160,6 +94,7 @@ pub struct DebugModEntry {
 pub struct DebugStatsResponse {
     pub tree_mods: Vec<DebugModEntry>,
     pub class_mods: Vec<DebugModEntry>,
+    pub gem_mods: Vec<DebugModEntry>,
     pub computed: HashMap<String, DebugComputedStat>,
 }
 
@@ -206,7 +141,6 @@ pub fn run() {
             let handle = app.handle();
             let storage_manager = storage::StorageManager::new(&handle);
             app.manage(storage_manager);
-            app.manage(Mutex::new(BuildInfo::default()));
 
             let resource_path = handle
                 .path()
@@ -221,6 +155,13 @@ pub fn run() {
                 game_data.tree.nodes.len(),
                 game_data.gems.len()
             );
+
+            // Build the initial BuildInfo with the class layer already populated so
+            // stats are non-zero before the user makes any changes.
+            let mut build_info = BuildInfo::default();
+            build_info.mod_db_layers.rebuild_class(&build_info.class, &game_data.tree);
+
+            app.manage(Mutex::new(build_info));
             app.manage(Arc::new(RwLock::new(game_data)));
 
             builder.mount_events(app);
@@ -247,21 +188,27 @@ fn update_build_info(
     character_class: Class,
     bloodline: Bloodline,
     state: tauri::State<'_, Mutex<BuildInfo>>,
+    game_data: tauri::State<'_, Arc<RwLock<data::GameData>>>,
 ) -> Result<(), String> {
     let mut build_info = state.lock().map_err(|e| e.to_string())?;
     build_info.level = level;
     build_info.class = character_class;
     build_info.bloodline = bloodline;
 
+    // Rebuild the class layer so the ModDB reflects the new class base stats.
+    let game = game_data.read().map_err(|e| e.to_string())?;
+    let class = build_info.class.clone();
+    build_info.mod_db_layers.rebuild_class(&class, &game.tree);
+
     info!(
-        "Build  updated: Level {}, Class {:?}, Bloodline {:?}",
+        "Build updated: Level {}, Class {:?}, Bloodline {:?}",
         build_info.level, build_info.class, build_info.bloodline
     );
     Ok(())
 }
 
 /// Receives the current set of selected node IDs from the frontend.
-/// Stores them and returns the total count (placeholder for future stat calculations).
+/// Rebuilds the tree layer of the persisted ModDB and returns updated build stats.
 #[tauri::command]
 #[specta::specta]
 fn update_selected_nodes(
@@ -274,20 +221,14 @@ fn update_selected_nodes(
 
     let game = game_data.read().map_err(|e| e.to_string())?;
 
-    let mut mod_db = modifier::ModDB::new();
-    let ctx = modifier::CalcContext::empty();
+    // Rebuild only the tree layer — class and gems layers are already up to date.
+    build.mod_db_layers.rebuild_tree(&node_ids, &game);
+    // Refresh gem layer in case skill group counts changed.
+    let skill_groups = build.skill_groups.clone();
+    build.mod_db_layers.rebuild_gems(&skill_groups);
 
-    for &node_id in &node_ids {
-        if let Some(node) = game.tree.get_node(node_id) {
-            let source = SourceId(node_id);
-            for stat_text in &node.stats {
-                for modifier in modifier::parser::parse_display_text(stat_text, source) {
-                    mod_db.add_mod(modifier);
-                }
-            }
-        }
-    }
-    add_class_base_stats(&mut mod_db, &build.class, &game.tree);
+    let mod_db = build.mod_db_layers.merged();
+    let ctx = modifier::CalcContext::empty();
 
     let total_str = mod_db.sum_base(data::StatId::Strength, &ctx);
     let total_dex = mod_db.sum_base(data::StatId::Dexterity, &ctx);
@@ -320,41 +261,6 @@ fn update_selected_nodes(
 
     build.stats = stats.clone();
     Ok(stats)
-}
-
-fn add_class_base_stats(mod_db: &mut ModDB, class: &Class, tree: &data::PassiveTree) {
-    // Map the Class enum to the class index in the tree data
-    let class_index = match class {
-        Class::Scion(_) => 0,
-        Class::Marauder(_) => 1,
-        Class::Ranger(_) => 2,
-        Class::Witch(_) => 3,
-        Class::Duelist(_) => 4,
-        Class::Templar(_) => 5,
-        Class::Shadow(_) => 6,
-    };
-
-    if let Some(class_data) = tree.classes.get(class_index) {
-        let source = SourceId(0); // class base stats source
-        mod_db.add_mod(modifier::parser::simple_mod(
-            data::StatId::Strength,
-            modifier::ModType::Base,
-            class_data.base_str as f64,
-            source,
-        ));
-        mod_db.add_mod(modifier::parser::simple_mod(
-            data::StatId::Dexterity,
-            modifier::ModType::Base,
-            class_data.base_dex as f64,
-            source,
-        ));
-        mod_db.add_mod(modifier::parser::simple_mod(
-            data::StatId::Intelligence,
-            modifier::ModType::Base,
-            class_data.base_int as f64,
-            source,
-        ));
-    }
 }
 
 #[tauri::command]
@@ -636,7 +542,8 @@ fn get_group_effects(
     Ok(group.clone())
 }
 
-/// Returns all modifiers in the ModDB for the debug page, grouped by layer.
+/// Returns all modifiers in the persisted ModDB layers for the debug page.
+/// Reads directly from build.mod_db_layers — does NOT recompute anything.
 #[tauri::command]
 #[specta::specta]
 fn get_debug_stats(
@@ -647,30 +554,7 @@ fn get_debug_stats(
     let game = game_data.read().map_err(|e| e.to_string())?;
     let ctx = modifier::CalcContext::empty();
 
-    // Build tree layer ModDB
-    let mut tree_db = modifier::ModDB::new();
-    let node_ids: Vec<u32> = build
-        .selected_nodes
-        .selected_node_ids
-        .iter()
-        .copied()
-        .collect();
-    for &node_id in &node_ids {
-        if let Some(node) = game.tree.get_node(node_id) {
-            let source = SourceId(node_id);
-            for stat_text in &node.stats {
-                for m in modifier::parser::parse_display_text(stat_text, source) {
-                    tree_db.add_mod(m);
-                }
-            }
-        }
-    }
-
-    // Build class layer ModDB
-    let mut class_db = modifier::ModDB::new();
-    add_class_base_stats(&mut class_db, &build.class, &game.tree);
-
-    // Helper: extract mods from a ModDB into DebugModEntry list
+    // Helper: extract mods from a ModDB layer into DebugModEntry list.
     fn extract_mods(db: &modifier::ModDB, tree: &data::PassiveTree) -> Vec<DebugModEntry> {
         let mut entries = Vec::new();
         for (stat_id, mods) in db.iter_all() {
@@ -702,16 +586,14 @@ fn get_debug_stats(
         entries
     }
 
-    let tree_mods = extract_mods(&tree_db, &game.tree);
-    let class_mods = extract_mods(&class_db, &game.tree);
+    // Read directly from the persisted layers — no rebuild.
+    let tree_mods = extract_mods(&build.mod_db_layers.tree, &game.tree);
+    let class_mods = extract_mods(&build.mod_db_layers.class, &game.tree);
+    let gem_mods = extract_mods(&build.mod_db_layers.gems, &game.tree);
 
-    // Build combined ModDB and compute final values for each stat
-    let mut combined = modifier::ModDB::new();
-    combined.merge(&tree_db);
-    combined.merge(&class_db);
-
+    // Merge all layers and compute final values for each unique stat.
+    let combined = build.mod_db_layers.merged();
     let mut computed = HashMap::new();
-    // Collect all unique stat IDs from the combined DB
     let mut seen_stats = HashSet::new();
     for (stat_id, _) in combined.iter_all() {
         seen_stats.insert(*stat_id);
@@ -735,6 +617,7 @@ fn get_debug_stats(
     Ok(DebugStatsResponse {
         tree_mods,
         class_mods,
+        gem_mods,
         computed,
     })
 }

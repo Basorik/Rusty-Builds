@@ -10,7 +10,10 @@ use rustc_hash::FxHashMap;
 pub use stat_id::StatId;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
-pub use tree::{PassiveNode, PassiveTree};
+pub use tree::{
+    Bloodline, Class, ClassData, DuelistAscendancy, MarauderAscendancy, PassiveNode, PassiveTree,
+    RangerAscendancy, ScionAscendancy, ShadowAscendancy, TemplarAscendancy, WitchAscendancy,
+};
 
 use crate::data::gems::GemItem;
 use crate::data::skills::GrantedEffect;
