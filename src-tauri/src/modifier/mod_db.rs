@@ -134,6 +134,11 @@ impl ModDB {
         }
     }
 
+    /// Iterate all (StatId, modifier list) entries in the ModDB.
+    pub fn iter_all(&self) -> impl Iterator<Item = (&StatId, &Vec<Modifier>)> {
+        self.mods.iter()
+    }
+
     /// Check if a modifier's flags/conditions match the current calc context.
     /// In Phase 2 this always returns true. Expand in Phase 5+.
     fn matches_context(&self, _modifier: &Modifier, _ctx: &CalcContext) -> bool {

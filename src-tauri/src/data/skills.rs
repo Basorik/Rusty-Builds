@@ -2,7 +2,7 @@ use rustc_hash::FxHashMap;
 use serde::de::{MapAccess, SeqAccess, Visitor};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
 use crate::data::stat_id;
@@ -18,7 +18,7 @@ pub struct GemInstance {
     pub quality: u32,
     pub enabled: bool,
     /// Computed stats at the current level/quality (stat_id → value).
-    pub stats: HashMap<String, f64>,
+    pub stats: BTreeMap<String, f64>,
     pub mana_cost: Option<f64>,
     pub crit_chance: Option<f64>,
     pub damage_effectiveness: Option<f64>,
@@ -288,10 +288,19 @@ pub fn build_skill_instance_stats(
 
         let stat_value = match interp_mode {
             3 => {
-                // Effectiveness interpolation
+                // Effectiveness interpolation — PoB CalcTools.lua formula:
+                // availableEffectiveness =
+                //   (SkillDamageBaseEffectiveness + SkillDamageIncrementalEffectiveness * (actorLevel - 1))
+                //   * grantedEffect.baseEffectiveness
+                //   * (1 + grantedEffect.incrementalEffectiveness) ^ (actorLevel - 1)
+                // statValue = round(availableEffectiveness * level[index])
+                const SKILL_DMG_BASE_EFF: f64 = 3.885209;
+                const SKILL_DMG_INC_EFF: f64 = 0.360246;
+                let game_scaling = SKILL_DMG_BASE_EFF + SKILL_DMG_INC_EFF * (actor_level - 1.0);
                 let base_eff = effect.base_effectiveness.unwrap_or(1.0);
                 let inc_eff = effect.incremental_effectiveness.unwrap_or(0.0);
-                let effectiveness = base_eff * (1.0 + inc_eff).powf(actor_level - 1.0);
+                let effectiveness =
+                    game_scaling * base_eff * (1.0 + inc_eff).powf(actor_level - 1.0);
                 (effectiveness * raw_value).round()
             }
             2 => {

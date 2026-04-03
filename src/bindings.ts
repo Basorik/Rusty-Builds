@@ -122,11 +122,33 @@ async removeGemFromGroup(groupId: number, gemIndex: number) : Promise<Result<Ski
 }
 },
 /**
+ * Updates the level and/or quality of a gem in a skill group, recomputing its stats.
+ */
+async updateGemLevelQuality(groupId: number, gemIndex: number, level: number, quality: number) : Promise<Result<SkillGroup, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_gem_level_quality", { groupId, gemIndex, level, quality }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Returns the skill group with up-to-date effects and compatibility.
  */
 async getGroupEffects(groupId: number) : Promise<Result<SkillGroup, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_group_effects", { groupId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns all modifiers in the ModDB for the debug page, grouped by layer.
+ */
+async getDebugStats() : Promise<Result<DebugStatsResponse, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_debug_stats") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -147,6 +169,18 @@ async getGroupEffects(groupId: number) : Promise<Result<SkillGroup, string>> {
 export type Bloodline = "None" | "Aul" | "Breachlord" | "Catarina" | "Delirious" | "Farrul" | "KingInTheMists" | "Lycia" | "Olroth" | "Oshabi" | "Primalist" | "Trialmaster" | "Warden" | "Warlock"
 export type BuildStats = { total_strength: number; total_dexterity: number; total_intelligence: number; node_count: number; life: number; mana: number }
 export type Class = { class: "Marauder"; ascendancy: MarauderAscendancy | null } | { class: "Ranger"; ascendancy: RangerAscendancy | null } | { class: "Witch"; ascendancy: WitchAscendancy | null } | { class: "Duelist"; ascendancy: DuelistAscendancy | null } | { class: "Templar"; ascendancy: TemplarAscendancy | null } | { class: "Shadow"; ascendancy: ShadowAscendancy | null } | { class: "Scion"; ascendancy: ScionAscendancy | null }
+/**
+ * A fully computed stat value (base × inc × more).
+ */
+export type DebugComputedStat = { base: number; inc: number; more: number; total: number }
+/**
+ * A single modifier entry for the debug page.
+ */
+export type DebugModEntry = { stat: string; mod_type: string; value: number; source: string; flags: string }
+/**
+ * All modifiers from each ModDB layer, for the debug page.
+ */
+export type DebugStatsResponse = { tree_mods: DebugModEntry[]; class_mods: DebugModEntry[]; computed: Partial<{ [key in string]: DebugComputedStat }> }
 export type DuelistAscendancy = "Slayer" | "Gladiator" | "Champion"
 /**
  * Gem color based on attribute tags.

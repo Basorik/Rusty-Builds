@@ -8,7 +8,7 @@ use log::info;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use specta_typescript::Typescript;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::{Arc, Mutex, RwLock};
 use tauri::Manager;
 use tauri_specta::{collect_commands, Builder};
@@ -145,6 +145,33 @@ impl Default for BuildInfo {
     }
 }
 
+/// A single modifier entry for the debug page.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct DebugModEntry {
+    pub stat: String,
+    pub mod_type: String,
+    pub value: f64,
+    pub source: String,
+    pub flags: String,
+}
+
+/// All modifiers from each ModDB layer, for the debug page.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct DebugStatsResponse {
+    pub tree_mods: Vec<DebugModEntry>,
+    pub class_mods: Vec<DebugModEntry>,
+    pub computed: HashMap<String, DebugComputedStat>,
+}
+
+/// A fully computed stat value (base × inc × more).
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct DebugComputedStat {
+    pub base: f64,
+    pub inc: f64,
+    pub more: f64,
+    pub total: f64,
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
@@ -160,7 +187,9 @@ pub fn run() {
         delete_skill_group,
         add_gem_to_group,
         remove_gem_from_group,
-        get_group_effects
+        update_gem_level_quality,
+        get_group_effects,
+        get_debug_stats
     ]);
 
     #[cfg(debug_assertions)]
@@ -538,6 +567,56 @@ fn remove_gem_from_group(
     Ok(group.clone())
 }
 
+/// Updates the level and/or quality of a gem in a skill group, recomputing its stats.
+#[tauri::command]
+#[specta::specta]
+fn update_gem_level_quality(
+    group_id: u32,
+    gem_index: u32,
+    level: u32,
+    quality: u32,
+    build_info: tauri::State<'_, Mutex<BuildInfo>>,
+    game_data: tauri::State<'_, Arc<RwLock<data::GameData>>>,
+) -> Result<SkillGroup, String> {
+    if level == 0 {
+        return Err("Level must be at least 1".to_string());
+    }
+    let game = game_data.read().map_err(|e| e.to_string())?;
+    let mut build = build_info.lock().map_err(|e| e.to_string())?;
+    let group = build
+        .skill_groups
+        .iter_mut()
+        .find(|g| g.id == group_id)
+        .ok_or_else(|| format!("Skill group {} not found", group_id))?;
+    let idx = gem_index as usize;
+    if idx >= group.gems.len() {
+        return Err(format!(
+            "Gem index {} out of range (group has {} gems)",
+            gem_index,
+            group.gems.len()
+        ));
+    }
+
+    let old = &group.gems[idx];
+    let effect = game
+        .gems
+        .get(&old.gem_id)
+        .and_then(|gi| game.skills.get(&gi.granted_effect_id));
+
+    let updated = build_gem_instance(
+        &old.gem_id,
+        &old.name,
+        old.is_support,
+        level,
+        quality,
+        effect,
+    );
+    group.gems[idx] = updated;
+
+    recompute_compatibility(group, &game);
+    Ok(group.clone())
+}
+
 /// Returns the skill group with up-to-date effects and compatibility.
 #[tauri::command]
 #[specta::specta]
@@ -557,6 +636,109 @@ fn get_group_effects(
     Ok(group.clone())
 }
 
+/// Returns all modifiers in the ModDB for the debug page, grouped by layer.
+#[tauri::command]
+#[specta::specta]
+fn get_debug_stats(
+    game_data: tauri::State<'_, Arc<RwLock<data::GameData>>>,
+    build_info: tauri::State<'_, Mutex<BuildInfo>>,
+) -> Result<DebugStatsResponse, String> {
+    let build = build_info.lock().map_err(|e| e.to_string())?;
+    let game = game_data.read().map_err(|e| e.to_string())?;
+    let ctx = modifier::CalcContext::empty();
+
+    // Build tree layer ModDB
+    let mut tree_db = modifier::ModDB::new();
+    let node_ids: Vec<u32> = build
+        .selected_nodes
+        .selected_node_ids
+        .iter()
+        .copied()
+        .collect();
+    for &node_id in &node_ids {
+        if let Some(node) = game.tree.get_node(node_id) {
+            let source = SourceId(node_id);
+            for stat_text in &node.stats {
+                for m in modifier::parser::parse_display_text(stat_text, source) {
+                    tree_db.add_mod(m);
+                }
+            }
+        }
+    }
+
+    // Build class layer ModDB
+    let mut class_db = modifier::ModDB::new();
+    add_class_base_stats(&mut class_db, &build.class, &game.tree);
+
+    // Helper: extract mods from a ModDB into DebugModEntry list
+    fn extract_mods(db: &modifier::ModDB, tree: &data::PassiveTree) -> Vec<DebugModEntry> {
+        let mut entries = Vec::new();
+        for (stat_id, mods) in db.iter_all() {
+            let stat_name = format!("{:?}", stat_id);
+            for m in mods {
+                let source_id = m.source.0;
+                let source_label = if source_id == 0 {
+                    "Class Base".to_string()
+                } else if let Some(node) = tree.get_node(source_id) {
+                    let name = node.name.as_deref().unwrap_or("Unknown");
+                    format!("{} ({})", name, source_id)
+                } else {
+                    format!("Source:{}", source_id)
+                };
+                entries.push(DebugModEntry {
+                    stat: stat_name.clone(),
+                    mod_type: format!("{:?}", m.mod_type),
+                    value: m.value,
+                    source: source_label,
+                    flags: if m.flags.is_empty() {
+                        String::new()
+                    } else {
+                        format!("{:?}", m.flags)
+                    },
+                });
+            }
+        }
+        entries.sort_by(|a, b| a.stat.cmp(&b.stat).then(a.source.cmp(&b.source)));
+        entries
+    }
+
+    let tree_mods = extract_mods(&tree_db, &game.tree);
+    let class_mods = extract_mods(&class_db, &game.tree);
+
+    // Build combined ModDB and compute final values for each stat
+    let mut combined = modifier::ModDB::new();
+    combined.merge(&tree_db);
+    combined.merge(&class_db);
+
+    let mut computed = HashMap::new();
+    // Collect all unique stat IDs from the combined DB
+    let mut seen_stats = HashSet::new();
+    for (stat_id, _) in combined.iter_all() {
+        seen_stats.insert(*stat_id);
+    }
+    for stat_id in seen_stats {
+        let base = combined.sum_base(stat_id, &ctx);
+        let inc = combined.sum_inc(stat_id, &ctx);
+        let more = combined.product_more(stat_id, &ctx);
+        let total = combined.calculate(stat_id, &ctx);
+        computed.insert(
+            format!("{:?}", stat_id),
+            DebugComputedStat {
+                base,
+                inc,
+                more,
+                total,
+            },
+        );
+    }
+
+    Ok(DebugStatsResponse {
+        tree_mods,
+        class_mods,
+        computed,
+    })
+}
+
 /// Build a GemInstance with computed stats from game data.
 fn build_gem_instance(
     gem_id: &str,
@@ -572,7 +754,7 @@ fn build_gem_instance(
             let li = (level as usize).saturating_sub(1);
             (s.into_iter().collect(), eff.levels.get(li))
         }
-        None => (HashMap::new(), None),
+        None => (BTreeMap::new(), None),
     };
 
     GemInstance {

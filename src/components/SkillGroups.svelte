@@ -12,8 +12,23 @@
     let skillGroups = $state<SkillGroup[]>([]);
     let newGroupLabel = $state("");
     let gemSearches = $state<Record<number, string>>({});
-    let expandedGem = $state<string | null>(null);
+    let selectedGemKey = $state<string | null>(null);
     let loading = $state(true);
+
+    /** The currently selected gem instance (derived from key) */
+    let selectedGem = $derived.by(() => {
+        if (!selectedGemKey) return null;
+        const [gid, gi] = selectedGemKey.split("-");
+        const group = skillGroups.find((g) => g.id === Number(gid));
+        if (!group) return null;
+        const gem = group.gems[Number(gi)];
+        return gem ?? null;
+    });
+
+    /** Color of the selected gem */
+    let selectedGemColor = $derived(
+        selectedGem ? gemColor(selectedGem.gem_id) : "white",
+    );
 
     onMount(async () => {
         const [gemsResult, groupsResult] = await Promise.all([
@@ -63,6 +78,29 @@
             skillGroups = skillGroups.map((g) =>
                 g.id === groupId ? result.data : g,
             );
+            // Clear selection if we removed the selected gem
+            if (selectedGemKey === `${groupId}-${gemIndex}`) {
+                selectedGemKey = null;
+            }
+        }
+    }
+
+    async function updateGemLevelQuality(
+        groupId: number,
+        gemIndex: number,
+        level: number,
+        quality: number,
+    ) {
+        const result = await commands.updateGemLevelQuality(
+            groupId,
+            gemIndex,
+            level,
+            quality,
+        );
+        if (result.status === "ok") {
+            skillGroups = skillGroups.map((g) =>
+                g.id === groupId ? result.data : g,
+            );
         }
     }
 
@@ -74,8 +112,13 @@
         return allGems.find((g) => g.id === gemId)?.description ?? undefined;
     }
 
-    function toggleExpanded(gemId: string) {
-        expandedGem = expandedGem === gemId ? null : gemId;
+    function gemTagString(gemId: string): string | undefined {
+        return allGems.find((g) => g.id === gemId)?.tag_string ?? undefined;
+    }
+
+    function selectGem(groupId: number, idx: number) {
+        const key = `${groupId}-${idx}`;
+        selectedGemKey = selectedGemKey === key ? null : key;
     }
 
     /** Check if a support is incompatible with any active in the group */
@@ -93,12 +136,12 @@
             });
     }
 
-    /** Format a stat key for display — replace underscores, title-case, trim internal IDs */
+    /** Format a stat key for display */
     function formatStatName(key: string): string {
         return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     }
 
-    /** Get notable stats to display for a gem (mana cost, crit, damage eff, etc.) */
+    /** Get notable properties to display */
     function getGemProperties(
         gem: GemInstance,
     ): { label: string; value: string }[] {
@@ -131,180 +174,275 @@
 {#if loading}
     <p class="loading">Loading gems...</p>
 {:else}
-    <div class="skill-groups">
-        <div class="create-group">
-            <input
-                type="text"
-                bind:value={newGroupLabel}
-                placeholder="New group name..."
-                onkeydown={(e) => e.key === "Enter" && createGroup()}
-            />
-            <button class="btn-create" onclick={createGroup}>+ Add Group</button
-            >
+    <div class="skills-layout">
+        <!-- Left: Skill Groups -->
+        <div class="groups-column">
+            <div class="create-group">
+                <input
+                    type="text"
+                    bind:value={newGroupLabel}
+                    placeholder="New group name..."
+                    onkeydown={(e) => e.key === "Enter" && createGroup()}
+                />
+                <button class="btn-create" onclick={createGroup}
+                    >+ Add Group</button
+                >
+            </div>
+
+            {#if skillGroups.length === 0}
+                <div class="empty-state">
+                    <p>No skill groups yet.</p>
+                    <p class="hint">
+                        Create a group and add gems to build your skill setup.
+                    </p>
+                </div>
+            {:else}
+                {#each skillGroups as group (group.id)}
+                    <div class="group-card">
+                        <div class="group-header">
+                            <h3>{group.label}</h3>
+                            <button
+                                class="btn-delete"
+                                onclick={() => deleteGroup(group.id)}
+                                title="Delete group">✕</button
+                            >
+                        </div>
+
+                        <ul class="gem-list">
+                            {#each group.gems as gem, idx (idx)}
+                                {@const incompatible = gem.is_support
+                                    ? getIncompatibleActives(group, gem.gem_id)
+                                    : []}
+                                {@const hasWarning = incompatible.length > 0}
+                                {@const isSelected =
+                                    selectedGemKey === `${group.id}-${idx}`}
+                                <li class="gem-entry">
+                                    <button
+                                        class="gem-item gem-color-{gemColor(
+                                            gem.gem_id,
+                                        )}"
+                                        class:gem-incompatible={hasWarning}
+                                        class:gem-selected={isSelected}
+                                        onclick={() => selectGem(group.id, idx)}
+                                    >
+                                        <span class="gem-name">{gem.name}</span>
+                                        <label class="gem-lq" title="Level">
+                                            Lv
+                                            <input
+                                                type="number"
+                                                class="input-lq"
+                                                min="1"
+                                                max="40"
+                                                value={gem.level}
+                                                onclick={(e) =>
+                                                    e.stopPropagation()}
+                                                onchange={(e) =>
+                                                    updateGemLevelQuality(
+                                                        group.id,
+                                                        idx,
+                                                        parseInt(
+                                                            (
+                                                                e.target as HTMLInputElement
+                                                            ).value,
+                                                        ) || 1,
+                                                        gem.quality,
+                                                    )}
+                                            />
+                                        </label>
+                                        <label class="gem-lq" title="Quality">
+                                            Q
+                                            <input
+                                                type="number"
+                                                class="input-lq"
+                                                min="0"
+                                                max="100"
+                                                value={gem.quality}
+                                                onclick={(e) =>
+                                                    e.stopPropagation()}
+                                                onchange={(e) =>
+                                                    updateGemLevelQuality(
+                                                        group.id,
+                                                        idx,
+                                                        gem.level,
+                                                        parseInt(
+                                                            (
+                                                                e.target as HTMLInputElement
+                                                            ).value,
+                                                        ) || 0,
+                                                    )}
+                                            />
+                                        </label>
+                                        <span class="gem-type"
+                                            >{gem.is_support
+                                                ? "Support"
+                                                : "Active"}</span
+                                        >
+                                        <span
+                                            class="btn-remove-gem"
+                                            role="button"
+                                            tabindex="0"
+                                            title="Remove gem"
+                                            onclick={(e) => {
+                                                e.stopPropagation();
+                                                removeGem(group.id, idx);
+                                            }}
+                                            onkeydown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.stopPropagation();
+                                                    removeGem(group.id, idx);
+                                                }
+                                            }}>✕</span
+                                        >
+                                    </button>
+                                    {#if hasWarning}
+                                        <div class="compat-warning">
+                                            ⚠ Cannot support: {incompatible.join(
+                                                ", ",
+                                            )}
+                                        </div>
+                                    {/if}
+                                </li>
+                            {/each}
+                        </ul>
+
+                        <div class="gem-selector">
+                            <input
+                                type="text"
+                                bind:value={gemSearches[group.id]}
+                                placeholder="Search gems..."
+                            />
+                            {#if gemSearches[group.id]}
+                                <ul class="gem-dropdown">
+                                    {#each filteredGems(gemSearches[group.id] ?? "").slice(0, 20) as gem (gem.id)}
+                                        <li>
+                                            <button
+                                                class="gem-option gem-text-{gem.color}"
+                                                title={gem.description ??
+                                                    undefined}
+                                                onclick={() =>
+                                                    addGem(group.id, gem.id)}
+                                            >
+                                                <span>{gem.name}</span>
+                                                <span class="gem-tag"
+                                                    >{gem.is_support
+                                                        ? "Support"
+                                                        : "Active"}</span
+                                                >
+                                            </button>
+                                        </li>
+                                    {/each}
+                                </ul>
+                            {/if}
+                        </div>
+                    </div>
+                {/each}
+            {/if}
         </div>
 
-        {#if skillGroups.length === 0}
-            <div class="empty-state">
-                <p>No skill groups yet.</p>
-                <p class="hint">
-                    Create a group and add gems to build your skill setup.
-                </p>
-            </div>
-        {:else}
-            {#each skillGroups as group (group.id)}
-                <div class="group-card">
-                    <div class="group-header">
-                        <h3>{group.label}</h3>
-                        <button
-                            class="btn-delete"
-                            onclick={() => deleteGroup(group.id)}
-                            title="Delete group">✕</button
-                        >
+        <!-- Right: Gem Info Panel (PoE-style box) -->
+        <div class="info-column">
+            {#if selectedGem}
+                <div class="gem-box gem-box-{selectedGemColor}">
+                    <!-- Header -->
+                    <div class="gem-box-header gem-header-{selectedGemColor}">
+                        <span class="gem-box-name">{selectedGem.name}</span>
                     </div>
 
-                    <ul class="gem-list">
-                        {#each group.gems as gem, idx (idx)}
-                            {@const incompatible = gem.is_support
-                                ? getIncompatibleActives(group, gem.gem_id)
-                                : []}
-                            {@const hasWarning = incompatible.length > 0}
-                            <li class="gem-entry">
-                                <div
-                                    class="gem-item gem-color-{gemColor(
-                                        gem.gem_id,
-                                    )}"
-                                    class:gem-incompatible={hasWarning}
+                    <!-- Tags -->
+                    {#if gemTagString(selectedGem.gem_id)}
+                        <div class="gem-box-tags">
+                            {gemTagString(selectedGem.gem_id)}
+                        </div>
+                    {/if}
+
+                    <!-- Level & Quality -->
+                    <div class="gem-box-section">
+                        <div class="gem-box-row">
+                            <span>Level</span>
+                            <span class="gem-box-val">{selectedGem.level}</span>
+                        </div>
+                        {#if selectedGem.quality > 0}
+                            <div class="gem-box-row quality-row">
+                                <span>Quality</span>
+                                <span class="gem-box-val quality-val"
+                                    >+{selectedGem.quality}%</span
                                 >
-                                    <button
-                                        class="gem-expand"
-                                        onclick={() =>
-                                            toggleExpanded(
-                                                `${group.id}-${idx}`,
-                                            )}
-                                    >
-                                        {expandedGem === `${group.id}-${idx}`
-                                            ? "▾"
-                                            : "▸"}
-                                    </button>
-                                    <span class="gem-name">{gem.name}</span>
-                                    <span class="gem-level">Lv {gem.level}</span
-                                    >
-                                    <span class="gem-type"
-                                        >{gem.is_support
-                                            ? "Support"
-                                            : "Active"}</span
-                                    >
-                                    <button
-                                        class="btn-remove-gem"
-                                        onclick={() => removeGem(group.id, idx)}
-                                        title="Remove gem">✕</button
-                                    >
-                                </div>
-
-                                {#if hasWarning}
-                                    <div class="compat-warning">
-                                        ⚠ Cannot support: {incompatible.join(
-                                            ", ",
-                                        )}
-                                    </div>
-                                {/if}
-
-                                {#if expandedGem === `${group.id}-${idx}`}
-                                    <div class="gem-details">
-                                        {#if gemDescription(gem.gem_id)}
-                                            <p class="gem-desc">
-                                                {gemDescription(gem.gem_id)}
-                                            </p>
-                                        {/if}
-
-                                        {#if getGemProperties(gem).length > 0}
-                                            <div class="gem-props">
-                                                {#each getGemProperties(gem) as prop}
-                                                    <div class="prop-row">
-                                                        <span class="prop-label"
-                                                            >{prop.label}</span
-                                                        >
-                                                        <span class="prop-value"
-                                                            >{prop.value}</span
-                                                        >
-                                                    </div>
-                                                {/each}
-                                            </div>
-                                        {/if}
-
-                                        {#if Object.keys(gem.stats).length > 0}
-                                            <div class="gem-stats">
-                                                <h4>
-                                                    Stats at Level {gem.level}
-                                                </h4>
-                                                {#each Object.entries(gem.stats) as [key, value]}
-                                                    <div class="stat-row">
-                                                        <span class="stat-name"
-                                                            >{formatStatName(
-                                                                key,
-                                                            )}</span
-                                                        >
-                                                        <span class="stat-value"
-                                                            >{typeof value ===
-                                                                "number" &&
-                                                            !Number.isInteger(
-                                                                value,
-                                                            )
-                                                                ? value.toFixed(
-                                                                      1,
-                                                                  )
-                                                                : value}</span
-                                                        >
-                                                    </div>
-                                                {/each}
-                                            </div>
-                                        {/if}
-                                    </div>
-                                {/if}
-                            </li>
-                        {/each}
-                    </ul>
-
-                    <div class="gem-selector">
-                        <input
-                            type="text"
-                            bind:value={gemSearches[group.id]}
-                            placeholder="Search gems..."
-                        />
-                        {#if gemSearches[group.id]}
-                            <ul class="gem-dropdown">
-                                {#each filteredGems(gemSearches[group.id] ?? "").slice(0, 20) as gem (gem.id)}
-                                    <li>
-                                        <button
-                                            class="gem-option gem-text-{gem.color}"
-                                            title={gem.description ?? undefined}
-                                            onclick={() =>
-                                                addGem(group.id, gem.id)}
-                                        >
-                                            <span>{gem.name}</span>
-                                            <span class="gem-tag"
-                                                >{gem.is_support
-                                                    ? "Support"
-                                                    : "Active"}</span
-                                            >
-                                        </button>
-                                    </li>
-                                {/each}
-                            </ul>
+                            </div>
                         {/if}
                     </div>
+
+                    <div class="gem-box-separator"></div>
+
+                    <!-- Properties -->
+                    {#if getGemProperties(selectedGem).length > 0}
+                        <div class="gem-box-section">
+                            {#each getGemProperties(selectedGem) as prop}
+                                <div class="gem-box-row">
+                                    <span>{prop.label}</span>
+                                    <span class="gem-box-val">{prop.value}</span
+                                    >
+                                </div>
+                            {/each}
+                        </div>
+                        <div class="gem-box-separator"></div>
+                    {/if}
+
+                    <!-- Description -->
+                    {#if gemDescription(selectedGem.gem_id)}
+                        <div class="gem-box-desc">
+                            {gemDescription(selectedGem.gem_id)}
+                        </div>
+                        <div class="gem-box-separator"></div>
+                    {/if}
+
+                    <!-- Stats -->
+                    {#if Object.keys(selectedGem.stats).length > 0}
+                        <div class="gem-box-stats">
+                            {#each Object.entries(selectedGem.stats) as [key, value]}
+                                <div class="gem-box-stat">
+                                    <span>{formatStatName(key)}: </span>
+                                    <span class="gem-box-stat-val">
+                                        {typeof value === "number" &&
+                                        !Number.isInteger(value)
+                                            ? value.toFixed(1)
+                                            : value}
+                                    </span>
+                                </div>
+                            {/each}
+                        </div>
+                    {/if}
                 </div>
-            {/each}
-        {/if}
+            {:else}
+                <div class="info-placeholder">
+                    <p>Click a gem to view its details</p>
+                </div>
+            {/if}
+        </div>
     </div>
 {/if}
 
 <style>
-    .skill-groups {
+    /* ── Layout ── */
+    .skills-layout {
+        display: flex;
+        gap: 1.5rem;
+        width: 100%;
+        align-items: flex-start;
+    }
+
+    .groups-column {
+        flex: 1;
+        min-width: 0;
         display: flex;
         flex-direction: column;
         gap: 1.25rem;
-        width: 100%;
+    }
+
+    .info-column {
+        width: 320px;
+        min-width: 320px;
+        position: sticky;
+        top: 1.5rem;
     }
 
     .loading {
@@ -313,6 +451,7 @@
         padding: 2rem;
     }
 
+    /* ── Create Group ── */
     .create-group {
         display: flex;
         gap: 0.5rem;
@@ -357,6 +496,7 @@
         font-size: 0.85rem;
     }
 
+    /* ── Group Card ── */
     .group-card {
         background: #16161a;
         border: 1px solid #2a2723;
@@ -393,6 +533,7 @@
         border-color: #e05555;
     }
 
+    /* ── Gem List ── */
     .gem-list {
         list-style: none;
         margin: 0 0 0.75rem;
@@ -414,7 +555,26 @@
         padding: 0.35em 0.5em;
         background: #1e1e22;
         border-radius: 4px;
+        border: 1px solid transparent;
         border-left: 3px solid #aaa;
+        cursor: pointer;
+        transition:
+            background 0.1s,
+            border-color 0.1s;
+        text-align: left;
+        font: inherit;
+        color: inherit;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .gem-item:hover {
+        background: #24242a;
+    }
+
+    .gem-selected {
+        background: #1a1e2a !important;
+        border-color: #4a6090;
     }
 
     .gem-incompatible {
@@ -435,26 +595,43 @@
         border-left-color: #c0c0c0;
     }
 
-    .gem-expand {
-        background: none;
-        border: none;
-        color: #6a6458;
-        cursor: pointer;
-        font-size: 0.8rem;
-        padding: 0;
-        width: 1em;
-        text-align: center;
-    }
-
     .gem-name {
         flex: 1;
         color: #e0d6c2;
         font-size: 0.9rem;
     }
 
-    .gem-level {
+    .gem-lq {
+        display: flex;
+        align-items: center;
+        gap: 0.2em;
         font-size: 0.72rem;
         color: #8a8578;
+        white-space: nowrap;
+    }
+
+    .input-lq {
+        width: 3em;
+        padding: 0.1em 0.25em;
+        background: #1a1a1e;
+        border: 1px solid #3a3730;
+        border-radius: 3px;
+        color: #e0d6c2;
+        font-size: 0.78rem;
+        text-align: center;
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+
+    .input-lq::-webkit-inner-spin-button,
+    .input-lq::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .input-lq:focus {
+        outline: none;
+        border-color: #c8a95e;
     }
 
     .gem-type {
@@ -463,12 +640,11 @@
     }
 
     .btn-remove-gem {
-        background: none;
-        border: none;
         color: #5a5448;
         cursor: pointer;
         font-size: 0.8rem;
         padding: 0.1em 0.3em;
+        line-height: 1;
     }
 
     .btn-remove-gem:hover {
@@ -484,67 +660,7 @@
         border-left: 3px solid #e05555;
     }
 
-    .gem-details {
-        background: #12121a;
-        border: 1px solid #2a2723;
-        border-top: none;
-        border-radius: 0 0 4px 4px;
-        padding: 0.6em 0.75em;
-        margin-top: -1px;
-    }
-
-    .gem-desc {
-        color: #8a8578;
-        font-size: 0.8rem;
-        font-style: italic;
-        margin: 0 0 0.5em;
-    }
-
-    .gem-props {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.4em 1.2em;
-        margin-bottom: 0.5em;
-    }
-
-    .prop-row {
-        display: flex;
-        gap: 0.3em;
-        font-size: 0.8rem;
-    }
-
-    .prop-label {
-        color: #8a8578;
-    }
-
-    .prop-value {
-        color: #c8a95e;
-    }
-
-    .gem-stats h4 {
-        color: #8a8578;
-        font-size: 0.78rem;
-        margin: 0.3em 0 0.2em;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .stat-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.78rem;
-        padding: 0.1em 0;
-    }
-
-    .stat-name {
-        color: #a09888;
-    }
-
-    .stat-value {
-        color: #e0d6c2;
-        font-variant-numeric: tabular-nums;
-    }
-
+    /* ── Gem Selector (search dropdown) ── */
     .gem-selector {
         position: relative;
     }
@@ -614,5 +730,126 @@
     .gem-tag {
         font-size: 0.72rem;
         color: #5a5448;
+    }
+
+    /* ── PoE-style Gem Info Box ── */
+    .info-placeholder {
+        text-align: center;
+        color: #5a5448;
+        padding: 3rem 1rem;
+        border: 1px dashed #2a2723;
+        border-radius: 6px;
+    }
+
+    .gem-box {
+        background: #0c0b10;
+        border: 1px solid #3a3632;
+        border-radius: 2px;
+        overflow: hidden;
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
+    .gem-box-header {
+        padding: 0.6em 0.8em;
+        text-align: center;
+        border-bottom: 1px solid #3a3632;
+    }
+
+    .gem-header-red {
+        background: linear-gradient(180deg, #3a1818 0%, #1a0c0c 100%);
+    }
+    .gem-header-green {
+        background: linear-gradient(180deg, #183a18 0%, #0c1a0c 100%);
+    }
+    .gem-header-blue {
+        background: linear-gradient(180deg, #18183a 0%, #0c0c1a 100%);
+    }
+    .gem-header-white {
+        background: linear-gradient(180deg, #2a2a2e 0%, #16161a 100%);
+    }
+
+    .gem-box-name {
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+
+    .gem-box-red .gem-box-name {
+        color: #e08080;
+    }
+    .gem-box-green .gem-box-name {
+        color: #80e080;
+    }
+    .gem-box-blue .gem-box-name {
+        color: #8ab4e0;
+    }
+    .gem-box-white .gem-box-name {
+        color: #d0d0d0;
+    }
+
+    .gem-box-tags {
+        text-align: center;
+        color: #8a8578;
+        font-size: 0.78rem;
+        padding: 0.3em 0.8em;
+        border-bottom: 1px solid #2a2520;
+    }
+
+    .gem-box-section {
+        padding: 0.4em 0.8em;
+    }
+
+    .gem-box-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.15em 0;
+        color: #8a8578;
+    }
+
+    .gem-box-val {
+        color: #e0d6c2;
+    }
+
+    .quality-row {
+        color: #5e8ec8;
+    }
+
+    .quality-val {
+        color: #8ab4e0;
+    }
+
+    .gem-box-separator {
+        height: 1px;
+        background: linear-gradient(
+            90deg,
+            transparent 0%,
+            #3a3632 30%,
+            #3a3632 70%,
+            transparent 100%
+        );
+        margin: 0 0.5em;
+    }
+
+    .gem-box-desc {
+        padding: 0.5em 0.8em;
+        color: #af6025;
+        font-style: italic;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .gem-box-stats {
+        padding: 0.5em 0.8em;
+    }
+
+    .gem-box-stat {
+        color: #7f7f7f;
+        font-size: 0.82rem;
+        padding: 0.1em 0;
+    }
+
+    .gem-box-stat-val {
+        color: #e0d6c2;
     }
 </style>
