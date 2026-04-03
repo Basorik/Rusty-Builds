@@ -2069,84 +2069,907 @@ Start with just Tree and Skills functional; others show "Coming Soon" placeholde
 
 ## Phase 4: Item System
 
-### Rust Concepts You'll Learn
+> **Scope**: Load all item game data, define the full `Item` type system, parse items from
+> PoE clipboard text and PoB-format unique text, compute local item stats (weapon DPS, armour
+> values, flask data), build item mods into the layered `ModDB`, manage equipment slots, and
+> expose an `ItemsTab` UI for equipping/crafting/browsing items.
+>
+> **PoB Reference Files**: `src/Classes/Item.lua` (~2000 lines), `src/Modules/ItemTools.lua`,
+> `src/Classes/ItemsTab.lua`, `src/Data/Global.lua`
 
-- **Ownership & borrowing** patterns in complex data structures
-- **`RefCell<T>`** for interior mutability
-- **String parsing** (item text → structured `Item`)
-- **`TryFrom`** implementations
-- **Complex pattern matching** with guards
-- **`Display` trait** for formatted output (item tooltips)
+### Exhaustive Item Property Inventory
+
+Every property that an `Item` must capture, sourced from PoB `Item.lua` and the JSON data files.
+Missing any of these will block Phase 5 calculations or Phase 6 import/export.
+
+#### A. Identity & Metadata
+
+| Property | Type | Source | Notes |
+|---|---|---|---|
+| `name` | `String` | parsed | Display name (for uniques: `title + " " + baseName`) |
+| `base_name` | `String` | parsed/lookup | The base type name (e.g. "Vaal Regalia") |
+| `title` | `Option<String>` | parsed | Unique item name (e.g. "Shavronne's Wrappings"), `None` for non-uniques |
+| `rarity` | `Rarity` | parsed | `Normal`, `Magic`, `Rare`, `Unique`, `Relic` |
+| `item_type` | `ItemType` | lookup | `Amulet`, `Ring`, `Belt`, `Helmet`, `BodyArmour`, `Gloves`, `Boots`, `Shield`, `Quiver`, `Weapon1H`, `Weapon2H`, `Flask`, `Jewel`, `AbyssJewel`, `Tincture`, `Graft` |
+| `sub_type` | `Option<String>` | lookup | Weapon sub-type: "Bow", "Wand", "Claw", etc.; from `Bases/*.json` `subType` field |
+| `item_level` | `u32` | parsed | Affects available mod tiers |
+| `quality` | `u8` | parsed | 0-30, affects local armour/weapon/flask calculations |
+| `unique_id` | `Option<String>` | PoB data | Internal unique identifier for variant matching |
+| `league` | `Option<String>` | PoB data | League restriction (e.g. "Delve", "Ritual") |
+| `unreleased` | `bool` | PoB data | Whether this unique is unreleased/unobtainable |
+| `source` | `Option<String>` | PoB data | Drop source info |
+| `class_restriction` | `Option<String>` | parsed | Class-specific items (e.g. "Marauder") |
+| `talisman_tier` | `Option<u8>` | parsed | For talismans: 1-4 |
+
+#### B. Item Flags (all `bool`)
+
+| Flag | Effect |
+|---|---|
+| `corrupted` | Cannot be modified; enables corrupt implicits |
+| `mirrored` | Cannot be modified |
+| `split` | Cannot be split again |
+| `fractured` | Has fractured mods (cannot be changed) |
+| `synthesised` | Has synthesis implicits |
+| `crafted` | Has bench-crafted mods |
+| `veiled` | Has veiled mods (need unveiling) |
+| `scourge` | Has scourge modifiers |
+| `crucible` | Has crucible passive tree |
+| `foulborn` | Has foulborn modifiers |
+
+#### C. Influence System
+
+| Property | Type | Notes |
+|---|---|---|
+| `influences` | `InfluenceSet` (bitflags) | Set of active influences on the item |
+
+**Influence Types** (from PoB `itemLib.influenceInfo`):
+
+| Internal Key | Display Name | Context |
+|---|---|---|
+| `shaper` | Shaper | Conqueror-era influence |
+| `elder` | Elder | Conqueror-era influence |
+| `adjudicator` | Warlord | Conqueror influence |
+| `basilisk` | Hunter | Conqueror influence |
+| `crusader` | Crusader | Conqueror influence |
+| `eyrie` | Redeemer | Conqueror influence |
+| `cleansing` | Searing Exarch | Eldritch influence (body armour, helmet, gloves, boots only) |
+| `tangle` | Eater of Worlds | Eldritch influence (body armour, helmet, gloves, boots only) |
+
+Items can have multiple influences simultaneously (e.g. Shaper + Elder via Awakener's Orb).
+Eldritch influences (Exarch/Eater) are mutually exclusive with conqueror influences
+but can coexist with each other. From `Bases/*.json`, the `influenceTags` field maps
+influence keys to tag overrides for weighted mod spawning.
+
+#### D. Mod Lines
+
+Items have **7 mod line categories**, each stored as `Vec<ModLine>`:
+
+| Category | Field | Source | Notes |
+|---|---|---|---|
+| Enchantments | `enchant_mod_lines` | Lab enchants, anoints | `EnchantmentHelmet.json` etc. |
+| Scourge | `scourge_mod_lines` | Scourge mechanic | Separate upside/downside |
+| Implicits | `implicit_mod_lines` | Base type or corruption | From `Bases/*.json` `implicit` field |
+| Explicits | `explicit_mod_lines` | Prefixes + Suffixes | Primary mod pool |
+| Crucible | `crucible_mod_lines` | Crucible passive tree | From `Crucible.json` |
+| Buff | `buff_mod_lines` | Flask buff effects | Active while flask is up |
+| Class Requirement | `class_req_mod_lines` | Class-restricted mods | Rare, e.g. graft items |
+
+**`ModLine` struct:**
+```rust
+pub struct ModLine {
+    pub line: String,                      // Display text (with ranges if applicable)
+    pub range: Option<f64>,                // Roll percentile 0.0-1.0 within affix tier range
+    pub value_scalar: Option<f64>,         // Value multiplier (catalysts, etc.)
+    pub mod_list: Vec<Modifier>,           // Parsed modifiers from this line
+    pub extra: Option<String>,             // Unparsed remainder (unsupported text)
+    pub mod_tags: SmallVec<[String; 4]>,   // Tags for catalyst quality scaling
+    pub crafted: bool,                     // Bench-crafted mod
+    pub custom: bool,                      // User-added custom mod
+    pub fractured: bool,                   // Cannot be removed by reroll
+    pub synthesis: bool,                   // Synthesis implicit
+    pub exarch: bool,                      // Searing Exarch eldritch implicit
+    pub eater: bool,                       // Eater of Worlds eldritch implicit
+    pub scourge: bool,                     // Scourge modifier
+    pub crucible: bool,                    // Crucible tree node
+    pub mutated: bool,                     // Mutated via corruption or other
+}
+```
+
+#### E. Affix / Crafting Data
+
+| Property | Type | Notes |
+|---|---|---|
+| `prefixes` | `Vec<Affix>` | Active prefix mods with `mod_id` + `range` (0.0-1.0) |
+| `suffixes` | `Vec<Affix>` | Active suffix mods with `mod_id` + `range` (0.0-1.0) |
+| `affix_limit` | `u8` | Max total affixes: 2 (magic), 4 (jewel), 6 (rare/unique) |
+| `prefix_limit` | `u8` | Max prefixes: 1 (magic), 2 (jewel), 3 (rare/unique) |
+| `suffix_limit` | `u8` | Max suffixes: same as prefix_limit |
+
+**`Affix` struct:**
+```rust
+pub struct Affix {
+    pub mod_id: String,     // Key into ModItem.json / ModJewel.json etc.
+    pub range: f64,         // Roll within tier range (0.0 = min, 1.0 = max)
+}
+```
+
+The mod pools (`ModItem.json`, `ModJewel.json`, `ModFlask.json`, etc.) use paired arrays
+`weightKey[]` / `weightVal[]` for spawn weighting. The `modTags[]` array controls catalyst
+quality scaling. `statOrder[]` determines display ordering. Tiers within the same `group`
+are distinguished by `level` (item level requirement).
+
+#### F. Socket System
+
+| Property | Type | Notes |
+|---|---|---|
+| `sockets` | `Vec<Socket>` | Ordered list of sockets |
+
+**`Socket` struct:**
+```rust
+pub struct Socket {
+    pub color: SocketColor,   // R, G, B, W (white), A (abyss)
+    pub group: u8,            // Sockets in same group are linked
+}
+
+pub enum SocketColor { Red, Green, Blue, White, Abyss }
+```
+
+- Links are implicit: sockets with the same `group` value are linked together
+- From `Bases/*.json`: `socketLimit` gives the maximum number of sockets
+- Abyssal items have `A` (Abyss) sockets that accept Abyss jewels instead of gems
+- `selectable_socket_count` computed from non-abyss sockets for gem socketing
+
+#### G. Requirements
+
+| Property | Type | Notes |
+|---|---|---|
+| `requirements` | `Requirements` | Level/attribute requirements |
+
+```rust
+pub struct Requirements {
+    pub level: u32,
+    pub str_req: u32,
+    pub dex_req: u32,
+    pub int_req: u32,
+    // Adjustments after local mods ("X% reduced Attribute Requirements")
+    pub str_mod: i32,
+    pub dex_mod: i32,
+    pub int_mod: i32,
+}
+```
+
+From `Bases/*.json`: `req: { level, str, dex, int }`. Local mods can modify requirements
+(e.g. "-15% to Strength Requirement").
+
+#### H. Catalyst System
+
+| Property | Type | Notes |
+|---|---|---|
+| `catalyst` | `Option<CatalystType>` | Applied catalyst type |
+| `catalyst_quality` | `u8` | 0-20, scales matching mods |
+
+**Catalyst types** (10 total, each maps to specific mod tags for quality scaling):
+
+| Type | Tag Match | Effect |
+|---|---|---|
+| `Abrasive` | attack | Scales attack mods |
+| `Accelerating` | speed | Scales speed mods |
+| `Fertile` | life, mana | Scales life/mana mods |
+| `Imbued` | caster | Scales caster mods |
+| `Intrinsic` | attribute | Scales attribute mods |
+| `Noxious` | chaos, physical | Scales phys/chaos mods |
+| `Prismatic` | resistance | Scales resistance mods |
+| `Tempering` | defences | Scales defence mods |
+| `Turbulent` | elemental | Scales elemental mods |
+| `Unstable` | critical | Scales critical mods |
+
+Catalyst quality scales matching mod lines by `catalystQuality / 100.0` as a value scalar
+on mod line output. Only applies to amulets, rings, and belts.
+
+#### I. Variant System (Uniques)
+
+| Property | Type | Notes |
+|---|---|---|
+| `variant_list` | `Vec<String>` | Available variant names (e.g. "Pre 3.19.0", "Current") |
+| `variant` | `Option<usize>` | Selected variant index |
+| `has_alt_variant` | `bool` | Has per-line alternate variants |
+| `variant_alt` | `Option<usize>` | Selected alt variant (up to 5 levels) |
+
+PoB uniques can have global variants (different versions across patches) and per-line
+alt variants where individual mod lines have `{variant:N}` tags selecting which variant
+they belong to. Up to 5 alt variant levels exist (`variantAlt`, `variantAlt2`...`variantAlt5`).
+
+#### J. Computed Weapon Data
+
+These are **calculated after applying local mods** (not stored in data files):
+
+```rust
+pub struct WeaponData {
+    pub phys_min: f64,
+    pub phys_max: f64,
+    pub fire_min: f64,
+    pub fire_max: f64,
+    pub cold_min: f64,
+    pub cold_max: f64,
+    pub lightning_min: f64,
+    pub lightning_max: f64,
+    pub chaos_min: f64,
+    pub chaos_max: f64,
+    pub attack_rate: f64,
+    pub crit_chance: f64,      // Percentage (e.g. 6.5)
+    pub range: f64,
+    // Computed totals
+    pub phys_dps: f64,
+    pub elemental_dps: f64,
+    pub chaos_dps: f64,
+    pub total_dps: f64,
+}
+```
+
+**Calculation** (from PoB `Item.lua:calcLocal()`):
+1. Start with base values from `Bases/*.json` (`PhysicalMin`, `PhysicalMax`, `CritChanceBase`, `AttackRateBase`, `Range`)
+2. Pull all **local** modifiers from the item's mod list (flagged with `ModFlag::Weapon*`)
+3. Apply flat added damage → `phys_min += flat_phys_min`, etc.
+4. Apply `% increased Physical Damage` → multiply phys by `(1 + inc_phys / 100)`
+5. Apply quality → `phys_min *= (1 + quality / 100)`
+6. Apply attack speed: `attack_rate = base_rate * (1 + local_attack_speed_inc / 100)`
+7. Apply crit: `crit_chance = base_crit * (1 + local_crit_inc / 100)`
+8. DPS = `(min + max) / 2 * attack_rate` for each element
+
+**Critical**: Local mods must be **removed** from the item's `modList` after being applied
+to weapon data. They do NOT go into the global `ModDB` — they modify the weapon's stats
+directly, and the calc engine reads weapon data separately.
+
+#### K. Computed Armour Data
+
+```rust
+pub struct ArmourData {
+    pub armour: f64,
+    pub armour_base_percentile: f64,
+    pub evasion: f64,
+    pub evasion_base_percentile: f64,
+    pub energy_shield: f64,
+    pub energy_shield_base_percentile: f64,
+    pub ward: f64,
+    pub ward_base_percentile: f64,
+    pub block_chance: f64,
+    pub movement_penalty: f64,
+}
+```
+
+**Calculation**: Same local-mod extraction pattern as weapons:
+1. Base values from `Bases/*.json` (`ArmourBaseMin/Max`, `EvasionBaseMin/Max`, `EnergyShieldBaseMin/Max`)
+2. Base percentile = `(base - min) / (max - min)` for tooltip display
+3. Apply flat local adds, then `% increased`, then quality bonus
+4. `total = (base + flat) * (1 + inc / 100) * (1 + quality / 100)`
+
+#### L. Computed Flask Data
+
+```rust
+pub struct FlaskData {
+    pub life_base: f64,
+    pub life_instant: f64,
+    pub life_gradual: f64,
+    pub life_total: f64,
+    pub mana_base: f64,
+    pub mana_instant: f64,
+    pub mana_gradual: f64,
+    pub mana_total: f64,
+    pub duration: f64,
+    pub charges_max: f64,
+    pub charges_used: f64,
+    pub effect_inc: f64,
+    pub gain_mod: f64,
+    pub instant_perc: f64,      // Percentage of recovery that is instant
+}
+```
+
+Flask data comes from `Bases/*.json` flask entries (`life`, `mana`, `duration`, `chargesMax`, `chargesUsed`).
+Flask `buff` arrays contain the active buff mod lines. Local flask mods affect duration, charges, recovery rate.
+
+#### M. Tincture Data
+
+```rust
+pub struct TinctureData {
+    pub mana_burn: f64,
+    pub cooldown: f64,
+    pub effect_inc: f64,
+}
+```
+
+#### N. Jewel Data
+
+```rust
+pub struct JewelData {
+    pub radius_index: Option<u8>,    // For tree jewels: small/medium/large radius
+    pub radius_label: Option<String>,
+    pub limit: Option<u32>,          // Stack limit
+    pub cluster_jewel: Option<ClusterJewelData>,
+}
+
+pub struct ClusterJewelData {
+    pub size: String,           // "Small", "Medium", "Large"
+    pub skill: String,          // Cluster skill key
+    pub node_count: u8,         // Rolled node count
+    pub granted_skills: Vec<String>,
+}
+```
+
+Cluster jewel data from `ClusterJewels.json`:
+- `jewels.{size}.skills.{tag}` → `{ enchant[], name, stats[], tag }`
+- `jewels.{size}.minNodes` / `maxNodes` for valid node count ranges
+
+#### O. Equipment Slots
+
+All slots from PoB `ItemsTab.lua` (order matters for UI):
+
+| Slot Name | Type | Notes |
+|---|---|---|
+| `Weapon 1` | Weapon | Main hand |
+| `Weapon 2` | Weapon/Shield/Quiver | Off hand |
+| `Helmet` | Armour | |
+| `Body Armour` | Armour | |
+| `Gloves` | Armour | |
+| `Boots` | Armour | |
+| `Amulet` | Jewellery | |
+| `Ring 1` | Jewellery | |
+| `Ring 2` | Jewellery | |
+| `Belt` | Jewellery | |
+| `Flask 1-5` | Flask | 5 flask slots |
+| `Graft 1-2` | Graft | Necropolis grafts |
+| `Weapon 1 Swap` | Weapon | Weapon set II |
+| `Weapon 2 Swap` | Weapon/Shield | Weapon set II off-hand |
+| `Ring 3` | Jewellery | Unique item grants (e.g. Precursor's Emblem) |
+
+**Additional dynamic slots:**
+- **Abyssal Sockets**: Up to 6 per slot for Weapon 1/2, Helmet, Body Armour, Gloves, Boots, Belt (e.g. "Belt Abyssal Socket 1")
+- **Jewel Sockets**: From passive tree nodes — dynamic count based on tree version
+- **Item Sets**: Multiple full equipment sets with quick switching (PoB supports this)
+
+---
+
+### Data File Reference
+
+| File | Format | Key → Value Type | Used For |
+|---|---|---|---|
+| `Bases/*.json` (22 files) | `{ baseName: BaseItem }` | Base names → structured item data | Base type lookup, local stat baselines |
+| `ModItem.json` | `{ modId: ModPool }` | Mod IDs → prefix/suffix definitions | Equipment mod rolling/display |
+| `ModJewel.json` | `{ modId: ModPool }` | Same format | Jewel-specific mods |
+| `ModFlask.json` | `{ modId: ModPool }` | Same format | Flask-specific mods |
+| `ModJewelAbyss.json` | `{ modId: ModPool }` | Same format | Abyss jewel mods |
+| `ModJewelCharm.json` | `{ modId: ModPool }` | Same format | Charm jewel mods |
+| `ModJewelCluster.json` | `{ modId: ModPool }` | Same format | Cluster jewel mods |
+| `ModGraft.json` | `{ modId: ModPool }` | Same format | Graft mods |
+| `ModTincture.json` | `{ modId: ModPool }` | Same format | Tincture mods |
+| `ModMaster.json` | `[ ModPool ]` | **Array** of objects (not keyed!) | Crafting bench mods |
+| `ModVeiled.json` | `{ modId: ModPool }` | Same format | Veiled mods |
+| `ModNecropolis.json` | `{ modId: ModPool }` | Same format | Necropolis crafting mods |
+| `ModFoulborn.json` | `{ modId: ModPool }` | Same format | Foulborn mods |
+| `BeastCraft.json` | `{ modId: ModPool }` | Same format | Beastcrafting mods |
+| `Uniques/*.json` (22+ files) | `[ String ]` | **Array of raw text strings!** | Unique item definitions |
+| `Essence.json` | `{ path: EssenceDef }` | Metadata paths → essence data | Essence crafting |
+| `ClusterJewels.json` | `{ jewels: nested }` | Nested by size → skills | Cluster jewel generation |
+| `Crucible.json` | `{ nodeId: CrucNode }` | Node IDs → crucible tree nodes | Crucible passive tree |
+| `Enchantment*.json` (6 files) | `{ skill: tiers }` | Skill names → tier arrays | Lab/enchant lookup |
+
+**Critical**: `Uniques/*.json` are **arrays of raw text strings** (PoE clipboard-like format
+with `\n` line separators), NOT structured JSON objects. These must be parsed using the same
+item text parser as clipboard input. Each string is a complete item definition.
+
+**`ModPool` schema** (shared by all Mod*.json except ModMaster):
+```json
+{
+  "affix": "Prefix" | "Suffix",
+  "group": "GroupName",
+  "level": 68,
+  "modTags": ["attack", "physical"],
+  "statOrder": [1, 2],
+  "type": "Prefix" | "Suffix" | "Exarch" | "Eater" | "Corrupted",
+  "weightKey": ["amulet", "ring", "belt"],
+  "weightVal": [1000, 1000, 0],
+  "1": { "min": 10, "max": 15, "fmt": "#" },
+  "2": { "min": 5, "max": 8, "fmt": "#" }
+}
+```
+
+---
 
 ### Steps
 
-#### 4.1 — Bundle Item Data
+#### 4.1 — Load Base Item Data (`data/bases.rs`)
 
-Item data is already downloaded by `tools/fetch_data.ts` and organized under `src-tauri/data/pob/`:
-- `Bases/*.json` — all base item types (by category: `Amulet.json`, `Body Armour.json`, `Bow.json`, etc.)
-- `Uniques/*.json` — unique items (by slot type + `Special/` for special uniques)
-- `ModItem.json`, `ModJewel.json`, `ModFlask.json`, `ModJewelAbyss.json`, etc. — mod pools (prefix/suffix definitions)
+Parse all 22 `Bases/*.json` files into typed Rust structs at startup. Store in `GameData`.
 
-No additional data fetching is needed — load these from the bundled `pob/` directory.
+```rust
+/// A single base item type (e.g. "Vaal Regalia", "Karui Chopper")
+pub struct BaseItem {
+    pub name: String,
+    pub item_type: String,          // "Body Armour", "Bow", etc.
+    pub sub_type: Option<String>,    // "Two Hand Sword", etc.
+    pub tags: FxHashMap<String, bool>,
+    pub implicit: Vec<String>,       // Implicit mod text lines
+    pub implicit_mod_types: Vec<Vec<String>>,  // Tag lists per implicit
+    pub influence_tags: FxHashMap<String, String>, // influence key → tag override
+    pub socket_limit: u8,
+    pub req: Requirements,
+    // Weapon-specific
+    pub weapon: Option<WeaponBase>,
+    // Armour-specific
+    pub armour: Option<ArmourBase>,
+    // Flask-specific
+    pub flask: Option<FlaskBase>,
+}
 
-#### 4.2 — Create Item Types (`item/types.rs`)
+pub struct WeaponBase {
+    pub attack_rate_base: f64,
+    pub crit_chance_base: f64,
+    pub physical_min: f64,
+    pub physical_max: f64,
+    pub range: f64,
+}
 
-Define: `Item`, `ItemSlot` (all 20+ equipment slots), `ItemMod`, `Rarity` enum (Normal/Magic/Rare/Unique), `SocketGroup`
+pub struct ArmourBase {
+    pub armour_min: f64,
+    pub armour_max: f64,
+    pub evasion_min: f64,
+    pub evasion_max: f64,
+    pub energy_shield_min: f64,
+    pub energy_shield_max: f64,
+    pub ward_min: f64,
+    pub ward_max: f64,
+    pub movement_penalty: f64,
+    pub block: f64,
+}
 
-#### 4.3 — Create Item Parser (`item/parser.rs`)
-
-Parse item text (as copied from POE's in-game clipboard format):
-
+pub struct FlaskBase {
+    pub life: f64,
+    pub mana: f64,
+    pub duration: f64,
+    pub charges_max: f64,
+    pub charges_used: f64,
+    pub buff: Vec<String>,   // Buff mod lines
+}
 ```
-Rarity: Unique
-Tabula Rasa
-Simple Robe
---------
-Sockets: W-W-W-W-W-W
---------
-Item Level: 100
+
+**Storage**: `GameData.bases: FxHashMap<String, BaseItem>` — keyed by base name for O(1) lookup.
+
+**Loading**: Iterate all files in `data/pob/Bases/`, parse each as `FxHashMap<String, BaseItem>`,
+merge into a single map. ~22 files, ~2000 total base items.
+
+**Tests**: Verify a known base (e.g. "Vaal Regalia") has correct `energy_shield_min/max`, `socket_limit: 6`, correct implicit.
+
+#### 4.2 — Load Mod Pool Data (`data/mods.rs`)
+
+Parse all `Mod*.json` files into a unified mod pool registry.
+
+```rust
+pub struct ModPoolEntry {
+    pub mod_id: String,
+    pub affix: AffixType,         // Prefix, Suffix
+    pub group: String,            // Affix group (for mutual exclusion)
+    pub level: u32,               // Item level requirement
+    pub mod_tags: Vec<String>,    // For catalyst quality scaling
+    pub stat_order: Vec<u32>,     // Display ordering
+    pub mod_type: ModPoolType,    // Prefix/Suffix/Exarch/Eater/Corrupted
+    pub weight_key: Vec<String>,  // Item type tags for spawn weighting
+    pub weight_val: Vec<i32>,     // Corresponding weights (0 = blocked)
+    pub stats: Vec<ModStatRange>, // Stat lines ("1", "2", etc.)
+}
+
+pub struct ModStatRange {
+    pub min: f64,
+    pub max: f64,
+    pub fmt: String,      // Display format template
+}
+
+pub enum AffixType { Prefix, Suffix }
+pub enum ModPoolType { Prefix, Suffix, Exarch, Eater, Corrupted }
 ```
 
-→ produces `Item { rarity: Unique, name: "Tabula Rasa", base: "Simple Robe", sockets: [...], ... }`
+**Storage**: `GameData.mod_pools: ModPoolRegistry` with:
+- `equipment: FxHashMap<String, ModPoolEntry>` (from `ModItem.json`)
+- `jewel: FxHashMap<String, ModPoolEntry>` (from `ModJewel.json`)
+- `flask: FxHashMap<String, ModPoolEntry>` (from `ModFlask.json`)
+- `abyss: FxHashMap<String, ModPoolEntry>` (from `ModJewelAbyss.json`)
+- `cluster: FxHashMap<String, ModPoolEntry>` (from `ModJewelCluster.json`)
+- `master: Vec<ModPoolEntry>` (from `ModMaster.json` — note: array, not map!)
+- `veiled: FxHashMap<String, ModPoolEntry>` (from `ModVeiled.json`)
+- `essence: FxHashMap<String, EssenceDef>` (from `Essence.json`)
 
-#### 4.4 — Create Item Tooltip (`item/tooltip.rs`)
+**Weight system**: `weightKey[i]` and `weightVal[i]` are paired. To check if a mod can
+spawn on an item, match the item's tags against `weightKey` entries; the mod is eligible
+if any matching key has `weightVal > 0`. Weight 0 means explicitly blocked for that type.
 
-Implement `Display for Item` to generate tooltip text with colored mod lines (blue = supported, red = unsupported).
+**Tests**: Verify mod pool loading, weight filtering for a known base type, affix count by group.
 
-#### 4.5 — Create Crafting System (`item/crafting.rs`)
+#### 4.3 — Load Unique Item Data (`data/uniques.rs`)
 
-- Select a base item
-- Add prefixes/suffixes from the mod pool
-- Validate: max 3 prefixes + 3 suffixes for rare items
-- Roll random tiers within ranges
+Parse all `Uniques/*.json` files. **These are arrays of raw text strings**, not structured JSON.
 
-#### 4.6 — Create Equipment Manager (`item/equip.rs`)
+```rust
+pub struct UniqueItemDef {
+    pub raw_text: String,        // Original text for re-parsing
+    pub base_name: String,       // Extracted base type
+    pub title: String,           // Unique name
+    pub variant_list: Vec<String>,
+    // Pre-parsed for search/browse (not full Item — that happens on equip)
+    pub league: Option<String>,
+    pub unreleased: bool,
+    pub source: Option<String>,
+}
+```
 
-- `Equipment` struct: `HashMap<ItemSlot, Item>`
-- `fn equip()` / `fn unequip()` with slot validation
-- `fn collect_mods(&self) -> ModDB` — gathers all item mods
+**Loading strategy**: Parse just enough metadata from each raw string for search/browse
+(name, base type, league, variant list). Full `Item` parsing is deferred to when the user
+actually equips/views the unique — this keeps startup fast (~4000+ uniques).
 
-#### 4.7 — Create `ItemsTab.svelte`
+**Storage**: `GameData.uniques: Vec<UniqueItemDef>` — flat list, indexed for search.
 
-- Equipment slot display (list or visual grid)
-- Click slot → item browser (uniques search, paste from clipboard, or craft)
-- Tooltip on hover
-- DPS comparison when swapping items
+**Tests**: Verify known unique (e.g. "Tabula Rasa") is found, has correct base name "Simple Robe".
+
+#### 4.4 — Item Type System (`item/types.rs`)
+
+Define the core `Item` struct and all supporting types. This is the largest type definition in the project.
+
+```rust
+pub struct Item {
+    // Identity (Section A)
+    pub name: String,
+    pub base_name: String,
+    pub title: Option<String>,
+    pub rarity: Rarity,
+    pub item_type: ItemType,
+    pub sub_type: Option<String>,
+    pub item_level: u32,
+    pub quality: u8,
+    pub unique_id: Option<String>,
+    pub league: Option<String>,
+    pub unreleased: bool,
+    pub source: Option<String>,
+    pub class_restriction: Option<String>,
+    pub talisman_tier: Option<u8>,
+
+    // Flags (Section B)
+    pub corrupted: bool,
+    pub mirrored: bool,
+    pub split: bool,
+    pub fractured: bool,
+    pub synthesised: bool,
+    pub crafted: bool,
+    pub veiled: bool,
+    pub scourge: bool,
+    pub crucible: bool,
+    pub foulborn: bool,
+
+    // Influence (Section C)
+    pub influences: InfluenceSet,
+
+    // Mod lines (Section D)
+    pub enchant_mod_lines: Vec<ModLine>,
+    pub scourge_mod_lines: Vec<ModLine>,
+    pub implicit_mod_lines: Vec<ModLine>,
+    pub explicit_mod_lines: Vec<ModLine>,
+    pub crucible_mod_lines: Vec<ModLine>,
+    pub buff_mod_lines: Vec<ModLine>,
+
+    // Crafting (Section E)
+    pub prefixes: Vec<Affix>,
+    pub suffixes: Vec<Affix>,
+
+    // Sockets (Section F)
+    pub sockets: Vec<Socket>,
+
+    // Requirements (Section G)
+    pub requirements: Requirements,
+
+    // Catalyst (Section H)
+    pub catalyst: Option<CatalystType>,
+    pub catalyst_quality: u8,
+
+    // Variants (Section I)
+    pub variant_list: Vec<String>,
+    pub variant: Option<usize>,
+    pub has_alt_variant: bool,
+
+    // Computed data (Sections J-N) — populated by build_mod_list()
+    pub weapon_data: Option<WeaponData>,
+    pub armour_data: Option<ArmourData>,
+    pub flask_data: Option<FlaskData>,
+    pub tincture_data: Option<TinctureData>,
+    pub jewel_data: Option<JewelData>,
+
+    // The full list of global (non-local) modifiers from this item
+    pub mod_list: Vec<Modifier>,
+}
+```
+
+**Enums:**
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Rarity { Normal, Magic, Rare, Unique, Relic }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ItemType {
+    Amulet, Ring, Belt, Helmet, BodyArmour, Gloves, Boots,
+    Shield, Quiver, Weapon1H, Weapon2H,
+    Flask, Jewel, AbyssJewel, ClusterJewel,
+    Tincture, Graft,
+}
+
+bitflags! {
+    pub struct InfluenceSet: u8 {
+        const SHAPER    = 1 << 0;
+        const ELDER     = 1 << 1;
+        const WARLORD   = 1 << 2;  // key: "adjudicator"
+        const HUNTER    = 1 << 3;  // key: "basilisk"
+        const CRUSADER  = 1 << 4;
+        const REDEEMER  = 1 << 5;  // key: "eyrie"
+        const EXARCH    = 1 << 6;  // key: "cleansing" (Searing Exarch)
+        const EATER     = 1 << 7;  // key: "tangle" (Eater of Worlds)
+    }
+}
+
+pub enum CatalystType {
+    Abrasive, Accelerating, Fertile, Imbued, Intrinsic,
+    Noxious, Prismatic, Tempering, Turbulent, Unstable,
+}
+
+pub enum SocketColor { Red, Green, Blue, White, Abyss }
+
+pub struct Socket {
+    pub color: SocketColor,
+    pub group: u8,
+}
+```
+
+#### 4.5 — Item Text Parser (`item/parser.rs`)
+
+Parse both PoE clipboard format and PoB unique text format into `Item`.
+
+This handles two input formats:
+1. **PoE clipboard** — copied from in-game (has `--------` separators, `Rarity:` header)
+2. **PoB raw text** — from `Uniques/*.json` (similar format but with extra metadata tags like `{variant:1}`, `Crafted: true`, `Shaper Item`, etc.)
+
+**Parsing stages** (mirroring PoB `Item:ParseRaw()`):
+
+1. **Header**: Extract rarity, name, base type
+2. **Flags**: `Corrupted`, `Mirrored`, `Split`, `Fractured Item`, `Synthesised Item`
+3. **Influences**: `Shaper Item`, `Elder Item`, `Warlord Item`, etc.
+4. **Properties**: `Quality: +20%`, `Sockets: R-R-G-B R`, `Item Level: 84`
+5. **Requirements**: `Level: 68`, `Str: 155`, `Dex: 100`, `Int: 68`
+6. **Sections** (separated by `--------`): Implicits, explicits, flavour text
+7. **PoB metadata tags**: `{variant:N}`, `{range:0.5}`, `{crafted}`, `{fractured}`, `{tags:attack,physical}`, `{custom}`
+8. **Mod line parsing**: Each mod line → `parse_display_text()` (reuse Phase 2 parser) → `Vec<Modifier>`
+
+**Important edge cases:**
+- Unique items have `title` (unique name) on line 1 and `base_name` on line 2
+- Magic items have affix names embedded in the name line
+- PoB text includes variant annotations: `{variant:1,2}Adds 1 to 2 Physical Damage`
+- Range annotations: `{range:0.75}(100-130)% increased Energy Shield`
+- Multi-line mods (some mods span 2+ display lines)
+
+**Tests**: Parse a known unique (Tabula Rasa), a rare with affixes, a magic item, a corrupted item with implicit swap.
+
+#### 4.6 — Local Mod Extraction & Computed Stats (`item/local_mods.rs`)
+
+Implement PoB's `calcLocal()` — the engine that separates local mods from global mods and
+computes weapon DPS / armour values / flask data.
+
+**Algorithm:**
+1. After parsing all mod lines into `Vec<Modifier>`, scan for local modifiers
+2. A modifier is "local" if:
+   - For weapons: any mod with `ModFlag::Weapon*` flags (includes flat added damage, attack speed, crit chance)
+   - For armour: `#% increased Armour/Evasion/Energy Shield/Ward`, flat adds to defences
+   - For flasks: duration, charges, recovery mods
+3. Remove local mods from `mod_list` (they don't enter ModDB)
+4. Apply local mods to compute `WeaponData` / `ArmourData` / `FlaskData`
+5. Store results in `item.weapon_data`, `item.armour_data`, `item.flask_data`
+6. The remaining mods in `mod_list` are "global" — these go into the items ModDB layer
+
+**PoB reference**: `Item.lua` lines ~1200-1400 (the `calcLocal` section within `BuildModListForSlotNum`).
+
+**Tests**: Craft a weapon with known base + mods, verify DPS matches PoB output. Same for armour and flasks.
+
+#### 4.7 — Equipment Manager (`item/equip.rs`)
+
+Manages equipping/unequipping items and rebuilding the items ModDB layer.
+
+```rust
+pub struct Equipment {
+    pub slots: FxHashMap<ItemSlot, Item>,
+    pub item_sets: Vec<ItemSet>,
+    pub active_set: usize,
+}
+
+pub struct ItemSet {
+    pub name: String,
+    pub slots: FxHashMap<ItemSlot, Item>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ItemSlot {
+    Weapon1, Weapon2,
+    Helmet, BodyArmour, Gloves, Boots,
+    Amulet, Ring1, Ring2, Belt,
+    Flask1, Flask2, Flask3, Flask4, Flask5,
+    Graft1, Graft2,
+    Weapon1Swap, Weapon2Swap,
+    Ring3,
+    // Dynamic: AbyssalSocket(slot, index), JewelSocket(node_id)
+}
+```
+
+**Key methods:**
+- `equip(slot, item)` — validates slot compatibility, triggers `rebuild_items()`
+- `unequip(slot)` — removes item, triggers `rebuild_items()`
+- `collect_mods() -> ModDB` — iterates all equipped items, collects `item.mod_list` into a ModDB
+- `swap_weapons()` — switches active weapon set (Weapon1↔Weapon1Swap, Weapon2↔Weapon2Swap)
+
+**ModDB integration**: Add `items: ModDB` layer to `ModDBLayers`:
+```rust
+pub struct ModDBLayers {
+    pub tree: ModDB,
+    pub class: ModDB,
+    pub gems: ModDB,
+    pub items: ModDB,   // NEW
+}
+```
+
+`rebuild_items()` → iterate all equipped items → collect all `item.mod_list` entries → store in `self.items`.
+`merged()` now includes `combined.merge(&self.items)`.
+
+**Tauri commands** (new):
+- `equip_item(slot: ItemSlot, item_text: String) -> Result<BuildStats, String>` — parse text, equip, recalc
+- `unequip_item(slot: ItemSlot) -> Result<BuildStats, String>`
+- `get_equipped_items() -> Result<HashMap<String, ItemSummary>, String>`
+- `search_uniques(query: String) -> Result<Vec<UniqueSearchResult>, String>`
+- `get_base_items(item_type: String) -> Result<Vec<BaseItemSummary>, String>`
+- `craft_item(base_name: String, affixes: Vec<AffixInput>) -> Result<Item, String>`
+
+**Tests**: Equip/unequip cycle, verify ModDB gains/loses mods, weapon swap.
+
+#### 4.8 — Crafting Engine (`item/crafting.rs`)
+
+Allow creating items from scratch and modifying them:
+
+**Features:**
+- Select a base item from loaded bases
+- Set rarity (changes affix limits)
+- Add prefixes/suffixes by mod ID from the pool
+- Roll ranges within tiers (slider 0.0-1.0)
+- Validate affix count: 1P+1S for magic, 3P+3S for rare, mutually exclusive groups
+- Apply essences (override one affix with essence mod)
+- Apply enchantments (from `Enchantment*.json`)
+- Apply corruptions (replace implicits with corrupt implicits from corruption mod pool)
+- Apply catalysts (set type + quality, affects mod line value scaling)
+- Apply anoints (add notable passive as an implicit to amulets/rings/blight uniques)
+
+**Spawn weight filtering** (PoB `GetModSpawnWeight`):
+```rust
+fn get_mod_spawn_weight(mod_entry: &ModPoolEntry, item: &Item, base: &BaseItem) -> i32 {
+    // Check each weightKey against item/base tags
+    // Return the corresponding weightVal, or 0 if no match
+    for (key, val) in mod_entry.weight_key.iter().zip(&mod_entry.weight_val) {
+        if base.tags.contains_key(key) || item_has_influence_tag(item, key) {
+            return *val;
+        }
+    }
+    0 // Not eligible for this item
+}
+```
+
+**Tests**: Create a rare with max affixes, verify validation rejects extra. Verify essence crafting overrides correctly.
+
+#### 4.9 — Item Tooltip Renderer (`item/tooltip.rs`)
+
+Generate rich tooltip text for items with colour-coded mod lines.
+
+**Colour codes** (from PoB `Global.lua`):
+- `NORMAL` (grey): regular mods
+- `MAGIC` (blue): magic mod lines
+- `CRAFTED` (light blue): bench-crafted mods
+- `FRACTURED` (gold): fractured mods
+- `CUSTOM` (green): user custom mods
+- `SCOURGE` (orange): scourge mods
+- `CRUCIBLE` (orange): crucible mods
+- `MUTATED` (pink): mutated mods
+- `UNSUPPORTED` (red): mods that couldn't be parsed
+
+**Tooltip sections** (in order):
+1. Rarity header + name
+2. Item type / weapon stats (DPS, attack speed, crit)
+3. Armour stats  
+4. Requirements
+5. Sockets
+6. Enchantments (labelled)
+7. Implicits (above separator)
+8. Explicits / buff lines
+9. Corruption / influence labels
+10. Flavour text (for uniques)
+
+**Output format**: Returns a structured `Vec<TooltipLine>` with `{ text, color_code }` for the frontend to render.
+
+#### 4.10 — `ItemsTab.svelte` (Frontend)
+
+The main items management UI component.
+
+**Layout:**
+- Equipment slot grid/list (all slots from Section O above)
+- Each slot is clickable → opens item editor panel
+- Item editor panel: search uniques, paste from clipboard, or craft from scratch
+- Equipped item preview with tooltip on hover
+- Stat comparison when hovering an item over an occupied slot
+
+**Key interactions:**
+- Paste item text (Ctrl+V or text box) → calls `equip_item` command
+- Search uniques → filter `search_uniques` results by name/base/type
+- Craft item → base selector + affix selector with tier/range sliders
+- Socket editor → visual socket display, click to change colours/links
+- Influence toggle → dropdown to add/remove influence types
+- Catalyst selector → type + quality slider
+- Quality editor → number input 0-30
+- Corruption toggle → recalculates implicits
+
+**Components** (suggested split):
+- `ItemsTab.svelte` — layout container
+- `EquipmentSlots.svelte` — slot grid with item previews
+- `ItemEditor.svelte` — edit/create/paste item
+- `ItemTooltip.svelte` — hover tooltip rendering
+- `AffixSelector.svelte` — prefix/suffix browser with tier sliders
+- `UniqueSearch.svelte` — searchable unique item list
+
+### Performance Considerations
+
+1. **Startup**: Load bases (~2000 items) and mod pools (~10k entries) at startup; defer
+   full unique parsing (~4000 items) to on-demand. Pre-index unique metadata only.
+
+2. **FxHashMap everywhere**: All lookups by base name, mod ID, unique name use `FxHashMap`.
+
+3. **Local mod calculation**: Done once per item equip, cached in `WeaponData`/`ArmourData`.
+   No recalculation unless the item changes.
+
+4. **ModDB layer rebuild**: Only the `items` layer is rebuilt on equip/unequip. Tree, class,
+   and gem layers remain untouched. This is the Phase 2 layered architecture paying off.
+
+5. **Item text parsing**: The parser runs once per item paste/equip. PoB-format unique parsing
+   is single-pass with regex-based metadata extraction.
+
+6. **Unique search**: Pre-indexed by name/base for substring search. No full-text re-parsing
+   on every keystroke — use the pre-extracted `UniqueItemDef` metadata.
+
+7. **Weight filtering**: `get_mod_spawn_weight()` is O(n) over weight keys per mod entry.
+   For crafting UI that shows eligible mods, pre-filter once on base selection, cache result.
+
+8. **SmallVec for mod tags**: `ModLine.mod_tags` uses `SmallVec<[String; 4]>` since most
+   mod lines have 1-3 tags. Avoids heap allocation for the common case.
 
 ### How to Verify Phase 4 is Complete
 
-- [ ] Can paste a real POE item text → parsed into `Item`
-- [ ] Can search uniques, select one, equip it, see mods
-- [ ] Can craft a rare item with valid prefix/suffix counts
-- [ ] Equipping items updates the ModDB (stat changes visible)
-- [ ] Item tooltip displays correctly
-- [ ] Tests cover parsing, crafting validation, equip/unequip
+- [ ] All `Bases/*.json` files loaded into `GameData.bases` with correct types
+- [ ] All `Mod*.json` pool files loaded and queryable
+- [ ] Unique item metadata pre-indexed from raw text files (~4000 entries)
+- [ ] Can paste a real PoE clipboard item → parsed into full `Item` struct
+- [ ] Can parse a PoB-format unique text string → full `Item`
+- [ ] Local mod extraction correctly computes weapon DPS matching PoB output
+- [ ] Local mod extraction correctly computes armour values matching PoB output
+- [ ] Equipping an item adds its global mods to the `items` ModDB layer
+- [ ] Unequipping removes mods and recalculates
+- [ ] Weapon swap works correctly (swaps Weapon1↔Weapon1Swap)
+- [ ] Can craft a rare item: select base, add affixes, validate limits
+- [ ] Spawn weight filtering correctly limits available mods by item type
+- [ ] Catalyst quality correctly scales matching mod lines
+- [ ] Influence flags correctly gate Exarch/Eater/Conqueror mods
+- [ ] Item tooltip renders all sections with correct colour codes
+- [ ] Frontend ItemsTab: equip/unequip/search/craft cycle works end-to-end
+- [ ] Tests cover: parsing (clipboard + PoB format), local mods, crafting validation, equip/unequip
+- [ ] Debug stats page shows item mods in the items layer
 
-### Suggested Reading
+### PoB Reference Files
 
-- [The Rust Programming Language, Ch 4: Ownership](https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html)
-- [The Rust Programming Language, Ch 15: Smart Pointers](https://doc.rust-lang.org/book/ch15-00-smart-pointers.html)
-- [std::fmt::Display](https://doc.rust-lang.org/std/fmt/trait.Display.html)
+- `src/Classes/Item.lua` — `ParseRaw()`, `BuildRaw()`, `BuildModList()`, `BuildModListForSlotNum()` (local mod extraction)
+- `src/Modules/ItemTools.lua` — `influenceInfo`, `applyRange()`, `formatModLine()`
+- `src/Classes/ItemsTab.lua` — slot management, crafting UI, item sets
+- `src/Data/Global.lua` — `ModFlag`, `KeywordFlag`, colour codes
 
 ---
 
