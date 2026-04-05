@@ -12,7 +12,8 @@
     "tauri": "tauri",
     "tool:fetch-data": "bun run tools/fetch_data.ts",
     "tool:fetch-pob": "bun run tools/fetch_data.ts --pob",
-    "tool:fetch-tree": "bun run tools/fetch_data.ts --tree"
+    "tool:fetch-tree": "bun run tools/fetch_data.ts --tree",
+    "tool:fetch-repoe": "bun run tools/fetch_data.ts --repoe"
   },
   "license": "MIT",
   "dependencies": {

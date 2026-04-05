@@ -3,16 +3,18 @@
  *
  * Downloads all development data files needed for Rusty Builds:
  *
- *   1. All top-level JSON files from repoe-fork (PoB data export)
+ *   1. All top-level JSON files from repoe-fork PoB data export
  *   2. The official PoE 1 passive skill tree from grindinggear/skilltree-export
+ *   3. The full RePoE data export (base_items, mods, gems, stats, etc.)
  *
  * Output directory: src-tauri/data/
  *
  * Usage:
- *   bun run tools/fetch_data.ts          # download everything
- *   bun run tools/fetch_data.ts --pob    # only repoe-fork files
- *   bun run tools/fetch_data.ts --tree   # only skill tree
- *   bun run tool:fetch-data              # package.json alias
+ *   bun run tools/fetch_data.ts           # download everything
+ *   bun run tools/fetch_data.ts --pob     # only repoe-fork PoB files
+ *   bun run tools/fetch_data.ts --tree    # only skill tree
+ *   bun run tools/fetch_data.ts --repoe   # only RePoE data export
+ *   bun run tool:fetch-data               # package.json alias
  */
 
 import { mkdirSync, existsSync } from "node:fs";
@@ -24,6 +26,8 @@ const OUT_DIR = resolve("src-tauri/data");
 
 const POB_BASE_URL = "https://repoe-fork.github.io/pob-data/poe1";
 
+const REPOE_BASE_URL = "https://repoe-fork.github.io";
+
 const SKILLTREE_API =
     "https://api.github.com/repos/grindinggear/skilltree-export";
 
@@ -32,7 +36,8 @@ const SKILLTREE_API =
 const args = process.argv.slice(2);
 const onlyPob = args.includes("--pob");
 const onlyTree = args.includes("--tree");
-const runAll = !onlyPob && !onlyTree;
+const onlyRepoe = args.includes("--repoe");
+const runAll = !onlyPob && !onlyTree && !onlyRepoe;
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -139,6 +144,87 @@ async function downloadSkillTree() {
     console.log(`   ℹ️  Update DEFAULT_TREE_VERSION in lib.rs to "${tag}" if this is a new version.`);
 }
 
+/**
+ * Crawl a repoe-fork directory page and return all .json file names
+ * (excluding .min.json). Only returns files, not subdirectories.
+ */
+async function crawlRepoeDir(dirUrl: string): Promise<string[]> {
+    const res = await fetch(dirUrl);
+    if (!res.ok) throw new Error(`Failed to fetch ${dirUrl}: HTTP ${res.status}`);
+    const html = await res.text();
+
+    const results: string[] = [];
+    const fileMatches = [...html.matchAll(/href="(?:\.\/)?([^"]+\.json)"/g)];
+    for (const m of fileMatches) {
+        const filename = m[1];
+        if (!filename.endsWith(".min.json")) {
+            results.push(filename);
+        }
+    }
+    return results;
+}
+
+async function downloadRepoeData() {
+    console.log("\n📚 Fetching RePoE data export (poe1)…");
+
+    const repoeDir = join(OUT_DIR, "repoe");
+    ensureDir(repoeDir);
+
+    // 1. Crawl the poe1.html index to get all top-level JSON files
+    console.log("   Scanning poe1 index…");
+    const indexRes = await fetch(`${REPOE_BASE_URL}/poe1.html`);
+    if (!indexRes.ok) throw new Error(`Failed to fetch poe1.html: HTTP ${indexRes.status}`);
+    const indexHtml = await indexRes.text();
+
+    // Extract all .json hrefs (not .min.json), skip directories
+    const topLevelFiles: string[] = [];
+    const fileMatches = [...indexHtml.matchAll(/href="\.\/([^"]+\.json)"/g)];
+    for (const m of fileMatches) {
+        const filename = m[1];
+        if (!filename.endsWith(".min.json")) {
+            topLevelFiles.push(filename);
+        }
+    }
+
+    console.log(`   Found ${topLevelFiles.length} top-level JSON files`);
+
+    for (const filename of topLevelFiles) {
+        const url = `${REPOE_BASE_URL}/${filename}`;
+        const dest = join(repoeDir, filename);
+        await downloadFile(url, dest, filename);
+    }
+
+    // 2. Download stat_translations/ subdirectory
+    console.log("\n   Scanning stat_translations/…");
+    const statTransDir = join(repoeDir, "stat_translations");
+    ensureDir(statTransDir);
+
+    const statTransFiles = await crawlRepoeDir(`${REPOE_BASE_URL}/stat_translations/`);
+    console.log(`   Found ${statTransFiles.length} stat translation files`);
+
+    for (const filename of statTransFiles) {
+        const url = `${REPOE_BASE_URL}/stat_translations/${filename}`;
+        const dest = join(statTransDir, filename);
+        await downloadFile(url, dest, `stat_translations/${filename}`);
+    }
+
+    // 3. Download passive_skill_trees/ subdirectory
+    console.log("\n   Scanning passive_skill_trees/…");
+    const passiveTreeDir = join(repoeDir, "passive_skill_trees");
+    ensureDir(passiveTreeDir);
+
+    const passiveTreeFiles = await crawlRepoeDir(`${REPOE_BASE_URL}/passive_skill_trees/`);
+    console.log(`   Found ${passiveTreeFiles.length} passive skill tree files`);
+
+    for (const filename of passiveTreeFiles) {
+        const url = `${REPOE_BASE_URL}/passive_skill_trees/${filename}`;
+        const dest = join(passiveTreeDir, filename);
+        await downloadFile(url, dest, `passive_skill_trees/${filename}`);
+    }
+
+    console.log(`\n   Written to ${repoeDir}/`);
+}
+
 // ── Main ─────────────────────────────────────────────────────────────
 
 async function main() {
@@ -147,6 +233,7 @@ async function main() {
 
     if (runAll || onlyPob) await downloadPobData();
     if (runAll || onlyTree) await downloadSkillTree();
+    if (runAll || onlyRepoe) await downloadRepoeData();
 
     console.log("\n🎉 Done.\n");
 }
