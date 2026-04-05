@@ -2,10 +2,11 @@
 // Calc variable names used by ModDB. Add new variants as the calc engine grows.
 
 use rustc_hash::FxHashMap;
+use serde::Deserialize;
 use std::sync::OnceLock;
 
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
 #[repr(u16)]
 pub enum StatId {
     Accuracy = 0,
@@ -328,6 +329,34 @@ pub enum StatId {
     WarcrySpeed = 317,
     snipeAilmentMulti = 318,
     snipeHitMulti = 319,
+    // Added: missing from original generation
+    BuffExpireFaster = 320,
+    ChaosDamageLifeLeech = 321,
+    ColdDamageLeech = 322,
+    DamageEnergyShieldLeech = 323,
+    DamageLifeLeech = 324,
+    DamageManaLeech = 325,
+    ElementalDamageManaLeech = 326,
+    ElementalResistMax = 327,
+    EnemyImpalePhysicalDamageReduction = 328,
+    EnemyPhysicalDamageReduction = 329,
+    EnemyStunThreshold = 330,
+    FireDamageLeech = 331,
+    FireDegen = 332,
+    HitsInvertEleResChance = 333,
+    LifeRegen = 334,
+    LifeRegenPercent = 335,
+    LightningDamageLeech = 336,
+    ManaCost = 337,
+    ManaRegen = 338,
+    PhysicalDamageLifeLeech = 339,
+    PhysicalDamageReduction = 340,
+    PhysicalDegen = 341,
+    PrimaryDuration = 342,
+    SelfCritMultiplier = 343,
+    SelfFreezeDuration = 344,
+    SelfIgniteDuration = 345,
+    SelfShockDuration = 346,
 }
 
 impl StatId {
@@ -657,6 +686,34 @@ impl StatId {
             m.insert("WarcrySpeed", Self::WarcrySpeed);
             m.insert("snipeAilmentMulti", Self::snipeAilmentMulti);
             m.insert("snipeHitMulti", Self::snipeHitMulti);
+            // Added: missing from original generation
+            m.insert("BuffExpireFaster", Self::BuffExpireFaster);
+            m.insert("ChaosDamageLifeLeech", Self::ChaosDamageLifeLeech);
+            m.insert("ColdDamageLeech", Self::ColdDamageLeech);
+            m.insert("DamageEnergyShieldLeech", Self::DamageEnergyShieldLeech);
+            m.insert("DamageLifeLeech", Self::DamageLifeLeech);
+            m.insert("DamageManaLeech", Self::DamageManaLeech);
+            m.insert("ElementalDamageManaLeech", Self::ElementalDamageManaLeech);
+            m.insert("ElementalResistMax", Self::ElementalResistMax);
+            m.insert("EnemyImpalePhysicalDamageReduction", Self::EnemyImpalePhysicalDamageReduction);
+            m.insert("EnemyPhysicalDamageReduction", Self::EnemyPhysicalDamageReduction);
+            m.insert("EnemyStunThreshold", Self::EnemyStunThreshold);
+            m.insert("FireDamageLeech", Self::FireDamageLeech);
+            m.insert("FireDegen", Self::FireDegen);
+            m.insert("HitsInvertEleResChance", Self::HitsInvertEleResChance);
+            m.insert("LifeRegen", Self::LifeRegen);
+            m.insert("LifeRegenPercent", Self::LifeRegenPercent);
+            m.insert("LightningDamageLeech", Self::LightningDamageLeech);
+            m.insert("ManaCost", Self::ManaCost);
+            m.insert("ManaRegen", Self::ManaRegen);
+            m.insert("PhysicalDamageLifeLeech", Self::PhysicalDamageLifeLeech);
+            m.insert("PhysicalDamageReduction", Self::PhysicalDamageReduction);
+            m.insert("PhysicalDegen", Self::PhysicalDegen);
+            m.insert("PrimaryDuration", Self::PrimaryDuration);
+            m.insert("SelfCritMultiplier", Self::SelfCritMultiplier);
+            m.insert("SelfFreezeDuration", Self::SelfFreezeDuration);
+            m.insert("SelfIgniteDuration", Self::SelfIgniteDuration);
+            m.insert("SelfShockDuration", Self::SelfShockDuration);
             m
         }).get(name).copied()
     }

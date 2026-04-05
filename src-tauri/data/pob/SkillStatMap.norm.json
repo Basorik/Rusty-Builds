@@ -1,0 +1,8843 @@
+{
+  "accuracy_rating": [
+    {
+      "name": "Accuracy",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "accuracy_rating_+%": [
+    {
+      "name": "Accuracy",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "accuracy_rating_+%_when_on_low_life": [
+    {
+      "name": "Accuracy",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "LowLife"
+        }
+      ]
+    }
+  ],
+  "active_skill_added_damage_+%_final": [
+    {
+      "name": "AddedDamage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_additive_minion_damage_modifiers_apply_to_all_damage_at_%_value": [
+    {
+      "name": "MinionDamageAppliesToPlayer",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ImprovedMinionDamageAppliesToPlayer",
+      "type": "MAX",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_additive_spell_damage_modifiers_apply_to_attack_damage_at_%_value": [
+    {
+      "name": "SpellDamageAppliesToAttacks",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ImprovedSpellDamageAppliesToAttacks",
+      "type": "MAX",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_ailment_damage_+%_final": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 524288,
+      "tags": []
+    }
+  ],
+  "active_skill_area_damage_+%_final": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 512,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_area_of_effect_+%_final": [
+    {
+      "name": "AreaOfEffect",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_area_of_effect_+%_final_per_endurance_charge": [
+    {
+      "name": "AreaOfEffect",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "EnduranceCharge"
+        }
+      ]
+    }
+  ],
+  "active_skill_area_of_effect_+%_final_when_cast_on_frostbolt": [
+    {
+      "name": "AreaOfEffect",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "CastOnFrostbolt"
+        }
+      ]
+    }
+  ],
+  "active_skill_area_of_effect_radius_+%_final": [
+    {
+      "name": "AreaOfEffect",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_attack_damage_+%_final_per_endurance_charge": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "EnduranceCharge"
+        }
+      ]
+    }
+  ],
+  "active_skill_attack_speed_+%_final": [
+    {
+      "name": "Speed",
+      "type": "MORE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_base_area_of_effect_radius": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "radius"
+      }
+    }
+  ],
+  "active_skill_base_radius_+": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "radiusExtra"
+      }
+    }
+  ],
+  "active_skill_base_secondary_area_of_effect_radius": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "radiusSecondary"
+      }
+    }
+  ],
+  "active_skill_base_tertiary_area_of_effect_radius": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "radiusTertiary"
+      }
+    }
+  ],
+  "active_skill_beam_splits_instead_of_chaining": [
+    {
+      "name": "NoAdditionalChains",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "AdditionalChainsAddSplitsInstead",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "active_skill_bleeding_damage_+%_final": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 4194304,
+      "tags": []
+    }
+  ],
+  "active_skill_bleeding_damage_+%_final_in_blood_stance": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 4194304,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "BloodStance"
+        }
+      ]
+    }
+  ],
+  "active_skill_brands_allowed_on_enemy_+": [
+    {
+      "name": "BrandsAttachedLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_cast_speed_+%_final": [
+    {
+      "name": "Speed",
+      "type": "MORE",
+      "flags": 16,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_chill_as_though_damage_+%_final": [
+    {
+      "name": "ChillAsThoughDealing",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_chill_effect_+%_final": [
+    {
+      "name": "EnemyChillEffect",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_damage_+%_final": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_damage_+%_final_vs_stunned_enemies": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Stunned"
+        }
+      ]
+    }
+  ],
+  "active_skill_damage_+%_final_when_cast_on_frostbolt": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "CastOnFrostbolt"
+        }
+      ]
+    }
+  ],
+  "active_skill_freeze_duration_+%_final": [
+    {
+      "name": "EnemyFreezeDuration",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_ignite_damage_+%_final": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 8388608,
+      "tags": []
+    }
+  ],
+  "active_skill_main_hand_weapon_damage_+%_final": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "MainHandAttack"
+        }
+      ]
+    }
+  ],
+  "active_skill_merged_damage_+%_final_while_dual_wielding": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "DualWielding"
+        }
+      ]
+    }
+  ],
+  "active_skill_minion_added_damage_+%_final": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "minionDamageEffectiveness"
+      }
+    }
+  ],
+  "active_skill_minion_attack_speed_+%_final": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 1,
+          "keywordFlags": 0,
+          "name": "Speed",
+          "type": "MORE"
+        }
+      }
+    }
+  ],
+  "active_skill_minion_bleeding_damage_+%_final": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 4194304,
+          "name": "Damage",
+          "type": "MORE"
+        }
+      }
+    }
+  ],
+  "active_skill_minion_damage_+%_final": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "Damage",
+          "type": "MORE"
+        }
+      }
+    }
+  ],
+  "active_skill_minion_energy_shield_+%_final": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "EnergyShield",
+          "type": "MORE"
+        }
+      }
+    }
+  ],
+  "active_skill_minion_life_+%_final": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "Life",
+          "type": "MORE"
+        }
+      }
+    }
+  ],
+  "active_skill_minion_movement_velocity_+%_final": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "MovementSpeed",
+          "type": "MORE"
+        }
+      }
+    }
+  ],
+  "active_skill_minion_physical_damage_+%_final": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "PhysicalDamage",
+          "type": "MORE"
+        }
+      }
+    }
+  ],
+  "active_skill_physical_damage_+%_final": [
+    {
+      "name": "PhysicalDamage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_poison_duration_+%_final": [
+    {
+      "name": "EnemyPoisonDuration",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_projectile_damage_+%_final": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 1024,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_projectile_speed_+%_final": [
+    {
+      "name": "ProjectileSpeed",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_quality_duration_+%_final": [
+    {
+      "name": "Duration",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_returning_projectile_damage_+%_final": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "ReturningProjectile"
+        }
+      ]
+    }
+  ],
+  "active_skill_shock_as_though_damage_+%_final": [
+    {
+      "name": "ShockAsThoughDealing",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_shock_effect_+%_final": [
+    {
+      "name": "EnemyShockEffect",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "active_skill_trap_throwing_speed_+%_final": [
+    {
+      "name": "TrapThrowingSpeed",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "added_damage_+%_final": [
+    {
+      "name": "AddedDamage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "additional_base_critical_strike_chance": [
+    {
+      "name": "CritChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    }
+  ],
+  "additional_beam_only_chains": [
+    {
+      "name": "BeamChainCountMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "additional_chance_to_freeze_chilled_enemies_%": [
+    {
+      "name": "EnemyFreezeChance",
+      "type": "BASE",
+      "flags": 4,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Chilled"
+        }
+      ]
+    }
+  ],
+  "additional_chance_to_take_critical_strike_%": [
+    {
+      "name": "SelfExtraCritChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "additional_critical_strike_chance_per_10_shield_maximum_energy_shield_permyriad": [
+    {
+      "name": "CritChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 10,
+          "stat": "EnergyShieldOnWeapon 2",
+          "type": "PerStat"
+        }
+      ],
+      "div": 100
+    }
+  ],
+  "additional_critical_strike_chance_permyriad_while_affected_by_elusive": [
+    {
+      "name": "CritChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "Elusive"
+        },
+        {
+          "type": "Condition",
+          "varList": [
+            "UsingClaw",
+            "UsingDagger"
+          ]
+        },
+        {
+          "neg": true,
+          "type": "Condition",
+          "varList": [
+            "UsingSword",
+            "UsingAxe",
+            "UsingMace"
+          ]
+        }
+      ],
+      "div": 100
+    }
+  ],
+  "additional_weapon_base_attack_time_ms": [
+    {
+      "name": "Speed",
+      "type": "BASE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 1000
+    }
+  ],
+  "additive_arrow_speed_modifiers_apply_to_area_of_effect": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "arrowSpeedAppliesToAreaOfEffect",
+        "value": true
+      }
+    }
+  ],
+  "additive_mine_duration_modifiers_apply_to_buff_effect_duration": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "mineDurationAppliesToSkill",
+        "value": true
+      }
+    }
+  ],
+  "ailment_damage_+%_per_frenzy_charge": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 524288,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "FrenzyCharge"
+        }
+      ]
+    }
+  ],
+  "all_damage_can_freeze": [
+    {
+      "name": "PhysicalCanFreeze",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "LightningCanFreeze",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "FireCanFreeze",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ChaosCanFreeze",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "all_damage_can_ignite": [
+    {
+      "name": "PhysicalCanIgnite",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "LightningCanIgnite",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ColdCanIgnite",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ChaosCanIgnite",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "all_damage_can_ignite_freeze_shock": [
+    {
+      "name": "PhysicalCanIgnite",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "LightningCanIgnite",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ColdCanIgnite",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ChaosCanIgnite",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "PhysicalCanFreeze",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "LightningCanFreeze",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "FireCanFreeze",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ChaosCanFreeze",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "PhysicalCanShock",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ColdCanShock",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "FireCanShock",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ChaosCanShock",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "all_damage_can_shock": [
+    {
+      "name": "PhysicalCanShock",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ColdCanShock",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "FireCanShock",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ChaosCanShock",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "always_freeze": [
+    {
+      "name": "EnemyFreezeChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": 100
+    }
+  ],
+  "always_ignite": [
+    {
+      "name": "EnemyIgniteChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": 100
+    }
+  ],
+  "always_pierce": [
+    {
+      "name": "PierceAllTargets",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "always_shock": [
+    {
+      "name": "EnemyShockChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": 100
+    }
+  ],
+  "area_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 512,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "area_of_effect_+%_final_per_removable_power_frenzy_or_endurance_charge": [
+    {
+      "name": "AreaOfEffect",
+      "type": "MORE",
+      "flags": 2,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "RemovableTotalCharges"
+        }
+      ]
+    }
+  ],
+  "area_of_effect_+%_per_50_strength": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 50,
+          "stat": "Str",
+          "type": "PerStat"
+        }
+      ],
+      "value": {
+        "key": "AreaOfEffect"
+      }
+    }
+  ],
+  "area_of_effect_+%_while_not_dual_wielding": [
+    {
+      "name": "AreaOfEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "neg": true,
+          "type": "Condition",
+          "var": "DualWielding"
+        }
+      ]
+    }
+  ],
+  "arrow_base_number_of_targets_to_pierce": [
+    {
+      "name": "PierceCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 2048,
+      "tags": []
+    }
+  ],
+  "attack_and_cast_speed_+%": [
+    {
+      "name": "Speed",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "attack_critical_strike_chance_+%": [
+    {
+      "name": "CritChance",
+      "type": "INC",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "attack_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "attack_damage_+%_per_450_evasion": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 450,
+          "stat": "Evasion",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "attack_damage_+%_per_450_physical_damage_reduction_rating": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 450,
+          "stat": "Armour",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "attack_maximum_added_chaos_damage": [
+    {
+      "name": "ChaosMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "attack_maximum_added_cold_damage": [
+    {
+      "name": "ColdMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "attack_maximum_added_fire_damage": [
+    {
+      "name": "FireMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "attack_maximum_added_lightning_damage": [
+    {
+      "name": "LightningMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "attack_maximum_added_physical_damage": [
+    {
+      "name": "PhysicalMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "attack_maximum_added_physical_damage_with_weapons": [
+    {
+      "name": "PhysicalMax",
+      "type": "BASE",
+      "flags": 8192,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "attack_minimum_added_chaos_damage": [
+    {
+      "name": "ChaosMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "attack_minimum_added_cold_damage": [
+    {
+      "name": "ColdMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "attack_minimum_added_fire_damage": [
+    {
+      "name": "FireMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "attack_minimum_added_lightning_damage": [
+    {
+      "name": "LightningMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "attack_minimum_added_physical_damage": [
+    {
+      "name": "PhysicalMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "attack_minimum_added_physical_damage_with_weapons": [
+    {
+      "name": "PhysicalMin",
+      "type": "BASE",
+      "flags": 8192,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "attack_skill_mana_leech_from_any_damage_permyriad": [
+    {
+      "name": "DamageManaLeech",
+      "type": "BASE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    }
+  ],
+  "attack_skills_additional_ballista_totems_allowed": [
+    {
+      "name": "ActiveTotemLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 125,
+          "type": "SkillType"
+        }
+      ]
+    }
+  ],
+  "attack_skills_have_added_lightning_damage_equal_to_%_of_maximum_mana": [
+    {
+      "name": "LightningMin",
+      "type": "BASE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "percent": true,
+          "stat": "Mana",
+          "type": "PercentStat"
+        }
+      ]
+    },
+    {
+      "name": "LightningMax",
+      "type": "BASE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "percent": true,
+          "stat": "Mana",
+          "type": "PercentStat"
+        }
+      ]
+    }
+  ],
+  "attack_speed_+%": [
+    {
+      "name": "Speed",
+      "type": "INC",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "attack_speed_+%_when_on_low_life": [
+    {
+      "name": "Speed",
+      "type": "INC",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "LowLife"
+        }
+      ]
+    }
+  ],
+  "attack_speed_+%_with_atleast_20_rage": [
+    {
+      "name": "Speed",
+      "type": "INC",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "threshold": 20,
+          "type": "MultiplierThreshold",
+          "var": "Rage"
+        }
+      ]
+    }
+  ],
+  "attacks_impale_on_hit_%_chance": [
+    {
+      "name": "ImpaleChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "aura_effect_+%": [
+    {
+      "name": "AuraEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "avoid_interruption_while_using_this_skill_%": [
+    {
+      "name": "AvoidInterruptStun",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "banner_area_of_effect_+%_final_per_resource": [
+    {
+      "name": "AreaOfEffect",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "BannerValour"
+        },
+        {
+          "type": "Condition",
+          "var": "BannerPlanted"
+        }
+      ]
+    }
+  ],
+  "banner_buff_effect_+%_final_per_resource": [
+    {
+      "name": "AuraEffect",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "BannerValour"
+        },
+        {
+          "type": "Condition",
+          "var": "BannerPlanted"
+        }
+      ]
+    }
+  ],
+  "base_active_skill_totem_level": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "totemLevel"
+      }
+    }
+  ],
+  "base_added_cooldown_count": [
+    {
+      "name": "AdditionalCooldownUses",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_ailment_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 524288,
+      "tags": []
+    }
+  ],
+  "base_all_ailment_duration_+%": [
+    {
+      "name": "EnemyAilmentDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_arrow_speed_+%": [
+    {
+      "name": "ProjectileSpeed",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 2048,
+      "tags": []
+    }
+  ],
+  "base_attack_speed_+%_per_frenzy_charge": [
+    {
+      "name": "Speed",
+      "type": "INC",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "FrenzyCharge"
+        }
+      ]
+    }
+  ],
+  "base_aura_area_of_effect_+%": [
+    {
+      "name": "AreaOfEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 1,
+      "tags": []
+    }
+  ],
+  "base_avoid_stun_%": [
+    {
+      "name": "AvoidStun",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_bleed_duration_+%": [
+    {
+      "name": "EnemyBleedDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_bleed_on_hit_still_%_of_physical_damage_to_deal_per_minute": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 60,
+      "value": {
+        "key": "bleedBasePercent"
+      }
+    }
+  ],
+  "base_block_%_damage_taken": [
+    {
+      "name": "BlockEffect",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_cannot_be_damaged": [
+    {
+      "name": "Condition:CannotBeDamaged",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_cannot_be_stunned": [
+    {
+      "name": "StunImmune",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "base_cast_speed_+%": [
+    {
+      "name": "Speed",
+      "type": "INC",
+      "flags": 16,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_chance_to_deal_triple_damage_%": [
+    {
+      "name": "TripleDamageChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_chance_to_dodge_%": [
+    {
+      "name": "AttackDodgeChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_chance_to_dodge_spells_%": [
+    {
+      "name": "SpellDodgeChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_chance_to_freeze_%": [
+    {
+      "name": "EnemyFreezeChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_chance_to_ignite_%": [
+    {
+      "name": "EnemyIgniteChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_chance_to_poison_on_hit_%": [
+    {
+      "name": "PoisonChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_chance_to_shock_%": [
+    {
+      "name": "EnemyShockChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_chaos_damage_resistance_%": [
+    {
+      "name": "ChaosResist",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_chaos_damage_to_deal_per_minute": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 60,
+      "value": {
+        "key": "ChaosDot"
+      }
+    }
+  ],
+  "base_cold_damage_resistance_%": [
+    {
+      "name": "ColdResist",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_cold_damage_to_deal_per_minute": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 60,
+      "value": {
+        "key": "ColdDot"
+      }
+    }
+  ],
+  "base_cooldown_modifier_ms": [
+    {
+      "name": "CooldownRecovery",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 1000
+    }
+  ],
+  "base_cooldown_speed_+%": [
+    {
+      "name": "CooldownRecovery",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_critical_strike_multiplier_+": [
+    {
+      "name": "CritMultiplier",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_curse_duration_+%": [
+    {
+      "name": "Duration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 2,
+      "tags": []
+    }
+  ],
+  "base_deal_no_chaos_damage": [
+    {
+      "name": "DealNoChaos",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "base_elemental_status_ailment_duration_+%": [
+    {
+      "name": "EnemyElementalAilmentDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_energy_shield_leech_from_spell_damage_permyriad": [
+    {
+      "name": "DamageEnergyShieldLeech",
+      "type": "BASE",
+      "flags": 2,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    }
+  ],
+  "base_evasion_rating": [
+    {
+      "name": "Evasion",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_fire_damage_resistance_%": [
+    {
+      "name": "FireResist",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_fire_damage_to_deal_per_minute": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 60,
+      "value": {
+        "key": "FireDot"
+      }
+    }
+  ],
+  "base_global_chance_to_knockback_%": [
+    {
+      "name": "EnemyKnockbackChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_graft_skill_tul_summon_maximum_allowed_demons": [
+    {
+      "name": "ActiveHivebornLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_holy_strike_maximum_number_of_animated_weapons": [
+    {
+      "name": "ActiveHolyStrikeMinionLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_inflict_cold_exposure_on_hit_%_chance": [
+    {
+      "name": "ColdExposureChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_inflict_fire_exposure_on_hit_%_chance": [
+    {
+      "name": "FireExposureChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_inflict_lightning_exposure_on_hit_%_chance": [
+    {
+      "name": "LightningExposureChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_killed_monster_dropped_item_quantity_+%": [
+    {
+      "name": "LootQuantity",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_killed_monster_dropped_item_rarity_+%": [
+    {
+      "name": "LootRarity",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_life_cost_+%": [
+    {
+      "name": "LifeCost",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_life_gain_per_target": [
+    {
+      "name": "LifeOnHit",
+      "type": "BASE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_life_leech_from_attack_damage_permyriad": [
+    {
+      "name": "DamageLifeLeech",
+      "type": "BASE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    }
+  ],
+  "base_life_leech_from_chaos_damage_permyriad": [
+    {
+      "name": "ChaosDamageLifeLeech",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    }
+  ],
+  "base_life_regeneration_rate_per_minute": [
+    {
+      "name": "LifeRegen",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 60
+    }
+  ],
+  "base_life_reservation_+%": [
+    {
+      "name": "LifeReserved",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_life_reservation_efficiency_+%": [
+    {
+      "name": "LifeReservationEfficiency",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_lightning_damage_resistance_%": [
+    {
+      "name": "LightningResist",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_mana_cost_+": [
+    {
+      "name": "ManaCostNoMult",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_mana_cost_-%": [
+    {
+      "name": "ManaCost",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_mana_leech_from_elemental_damage_permyriad": [
+    {
+      "name": "ElementalDamageManaLeech",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    }
+  ],
+  "base_mana_regeneration_rate_per_minute": [
+    {
+      "name": "ManaRegen",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 60
+    }
+  ],
+  "base_mana_reservation_+%": [
+    {
+      "name": "ManaReserved",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_mana_reservation_efficiency_+%": [
+    {
+      "name": "ManaReservationEfficiency",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_max_number_of_absolution_sentinels": [
+    {
+      "name": "ActiveSentinelOfAbsolutionLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_maximum_cold_damage_resistance_%": [
+    {
+      "name": "ColdResistMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_maximum_energy_shield": [
+    {
+      "name": "EnergyShield",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_maximum_fire_damage_resistance_%": [
+    {
+      "name": "FireResistMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_maximum_lightning_damage_resistance_%": [
+    {
+      "name": "LightningResistMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_melee_attack_repeat_count": [
+    {
+      "name": "RepeatCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "modFlags": 83886080,
+          "type": "ModFlagOr"
+        }
+      ]
+    },
+    {
+      "name": "RepeatCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 13,
+          "type": "SkillType"
+        }
+      ]
+    }
+  ],
+  "base_minion_duration_+%": [
+    {
+      "name": "Duration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 88,
+          "type": "SkillType"
+        }
+      ]
+    }
+  ],
+  "base_movement_velocity_+%": [
+    {
+      "name": "MovementSpeed",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_nonlethal_fire_damage_%_of_maximum_energy_shield_taken_per_minute": [
+    {
+      "name": "FireDegen",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 1,
+          "stat": "EnergyShield",
+          "type": "PerStat"
+        }
+      ],
+      "div": 6000
+    }
+  ],
+  "base_nonlethal_fire_damage_%_of_maximum_life_taken_per_minute": [
+    {
+      "name": "FireDegen",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 1,
+          "stat": "Life",
+          "type": "PerStat"
+        }
+      ],
+      "div": 6000
+    }
+  ],
+  "base_number_of_arbalists": [
+    {
+      "name": "ActiveArbalistLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_arrows": [
+    {
+      "name": "ProjectileCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 2048,
+      "tags": []
+    }
+  ],
+  "base_number_of_champions_of_light_allowed": [
+    {
+      "name": "ActiveSentinelOfPurityLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_golems_allowed": [
+    {
+      "name": "ActiveGolemLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_living_lightning_allowed": [
+    {
+      "name": "ActiveLivingLightningLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_projectiles": [
+    {
+      "name": "ProjectileCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_projectiles_in_spiral_nova": [
+    {
+      "name": "ProjectileCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_raging_spirits_allowed": [
+    {
+      "name": "ActiveRagingSpiritLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_reapers_allowed": [
+    {
+      "name": "ActiveReaperLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_relics_allowed": [
+    {
+      "name": "ActiveHolyRelicLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_restless_dead_allowed": [
+    {
+      "name": "ShamblingUndeadLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_sigils_allowed_per_target": [
+    {
+      "name": "BrandsAttachedLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_skeletons_allowed": [
+    {
+      "name": "ActiveSkeletonLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_spectres_allowed": [
+    {
+      "name": "ActiveSpectreLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_totems_allowed": [
+    {
+      "name": "ActiveTotemLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_void_spawns_allowed": [
+    {
+      "name": "ActiveVoidSpawnLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_number_of_zombies_allowed": [
+    {
+      "name": "ActiveZombieLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_penetrate_elemental_resistances_%": [
+    {
+      "name": "ElementalPenetration",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_physical_damage_%_of_maximum_energy_shield_to_deal_per_minute": [
+    {
+      "name": "PhysicalDegen",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 1,
+          "stat": "EnergyShield",
+          "type": "PerStat"
+        }
+      ],
+      "div": 6000
+    }
+  ],
+  "base_physical_damage_%_of_maximum_life_to_deal_per_minute": [
+    {
+      "name": "PhysicalDegen",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 1,
+          "stat": "Life",
+          "type": "PerStat"
+        }
+      ],
+      "div": 6000
+    }
+  ],
+  "base_physical_damage_%_to_convert_to_chaos": [
+    {
+      "name": "PhysicalDamageConvertToChaos",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_physical_damage_%_to_convert_to_cold": [
+    {
+      "name": "PhysicalDamageConvertToCold",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_physical_damage_%_to_convert_to_fire": [
+    {
+      "name": "PhysicalDamageConvertToFire",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_physical_damage_%_to_convert_to_lightning": [
+    {
+      "name": "PhysicalDamageConvertToLightning",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_physical_damage_over_time_taken_+%": [
+    {
+      "name": "PhysicalDamageTakenOverTime",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_physical_damage_reduction_rating": [
+    {
+      "name": "Armour",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_physical_damage_to_deal_per_minute": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 60,
+      "value": {
+        "key": "PhysicalDot"
+      }
+    }
+  ],
+  "base_poison_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 2097152,
+      "tags": []
+    }
+  ],
+  "base_poison_duration_+%": [
+    {
+      "name": "EnemyPoisonDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_projectile_speed_+%": [
+    {
+      "name": "ProjectileSpeed",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_reduce_enemy_cold_resistance_%": [
+    {
+      "name": "ColdPenetration",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_reduce_enemy_fire_resistance_%": [
+    {
+      "name": "FirePenetration",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_reduce_enemy_lightning_resistance_%": [
+    {
+      "name": "LightningPenetration",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_reservation_+%": [
+    {
+      "name": "Reserved",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_reservation_efficiency_+%": [
+    {
+      "name": "ReservationEfficiency",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_resist_all_elements_%": [
+    {
+      "name": "ElementalResist",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_secondary_skill_effect_duration": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 1000,
+      "value": {
+        "key": "durationSecondary"
+      }
+    }
+  ],
+  "base_self_critical_strike_multiplier_-%": [
+    {
+      "name": "SelfCritMultiplier",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_self_freeze_duration_-%": [
+    {
+      "name": "SelfFreezeDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_self_ignite_duration_-%": [
+    {
+      "name": "SelfIgniteDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_self_shock_duration_-%": [
+    {
+      "name": "SelfShockDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_sigil_repeat_frequency_ms": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 1000,
+      "value": {
+        "key": "repeatFrequency"
+      }
+    }
+  ],
+  "base_skill_area_of_effect_+%": [
+    {
+      "name": "AreaOfEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_skill_cost_life_instead_of_mana": [
+    {
+      "name": "CostLifeInsteadOfMana",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "base_skill_cost_life_instead_of_mana_%": [
+    {
+      "name": "HybridManaAndLifeCost_Life",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_skill_effect_duration": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 1000,
+      "value": {
+        "key": "duration"
+      }
+    }
+  ],
+  "base_skill_reserve_life_instead_of_mana": [
+    {
+      "name": "BloodMagicReserved",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "base_skill_show_average_damage_instead_of_dps": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "showAverage",
+        "value": true
+      }
+    }
+  ],
+  "base_spell_block_%": [
+    {
+      "name": "SpellBlockChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_spell_cast_time_ms_override": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 1000,
+      "value": {
+        "key": "castTimeOverride"
+      }
+    }
+  ],
+  "base_spell_cooldown_speed_+%": [
+    {
+      "name": "CooldownRecovery",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_spell_repeat_count": [
+    {
+      "name": "RepeatCount",
+      "type": "BASE",
+      "flags": 16,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_stun_duration_+%": [
+    {
+      "name": "EnemyStunDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_stun_recovery_+%": [
+    {
+      "name": "StunRecovery",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_stun_threshold_reduction_+%": [
+    {
+      "name": "EnemyStunThreshold",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "base_tertiary_skill_effect_duration": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 1000,
+      "value": {
+        "key": "durationTertiary"
+      }
+    }
+  ],
+  "base_totem_duration": [
+    {
+      "name": "TotemDuration",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 1000
+    }
+  ],
+  "bleed_duration_is_skill_duration": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "bleedDurationIsSkillDuration",
+        "value": true
+      }
+    }
+  ],
+  "bleed_on_hit_with_attacks_%": [
+    {
+      "name": "BleedChance",
+      "type": "BASE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "bleed_on_melee_attack_chance_%": [
+    {
+      "name": "BleedChance",
+      "type": "BASE",
+      "flags": 256,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "bleeding_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 4194304,
+      "tags": []
+    }
+  ],
+  "bleeding_stacks_up_to_x_times": [
+    {
+      "name": "BleedStacksMax",
+      "type": "OVERRIDE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "blind_effect_+%": [
+    {
+      "name": "BlindEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "effectName": "Vaal Blade Flurry",
+          "effectType": "Debuff",
+          "type": "GlobalEffect"
+        }
+      ]
+    }
+  ],
+  "block_while_dual_wielding_%": [
+    {
+      "name": "BlockChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "DualWielding"
+        }
+      ]
+    }
+  ],
+  "brand_atttached_duration_is_infinite": [
+    {
+      "name": "UnlimitedBrandDuration",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "brand_cannot_be_recalled": [
+    {
+      "name": "Condition:CannotRecallBrand",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "buff_effect_duration_+%_per_removable_endurance_charge": [
+    {
+      "name": "Duration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "RemovableEnduranceCharge"
+        }
+      ]
+    }
+  ],
+  "buff_effect_duration_+%_per_removable_endurance_charge_limited_to_5": [
+    {
+      "name": "Duration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "limit": 5,
+          "type": "Multiplier",
+          "var": "RemovableEnduranceCharge"
+        }
+      ]
+    }
+  ],
+  "buff_time_passed_-%": [
+    {
+      "name": "BuffExpireFaster",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "burn_damage_+%": [
+    {
+      "name": "FireDamage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 134217728,
+      "tags": []
+    }
+  ],
+  "cannot_be_knocked_back": [
+    {
+      "name": "KnockbackImmune",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "cannot_be_stunned_while_leeching": [
+    {
+      "name": "AvoidStun",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": 100
+    }
+  ],
+  "cannot_cause_bleeding": [
+    {
+      "name": "CannotBleed",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "cannot_inflict_additional_poisons": [
+    {
+      "name": "CannotMultiplePoison",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "cannot_inflict_status_ailments": [
+    {
+      "name": "CannotShock",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotChill",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotFreeze",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotIgnite",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotScorch",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotBrittle",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotSap",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "cannot_pierce": [
+    {
+      "name": "CannotPierce",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "cannot_poison_poisoned_enemies": [
+    {
+      "name": "Condition:NonPoisonedOnly",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "PoisonStackLimit",
+      "type": "MIN",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": 1
+    }
+  ],
+  "cast_linked_spells_on_attack_crit_%": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 1,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "chanceToTriggerOnCrit"
+      }
+    }
+  ],
+  "cast_linked_spells_on_melee_kill_%": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 1,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 24,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "chanceToTriggerOnMeleeKill"
+      }
+    }
+  ],
+  "cast_on_damage_taken_threshold": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByDamageTaken"
+      }
+    }
+  ],
+  "cast_on_stunned_%": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "chanceToTriggerOnStun"
+      }
+    }
+  ],
+  "cast_speed_+%_granted_from_skill": [
+    {
+      "name": "Speed",
+      "type": "INC",
+      "flags": 16,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "cast_spell_on_linked_attack_crit": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByCoc",
+        "value": true
+      }
+    },
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggerOnCrit",
+        "value": true
+      }
+    }
+  ],
+  "cast_spell_on_linked_melee_kill": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        },
+        {
+          "type": "Condition",
+          "var": "KilledRecently"
+        }
+      ],
+      "value": {
+        "key": "triggeredByMeleeKill",
+        "value": true
+      }
+    }
+  ],
+  "cast_spell_while_linked_skill_channelling": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredWhileChannelling",
+        "value": true
+      }
+    }
+  ],
+  "cast_time_overrides_attack_duration": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "castTimeOverridesAttackTime",
+        "value": true
+      }
+    }
+  ],
+  "cast_when_cast_curse_%": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 108,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "chanceToTriggerCurseOnCurse"
+      }
+    }
+  ],
+  "chance_for_extra_damage_roll_%": [
+    {
+      "name": "LuckyHitsChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chance_to_be_frozen_%": [
+    {
+      "name": "SelfFreezeChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chance_to_be_ignited_%": [
+    {
+      "name": "SelfIgniteChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chance_to_be_knocked_back_%": [
+    {
+      "name": "SelfKnockbackChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chance_to_be_pierced_%": [
+    {
+      "name": "SelfPierceChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chance_to_be_shocked_%": [
+    {
+      "name": "SelfShockChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chance_to_bleed_on_hit_%_chance_in_blood_stance": [
+    {
+      "name": "BleedChance",
+      "type": "BASE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "BloodStance"
+        }
+      ]
+    }
+  ],
+  "chance_to_bleed_on_hit_%_vs_maimed": [
+    {
+      "name": "BleedChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Maimed"
+        }
+      ]
+    }
+  ],
+  "chance_to_cast_on_kill_%": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        },
+        {
+          "type": "Condition",
+          "var": "KilledRecently"
+        }
+      ],
+      "value": {
+        "key": "triggeredBySquirmingTerror",
+        "value": true
+      }
+    }
+  ],
+  "chance_to_deal_double_damage_%": [
+    {
+      "name": "DoubleDamageChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chance_to_deal_double_damage_%_per_10_intelligence": [
+    {
+      "name": "DoubleDamageChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 10,
+          "stat": "Int",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "chance_to_deal_double_damage_%_vs_bleeding_enemies": [
+    {
+      "name": "DoubleDamageChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Bleeding"
+        }
+      ]
+    }
+  ],
+  "chance_to_double_stun_duration_%": [
+    {
+      "name": "DoubleEnemyStunDurationChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chance_to_freeze_shock_ignite_%": [
+    {
+      "name": "EnemyFreezeChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemyShockChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemyIgniteChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chance_to_scorch_%": [
+    {
+      "name": "EnemyScorchChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "channelled_skill_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 57,
+          "type": "SkillType"
+        }
+      ]
+    }
+  ],
+  "chaos_damage_+%": [
+    {
+      "name": "ChaosDamage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chaos_damage_taken_+%": [
+    {
+      "name": "ChaosDamageTaken",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chaos_dot_multiplier_+": [
+    {
+      "name": "ChaosDotMultiplier",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chill_and_freeze_duration_+%": [
+    {
+      "name": "EnemyChillDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemyFreezeDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chill_duration_+%": [
+    {
+      "name": "EnemyChillDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "chill_effect_+%": [
+    {
+      "name": "EnemyChillEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "cold_ailment_duration_+%": [
+    {
+      "name": "EnemyChillDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemyFreezeDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemyBrittleDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "cold_ailment_effect_+%": [
+    {
+      "name": "EnemyChillEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemyFreezeEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemyBrittleEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "cold_damage_%_to_add_as_fire": [
+    {
+      "name": "ColdDamageGainAsFire",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "cold_damage_+%": [
+    {
+      "name": "ColdDamage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "cold_damage_taken_+%": [
+    {
+      "name": "ColdDamageTaken",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "cold_dot_multiplier_+": [
+    {
+      "name": "ColdDotMultiplier",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "consecrated_ground_effect_+%": [
+    {
+      "name": "ConsecratedGroundEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "effectType": "Buff",
+          "type": "GlobalEffect"
+        }
+      ]
+    }
+  ],
+  "consecrated_ground_enemy_damage_taken_+%": [
+    {
+      "name": "DamageTakenConsecratedGround",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "effectType": "Debuff",
+          "type": "GlobalEffect"
+        },
+        {
+          "type": "Condition",
+          "var": "OnConsecratedGround"
+        }
+      ]
+    }
+  ],
+  "cooldown_recovery_rate_+%_per_100_ward": [
+    {
+      "name": "CooldownRecovery",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 100,
+          "stat": "Ward",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "corpse_explosion_monster_life_%": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100,
+      "value": {
+        "key": "corpseExplosionLifeMultiplier"
+      }
+    }
+  ],
+  "corpse_explosion_monster_life_permillage_fire": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 1000,
+      "value": {
+        "key": "corpseExplosionLifeMultiplier"
+      }
+    }
+  ],
+  "critical_ailment_dot_multiplier_+": [
+    {
+      "name": "DotMultiplier",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "CriticalStrike"
+        }
+      ]
+    }
+  ],
+  "critical_multiplier_+%_per_100_max_es_on_shield": [
+    {
+      "name": "CritMultiplier",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 100,
+          "stat": "EnergyShieldOnWeapon 2",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "critical_poison_dot_multiplier_+": [
+    {
+      "name": "DotMultiplier",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 2097152,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "CriticalStrike"
+        }
+      ]
+    }
+  ],
+  "critical_strike_chance_+%": [
+    {
+      "name": "CritChance",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "critical_strike_chance_+%_per_power_charge": [
+    {
+      "name": "CritChance",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "PowerCharge"
+        }
+      ]
+    }
+  ],
+  "critical_strike_chance_+%_vs_bleeding_enemies": [
+    {
+      "name": "CritChance",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Bleeding"
+        }
+      ]
+    }
+  ],
+  "critical_strike_chance_+%_vs_blinded_enemies": [
+    {
+      "name": "CritChance",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Blinded"
+        }
+      ]
+    }
+  ],
+  "critical_strike_chance_+%_vs_shocked_enemies": [
+    {
+      "name": "CritChance",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Shocked"
+        }
+      ]
+    }
+  ],
+  "critical_strike_chance_against_enemies_on_full_life_+%": [
+    {
+      "name": "CritChance",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "FullLife"
+        }
+      ]
+    }
+  ],
+  "critical_strike_multiplier_+_if_dexterity_higher_than_intelligence": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "DexHigherThanInt"
+        }
+      ],
+      "value": {
+        "key": "CritMultiplier"
+      }
+    }
+  ],
+  "critical_strike_multiplier_+_per_power_charge": [
+    {
+      "name": "CritMultiplier",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "PowerCharge"
+        }
+      ]
+    }
+  ],
+  "curse_area_of_effect_+%": [
+    {
+      "name": "AreaOfEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 2,
+      "tags": []
+    }
+  ],
+  "curse_cast_speed_+%": [
+    {
+      "name": "Speed",
+      "type": "INC",
+      "flags": 16,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "curse_effect_+%": [
+    {
+      "name": "CurseEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "curse_effect_+%_vs_players": [
+    {
+      "name": "CurseEffectAgainstPlayer",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "curse_maximum_doom": [
+    {
+      "name": "MaxDoom",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "curse_skill_effect_duration_+%": [
+    {
+      "name": "Duration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 2,
+      "tags": []
+    }
+  ],
+  "damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "damage_+%_if_you_have_consumed_a_corpse_recently": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "ConsumedCorpseRecently"
+        }
+      ]
+    }
+  ],
+  "damage_+%_on_full_energy_shield": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "FullEnergyShield"
+        }
+      ]
+    }
+  ],
+  "damage_+%_per_chain": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "stat": "Chain",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "damage_+%_per_endurance_charge": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "EnduranceCharge"
+        }
+      ]
+    }
+  ],
+  "damage_+%_per_frenzy_charge": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "FrenzyCharge"
+        }
+      ]
+    }
+  ],
+  "damage_+%_per_power_charge": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "PowerCharge"
+        }
+      ]
+    }
+  ],
+  "damage_+%_vs_enemies_on_full_life": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 786432,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "FullLife"
+        }
+      ]
+    }
+  ],
+  "damage_+%_vs_frozen_enemies": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 4,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Frozen"
+        }
+      ]
+    }
+  ],
+  "damage_+%_when_on_full_life": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "FullLife"
+        }
+      ]
+    }
+  ],
+  "damage_+%_when_on_low_life": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "LowLife"
+        }
+      ]
+    }
+  ],
+  "damage_+%_while_es_leeching": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "LeechingEnergyShield"
+        }
+      ]
+    }
+  ],
+  "damage_+%_while_life_leeching": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "LeechingLife"
+        }
+      ]
+    }
+  ],
+  "damage_+%_while_mana_leeching": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "LeechingMana"
+        }
+      ]
+    }
+  ],
+  "damage_+%_with_hits_and_ailments": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 786432,
+      "tags": []
+    }
+  ],
+  "damage_over_time_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 8,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "damage_vs_enemies_on_low_life_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 4,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "LowLife"
+        }
+      ]
+    }
+  ],
+  "damaging_ailments_deal_damage_+%_faster": [
+    {
+      "name": "BleedFaster",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "PoisonFaster",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "IgniteBurnFaster",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "deal_chaos_damage_per_second_for_10_seconds_on_hit": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "decay",
+        "merge": "MAX"
+      }
+    }
+  ],
+  "deal_no_elemental_damage": [
+    {
+      "name": "DealNoFire",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "DealNoCold",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "DealNoLightning",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "degen_effect_+%": [
+    {
+      "name": "DamageTakenOverTime",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "discharge_damage_+%_if_3_charge_types_removed": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "limit": 1,
+          "type": "Multiplier",
+          "var": "RemovableEnduranceCharge"
+        },
+        {
+          "limit": 1,
+          "type": "Multiplier",
+          "var": "RemovableFrenzyCharge"
+        },
+        {
+          "limit": 1,
+          "type": "Multiplier",
+          "var": "RemovablePowerCharge"
+        }
+      ]
+    }
+  ],
+  "display_mirage_warriors_no_spirit_strikes": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 1,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredBySaviour",
+        "value": true
+      }
+    }
+  ],
+  "display_skill_minions_level_is_corpse_level": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "minionLevelIsEnemyLevel",
+        "value": true
+      }
+    }
+  ],
+  "display_this_skill_cooldown_does_not_recover_during_buff": [
+    {
+      "name": "NoCooldownRecoveryInDuration",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "dot_multiplier_+": [
+    {
+      "name": "DotMultiplier",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "dual_wield_inherent_attack_speed_+%_final": [
+    {
+      "name": "Speed",
+      "type": "MORE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "DualWielding"
+        }
+      ]
+    }
+  ],
+  "elemental_damage_+%": [
+    {
+      "name": "ElementalDamage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "elemental_damage_with_attack_skills_+%": [
+    {
+      "name": "ElementalDamage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "elusive_effect_+%": [
+    {
+      "name": "ElusiveEffect",
+      "type": "MAX",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "effectType": "Buff",
+          "type": "GlobalEffect"
+        }
+      ]
+    }
+  ],
+  "enemies_you_shock_take_%_increased_physical_damage": [
+    {
+      "name": "PhysicalDamageTaken",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "effectType": "Debuff",
+          "type": "GlobalEffect"
+        },
+        {
+          "type": "Condition",
+          "var": "Shocked"
+        }
+      ]
+    }
+  ],
+  "enemy_phys_reduction_%_penalty_vs_hit": [
+    {
+      "name": "EnemyPhysicalDamageReduction",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "energy_shield_leech_from_any_damage_permyriad": [
+    {
+      "name": "DamageEnergyShieldLeech",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    }
+  ],
+  "energy_shield_recharge_rate_+%": [
+    {
+      "name": "EnergyShieldRecharge",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "faster_bleed_%": [
+    {
+      "name": "BleedFaster",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "faster_burn_%": [
+    {
+      "name": "IgniteBurnFaster",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "faster_poison_%": [
+    {
+      "name": "PoisonFaster",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "fire_damage_%_to_add_as_chaos": [
+    {
+      "name": "FireDamageGainAsChaos",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "fire_damage_+%": [
+    {
+      "name": "FireDamage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "fire_damage_taken_+%": [
+    {
+      "name": "FireDamageTaken",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "fire_dot_multiplier_+": [
+    {
+      "name": "FireDotMultiplier",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "flask_effect_+%": [
+    {
+      "name": "FlaskEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "flask_mana_to_recover_+%": [
+    {
+      "name": "FlaskManaRecovery",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "fortify_duration_+%": [
+    {
+      "name": "FortifyDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "freeze_as_though_dealt_damage_+%": [
+    {
+      "name": "FreezeAsThoughDealing",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "freeze_duration_+%": [
+    {
+      "name": "EnemyFreezeDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "gain_fortify_on_melee_hit_ms": [
+    {
+      "name": "FortifyDuration",
+      "type": "OVERRIDE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 1000
+    }
+  ],
+  "gain_x_rage_on_attack_hit": [
+    {
+      "name": "Condition:CanGainRage",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "effectName": "Rage",
+          "effectType": "Buff",
+          "type": "GlobalEffect"
+        }
+      ],
+      "value": true
+    }
+  ],
+  "global_always_hit": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "cannotBeEvaded",
+        "value": true
+      }
+    }
+  ],
+  "global_bleed_on_hit": [
+    {
+      "name": "BleedChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": 100
+    }
+  ],
+  "global_knockback": [
+    {
+      "name": "EnemyKnockbackChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": 100
+    }
+  ],
+  "global_maximum_added_chaos_damage": [
+    {
+      "name": "ChaosMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "global_maximum_added_cold_damage": [
+    {
+      "name": "ColdMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "global_maximum_added_fire_damage_vs_burning_enemies": [
+    {
+      "name": "FireMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Burning"
+        }
+      ]
+    }
+  ],
+  "global_maximum_added_lightning_damage": [
+    {
+      "name": "LightningMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "global_maximum_added_physical_damage_vs_bleeding_enemies": [
+    {
+      "name": "PhysicalMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Bleeding"
+        }
+      ]
+    }
+  ],
+  "global_minimum_added_chaos_damage": [
+    {
+      "name": "ChaosMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "global_minimum_added_cold_damage": [
+    {
+      "name": "ColdMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "global_minimum_added_fire_damage_vs_burning_enemies": [
+    {
+      "name": "FireMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Burning"
+        }
+      ]
+    }
+  ],
+  "global_minimum_added_lightning_damage": [
+    {
+      "name": "LightningMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "global_minimum_added_physical_damage_vs_bleeding_enemies": [
+    {
+      "name": "PhysicalMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Bleeding"
+        }
+      ]
+    }
+  ],
+  "global_poison_on_hit": [
+    {
+      "name": "PoisonChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": 100
+    }
+  ],
+  "golem_buff_effect_+%": [
+    {
+      "name": "BuffEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "golem_cooldown_recovery_+%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "CooldownRecovery",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "hex_applied_when_trap_triggers": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 108,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 79,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByTrapTrigger",
+        "value": true
+      }
+    }
+  ],
+  "hit_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 4,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "holy_relic_trigger_on_parent_attack_%": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "chanceToTriggerOnParentAttack",
+        "value": true
+      }
+    }
+  ],
+  "ignite_duration_+%": [
+    {
+      "name": "EnemyIgniteDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "impale_debuff_effect_+%": [
+    {
+      "name": "ImpaleEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "impale_on_hit_%_chance": [
+    {
+      "name": "ImpaleChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "impale_phys_reduction_%_penalty": [
+    {
+      "name": "EnemyImpalePhysicalDamageReduction",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "keystone_strong_bowman": [
+    {
+      "name": "IronGrip",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "kill_enemy_on_hit_if_under_10%_life": [
+    {
+      "name": "CullPercent",
+      "type": "MAX",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": 10
+    }
+  ],
+  "kill_normal_or_magic_enemy_on_hit_if_under_x%_life": [
+    {
+      "name": "CullPercent",
+      "type": "MAX",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "neg": true,
+          "type": "ActorCondition",
+          "var": "RareOrUnique"
+        }
+      ]
+    }
+  ],
+  "knockback_distance_+%": [
+    {
+      "name": "EnemyKnockbackDistance",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "life_granted_when_hit_by_attacks": [
+    {
+      "name": "SelfLifeOnHit",
+      "type": "BASE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "life_granted_when_killed": [
+    {
+      "name": "SelfLifeOnKill",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "life_leech_does_not_stop_at_full_life": [
+    {
+      "name": "CanLeechLifeOnFullLife",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "life_leech_from_any_damage_permyriad": [
+    {
+      "name": "DamageLifeLeech",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    }
+  ],
+  "life_leech_from_physical_attack_damage_permyriad": [
+    {
+      "name": "PhysicalDamageLifeLeech",
+      "type": "BASE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    }
+  ],
+  "life_leech_on_any_damage_when_hit_permyriad": [
+    {
+      "name": "SelfDamageLifeLeech",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "life_regeneration_rate_per_minute_%": [
+    {
+      "name": "LifeRegenPercent",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 60
+    }
+  ],
+  "lightning_ailment_duration_+%": [
+    {
+      "name": "EnemyShockDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemySapDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "lightning_ailment_effect_+%": [
+    {
+      "name": "EnemyShockEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemySapEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "lightning_damage_%_to_add_as_chaos": [
+    {
+      "name": "LightningDamageGainAsChaos",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "lightning_damage_+%": [
+    {
+      "name": "LightningDamage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "lightning_damage_cannot_shock": [
+    {
+      "name": "LightningCannotShock",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "lightning_damage_taken_+%": [
+    {
+      "name": "LightningDamageTaken",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "link_buff_effect_on_self_+%": [
+    {
+      "name": "LinkEffectOnSelf",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "main_hand_local_maximum_added_physical_damage": [
+    {
+      "name": "PhysicalMax",
+      "type": "BASE",
+      "flags": 8192,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "main_hand_local_minimum_added_physical_damage": [
+    {
+      "name": "PhysicalMin",
+      "type": "BASE",
+      "flags": 8192,
+      "keywordFlags": 65536,
+      "tags": []
+    }
+  ],
+  "mana_gain_per_target": [
+    {
+      "name": "ManaOnHit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "mana_granted_when_hit_by_attacks": [
+    {
+      "name": "SelfManaOnHit",
+      "type": "BASE",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "mana_granted_when_killed": [
+    {
+      "name": "SelfManaOnKill",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "mana_leech_from_any_damage_permyriad": [
+    {
+      "name": "DamageManaLeech",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    }
+  ],
+  "mana_leech_on_any_damage_when_hit_permyriad": [
+    {
+      "name": "SelfDamageManaLeech",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "mark_skills_curse_effect_+%": [
+    {
+      "name": "CurseEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 109,
+          "type": "SkillType"
+        }
+      ]
+    }
+  ],
+  "maximum_added_cold_damage_per_frenzy_charge": [
+    {
+      "name": "ColdMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "FrenzyCharge"
+        }
+      ]
+    }
+  ],
+  "maximum_added_cold_damage_vs_chilled_enemies": [
+    {
+      "name": "ColdMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Chilled"
+        }
+      ]
+    }
+  ],
+  "maximum_added_fire_damage_vs_ignited_enemies": [
+    {
+      "name": "FireMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Ignited"
+        }
+      ]
+    }
+  ],
+  "maximum_energy_shield_leech_amount_per_leech_+%": [
+    {
+      "name": "MaxEnergyShieldLeechRate",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "maximum_life_+%_for_corpses_you_create": [
+    {
+      "name": "CorpseLife",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "maximum_life_leech_amount_per_leech_+%": [
+    {
+      "name": "MaxLifeLeechRate",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "melee_attack_number_of_spirit_strikes": [
+    {
+      "name": "AdditionalStrikeTarget",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "melee_counterattack_trigger_on_block_%": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 1,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "chanceToTriggerCounterattackOnBlock"
+      }
+    }
+  ],
+  "melee_counterattack_trigger_on_hit_%": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 1,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "chanceToTriggerCounterAttackOnHit"
+      }
+    }
+  ],
+  "melee_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 256,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "melee_damage_vs_bleeding_enemies_+%": [
+    {
+      "name": "PhysicalDamage",
+      "type": "INC",
+      "flags": 256,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Bleeding"
+        }
+      ]
+    }
+  ],
+  "melee_physical_damage_+%": [
+    {
+      "name": "PhysicalDamage",
+      "type": "INC",
+      "flags": 256,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "melee_range_+": [
+    {
+      "name": "MeleeWeaponRange",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "UnarmedRange",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "melee_weapon_range_+": [
+    {
+      "name": "MeleeWeaponRange",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "mine_critical_strike_chance_+%_per_power_charge": [
+    {
+      "name": "CritChance",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 8192,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "PowerCharge"
+        }
+      ]
+    }
+  ],
+  "mine_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 8192,
+      "tags": []
+    }
+  ],
+  "mine_detonation_radius_+%": [
+    {
+      "name": "MineDetonationAreaOfEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "mine_duration_+%": [
+    {
+      "name": "MineDuration",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "mine_laying_speed_+%": [
+    {
+      "name": "MineLayingSpeed",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "mine_projectile_speed_+%_per_frenzy_charge": [
+    {
+      "name": "ProjectileSpeed",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 8192,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "FrenzyCharge"
+        }
+      ]
+    }
+  ],
+  "mine_throwing_speed_+%_per_frenzy_charge": [
+    {
+      "name": "MineLayingSpeed",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "FrenzyCharge"
+        }
+      ]
+    }
+  ],
+  "minimum_added_cold_damage_per_frenzy_charge": [
+    {
+      "name": "ColdMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "FrenzyCharge"
+        }
+      ]
+    }
+  ],
+  "minimum_added_cold_damage_vs_chilled_enemies": [
+    {
+      "name": "ColdMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Chilled"
+        }
+      ]
+    }
+  ],
+  "minimum_added_fire_damage_vs_ignited_enemies": [
+    {
+      "name": "FireMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "Ignited"
+        }
+      ]
+    }
+  ],
+  "minion_actor_level_is_user_level_up_to_maximum": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "minionLevelIsPlayerLevel",
+        "value": true
+      }
+    }
+  ],
+  "minion_additional_physical_damage_reduction_%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "PhysicalDamageReduction",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "minion_ailment_damage_+%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 524288,
+          "name": "Damage",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minion_always_crit": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "CritChance",
+          "type": "OVERRIDE"
+        }
+      }
+    }
+  ],
+  "minion_area_of_effect_+%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "AreaOfEffect",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minion_attack_speed_+%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 1,
+          "keywordFlags": 0,
+          "name": "Speed",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minion_attack_speed_+%_when_on_low_life": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "1": {
+            "type": "Condition",
+            "var": "LowLife"
+          },
+          "flags": 1,
+          "keywordFlags": 0,
+          "name": "Speed",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minion_base_physical_damage_%_to_convert_to_lightning": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "PhysicalDamageConvertToLightning",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "minion_cast_speed_+%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 16,
+          "keywordFlags": 0,
+          "name": "Speed",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minion_chance_to_deal_double_damage_%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "DoubleDamageChance",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "minion_cooldown_recovery_+%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "CooldownRecovery",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minion_critical_strike_chance_+%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "CritChance",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minion_critical_strike_multiplier_+": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "CritMultiplier",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "minion_damage_+%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "Damage",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minion_damage_+%_on_full_life": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "1": {
+            "type": "Condition",
+            "var": "FullLife"
+          },
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "Damage",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minion_elemental_resistance_%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "ElementalResist",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "minion_life_leech_from_elemental_damage_permyriad": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100,
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "FireDamageLeech",
+          "type": "BASE"
+        }
+      }
+    },
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100,
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "LightningDamageLeech",
+          "type": "BASE"
+        }
+      }
+    },
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100,
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "ColdDamageLeech",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "minion_life_regeneration_rate_per_minute_%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 60,
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "LifeRegenPercent",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "minion_maximum_all_elemental_resistances_%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "ElementalResistMax",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "minion_maximum_life_+%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "Life",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minion_melee_damage_+%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 256,
+          "keywordFlags": 0,
+          "name": "Damage",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minion_melee_range_+": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "MeleeWeaponRange",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "minion_movement_speed_+%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "MovementSpeed",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minion_skill_area_of_effect_+%": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "AreaOfEffect",
+          "type": "INC"
+        }
+      }
+    }
+  ],
+  "minions_deal_%_of_physical_damage_as_additional_chaos_damage": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "PhysicalDamageGainAsChaos",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "minions_have_%_chance_to_inflict_wither_on_hit": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "Condition:CanWither",
+          "type": "FLAG",
+          "value": true
+        }
+      }
+    }
+  ],
+  "modifiers_to_buff_effect_duration_also_affect_soul_prevention_duration": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "skillEffectAppliesToSoulGainPrevention",
+        "value": true
+      }
+    }
+  ],
+  "modifiers_to_number_of_projectiles_instead_apply_to_chaining": [
+    {
+      "name": "NoAdditionalProjectiles",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "AdditionalProjectilesAddChainsInstead",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "modifiers_to_number_of_projectiles_instead_apply_to_splitting": [
+    {
+      "name": "NoAdditionalProjectiles",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "AdditionalProjectilesAddSplitsInstead",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "modifiers_to_projectile_count_do_not_apply": [
+    {
+      "name": "NoAdditionalProjectiles",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "modifiers_to_skill_effect_duration_also_affect_soul_prevention_duration": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "skillEffectAppliesToSoulGainPrevention",
+        "value": true
+      }
+    }
+  ],
+  "monster_base_block_%": [
+    {
+      "name": "BlockChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "monster_inherent_damage_taken_+%_final": [
+    {
+      "name": "DamageTaken",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "never_any_ailment": [
+    {
+      "name": "CannotShock",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotChill",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotFreeze",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotIgnite",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotScorch",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotBrittle",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotSap",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotBleed",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "CannotPoison",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "never_chill": [
+    {
+      "name": "CannotChill",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "never_freeze": [
+    {
+      "name": "CannotFreeze",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "never_ignite": [
+    {
+      "name": "CannotIgnite",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "never_shock": [
+    {
+      "name": "CannotShock",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "nightblade_elusive_grants_critical_strike_multiplier_+_to_supported_skills": [
+    {
+      "name": "NightbladeElusiveCritMultiplier",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "varList": [
+            "UsingClaw",
+            "UsingDagger"
+          ]
+        },
+        {
+          "neg": true,
+          "type": "Condition",
+          "varList": [
+            "UsingSword",
+            "UsingAxe",
+            "UsingMace"
+          ]
+        }
+      ]
+    }
+  ],
+  "no_critical_strike_multiplier": [
+    {
+      "name": "NoCritMultiplier",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "no_mana_cost": [
+    {
+      "name": "ManaCost",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": -100
+    }
+  ],
+  "non_curse_aura_effect_+%": [
+    {
+      "name": "AuraEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "neg": true,
+          "skillType": 79,
+          "type": "SkillType"
+        }
+      ]
+    }
+  ],
+  "non_damaging_ailment_effect_+%": [
+    {
+      "name": "EnemyChillEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemyShockEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemyFreezeEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemyScorchEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemyBrittleEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "EnemySapEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_additional_arrows": [
+    {
+      "name": "ProjectileCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 2048,
+      "tags": []
+    }
+  ],
+  "number_of_additional_curses_allowed": [
+    {
+      "name": "EnemyCurseLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_additional_forks_base": [
+    {
+      "name": "ForkTwice",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ForkCountMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_additional_mines_to_place": [
+    {
+      "name": "MineThrowCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_additional_projectiles": [
+    {
+      "name": "ProjectileCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_additional_remote_mines_allowed": [
+    {
+      "name": "ActiveMineLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_additional_totems_allowed": [
+    {
+      "name": "ActiveTotemLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_additional_traps_allowed": [
+    {
+      "name": "ActiveTrapLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_additional_traps_to_throw": [
+    {
+      "name": "TrapThrowCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_archer_skeletons_to_summon": [
+    {
+      "name": "MinionPerCastCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_chains": [
+    {
+      "name": "ChainCountMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_mage_skeletons_to_summon": [
+    {
+      "name": "MinionPerCastCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_melee_skeletons_to_summon": [
+    {
+      "name": "MinionPerCastCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_spider_minions_allowed": [
+    {
+      "name": "ActiveSpiderLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_tigers_allowed": [
+    {
+      "name": "ActiveTigerLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "number_of_wolves_allowed": [
+    {
+      "name": "ActiveWolfLimit",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "off_hand_base_weapon_attack_duration_ms": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "setOffHandAttackTime"
+      }
+    }
+  ],
+  "off_hand_critical_strike_chance_+_per_10_es_on_shield": [
+    {
+      "name": "CritChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 10,
+          "stat": "EnergyShieldOnWeapon 2",
+          "type": "PerStat"
+        }
+      ],
+      "div": 100
+    }
+  ],
+  "off_hand_local_maximum_added_cold_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "setOffHandColdMax"
+      }
+    }
+  ],
+  "off_hand_local_maximum_added_fire_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "setOffHandFireMax"
+      }
+    }
+  ],
+  "off_hand_local_maximum_added_physical_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "setOffHandPhysicalMax"
+      }
+    }
+  ],
+  "off_hand_local_minimum_added_cold_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "setOffHandColdMin"
+      }
+    }
+  ],
+  "off_hand_local_minimum_added_fire_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "setOffHandFireMin"
+      }
+    }
+  ],
+  "off_hand_local_minimum_added_physical_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "setOffHandPhysicalMin"
+      }
+    }
+  ],
+  "off_hand_maximum_added_cold_damage_per_15_shield_evasion": [
+    {
+      "name": "ColdMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "OffHandAttack"
+        },
+        {
+          "div": 15,
+          "stat": "EvasionOnWeapon 2",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "off_hand_maximum_added_fire_damage_per_15_shield_armour": [
+    {
+      "name": "FireMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "OffHandAttack"
+        },
+        {
+          "div": 15,
+          "stat": "ArmourOnWeapon 2",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "off_hand_maximum_added_physical_damage_per_15_shield_armour": [
+    {
+      "name": "PhysicalMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "OffHandAttack"
+        },
+        {
+          "div": 15,
+          "stat": "ArmourOnWeapon 2",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "off_hand_maximum_added_physical_damage_per_15_shield_armour_and_evasion_rating": [
+    {
+      "name": "PhysicalMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "OffHandAttack"
+        },
+        {
+          "div": 15,
+          "statList": [
+            "ArmourOnWeapon 2",
+            "EvasionOnWeapon 2"
+          ],
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "off_hand_minimum_added_cold_damage_per_15_shield_evasion": [
+    {
+      "name": "ColdMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "OffHandAttack"
+        },
+        {
+          "div": 15,
+          "stat": "EvasionOnWeapon 2",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "off_hand_minimum_added_fire_damage_per_15_shield_armour": [
+    {
+      "name": "FireMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "OffHandAttack"
+        },
+        {
+          "div": 15,
+          "stat": "ArmourOnWeapon 2",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "off_hand_minimum_added_physical_damage_per_15_shield_armour": [
+    {
+      "name": "PhysicalMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "OffHandAttack"
+        },
+        {
+          "div": 15,
+          "stat": "ArmourOnWeapon 2",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "off_hand_minimum_added_physical_damage_per_15_shield_armour_and_evasion_rating": [
+    {
+      "name": "PhysicalMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "OffHandAttack"
+        },
+        {
+          "div": 15,
+          "statList": [
+            "ArmourOnWeapon 2",
+            "EvasionOnWeapon 2"
+          ],
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "offering_skill_effect_duration_per_corpse": [
+    {
+      "name": "PrimaryDuration",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "limit": 4,
+          "type": "Multiplier",
+          "var": "CorpseConsumedRecently"
+        }
+      ],
+      "div": 1000
+    }
+  ],
+  "offering_spells_effect_+%": [
+    {
+      "name": "BuffEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "override_off_hand_base_critical_strike_chance_to_5%": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "setOffHandBaseCritChance"
+      }
+    }
+  ],
+  "physical_damage_%_to_add_as_chaos": [
+    {
+      "name": "PhysicalDamageGainAsChaos",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "physical_damage_%_to_add_as_cold": [
+    {
+      "name": "PhysicalDamageGainAsCold",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "physical_damage_%_to_add_as_fire": [
+    {
+      "name": "PhysicalDamageGainAsFire",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "physical_damage_%_to_add_as_lightning": [
+    {
+      "name": "PhysicalDamageGainAsLightning",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "physical_damage_+%": [
+    {
+      "name": "PhysicalDamage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "physical_damage_+%_per_frenzy_charge": [
+    {
+      "name": "PhysicalDamage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "FrenzyCharge"
+        }
+      ]
+    }
+  ],
+  "physical_damage_reduction_rating_+%": [
+    {
+      "name": "Armour",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "physical_damage_taken_+%": [
+    {
+      "name": "PhysicalDamageTaken",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "physical_weapon_damage_+%_per_10_str": [
+    {
+      "name": "PhysicalDamage",
+      "type": "INC",
+      "flags": 8192,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 10,
+          "stat": "Str",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "pierce_%": [
+    {
+      "name": "PierceChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "placing_traps_cooldown_recovery_+%": [
+    {
+      "name": "CooldownRecovery",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 4096,
+      "tags": []
+    }
+  ],
+  "poison_dot_multiplier_+": [
+    {
+      "name": "DotMultiplier",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 2097152,
+      "tags": []
+    }
+  ],
+  "poison_duration_is_skill_duration": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "poisonDurationIsSkillDuration",
+        "value": true
+      }
+    }
+  ],
+  "projectile_base_number_of_targets_to_pierce": [
+    {
+      "name": "PierceCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "projectile_behaviour_only_explode": [
+    {
+      "name": "CannotSplit",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "projectile_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 1024,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "projectile_damage_+%_final_if_pierced_enemy": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 1024,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "stat": "PiercedCount",
+          "threshold": 1,
+          "type": "StatThreshold"
+        }
+      ]
+    }
+  ],
+  "projectile_damage_+%_if_pierced_enemy": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 1024,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "stat": "PiercedCount",
+          "threshold": 1,
+          "type": "StatThreshold"
+        }
+      ]
+    }
+  ],
+  "projectile_damage_+%_per_remaining_chain": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 1024,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "stat": "ChainRemaining",
+          "type": "PerStat"
+        }
+      ]
+    },
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 2048,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "stat": "ChainRemaining",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "projectile_damage_modifiers_apply_to_skill_dot": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "dotIsProjectile",
+        "value": true
+      }
+    }
+  ],
+  "projectile_damage_taken_+%": [
+    {
+      "name": "ProjectileDamageTaken",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "projectile_number_to_split": [
+    {
+      "name": "SplitCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "projectiles_always_pierce_you": [
+    {
+      "name": "AlwaysPierceSelf",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "projectiles_cannot_split": [
+    {
+      "name": "CannotSplit",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "projectiles_fork": [
+    {
+      "name": "ForkOnce",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "ForkCountMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "receive_bleeding_chance_%_when_hit_by_attack": [
+    {
+      "name": "SelfBleedChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "reduce_enemy_chaos_resistance_%": [
+    {
+      "name": "ChaosPenetration",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "reduce_enemy_elemental_resistance_%": [
+    {
+      "name": "ElementalPenetration",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "remote_mined_by_support": [
+    {
+      "name": "ManaCostGainAsReservation",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    },
+    {
+      "name": "LifeCostGainAsReservation",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "returning_projectiles_always_pierce": [
+    {
+      "name": "PierceAllTargets",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "ReturningProjectile"
+        }
+      ],
+      "value": true
+    }
+  ],
+  "secondary_maximum_base_chaos_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "ChaosMax"
+      }
+    }
+  ],
+  "secondary_maximum_base_cold_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "ColdMax"
+      }
+    }
+  ],
+  "secondary_maximum_base_fire_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "FireMax"
+      }
+    }
+  ],
+  "secondary_maximum_base_lightning_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "LightningMax"
+      }
+    }
+  ],
+  "secondary_maximum_base_physical_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "PhysicalMax"
+      }
+    }
+  ],
+  "secondary_minimum_base_chaos_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "ChaosMin"
+      }
+    }
+  ],
+  "secondary_minimum_base_cold_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "ColdMin"
+      }
+    }
+  ],
+  "secondary_minimum_base_fire_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "FireMin"
+      }
+    }
+  ],
+  "secondary_minimum_base_lightning_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "LightningMin"
+      }
+    }
+  ],
+  "secondary_minimum_base_physical_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "PhysicalMin"
+      }
+    }
+  ],
+  "secondary_skill_effect_duration_+%": [
+    {
+      "name": "SecondaryDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "set_base_avoid_projectiles_%_chance": [
+    {
+      "name": "AvoidProjectilesChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "set_base_cannot_be_damaged": [
+    {
+      "name": "DamageTaken",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": -100
+    }
+  ],
+  "set_energy_shield_recharge_rate_per_minute_%": [
+    {
+      "name": "EnergyShieldRecharge",
+      "type": "OVERRIDE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 6000
+    }
+  ],
+  "set_immune_to_curses": [
+    {
+      "name": "CurseImmune",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "set_max_endurance_charges": [
+    {
+      "name": "EnduranceChargesMax",
+      "type": "OVERRIDE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "set_max_frenzy_charges": [
+    {
+      "name": "FrenzyChargesMax",
+      "type": "OVERRIDE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "set_max_power_charges": [
+    {
+      "name": "PowerChargesMax",
+      "type": "OVERRIDE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "set_maximum_life_is_one": [
+    {
+      "name": "Life",
+      "type": "OVERRIDE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "shield_charge_damage_+%_maximum": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 4,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "ramp": [
+            [
+              0,
+              0
+            ],
+            [
+              60,
+              1
+            ]
+          ],
+          "type": "DistanceRamp"
+        }
+      ]
+    }
+  ],
+  "shock_duration_+%": [
+    {
+      "name": "EnemyShockDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "shock_effect_+%": [
+    {
+      "name": "EnemyShockEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "shock_maximum_magnitude_+": [
+    {
+      "name": "ShockMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "shock_minimum_damage_taken_increase_%+": [
+    {
+      "name": "ShockMinimum",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "sigil_attached_target_damage_+%_final": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "threshold": 1,
+          "type": "MultiplierThreshold",
+          "var": "BrandsAttachedToEnemy"
+        }
+      ]
+    }
+  ],
+  "sigil_attached_target_hit_damage_+%_final": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 4,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "TargetingBrandedEnemy"
+        }
+      ]
+    }
+  ],
+  "sigil_repeat_frequency_+%": [
+    {
+      "name": "BrandActivationFrequency",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_area_of_effect_+%_final_in_sand_stance": [
+    {
+      "name": "AreaOfEffect",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "SandStance"
+        }
+      ]
+    }
+  ],
+  "skill_buff_effect_+%": [
+    {
+      "name": "BuffEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_can_own_mirage_archers": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 68,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByMirageArcher",
+        "value": true
+      }
+    }
+  ],
+  "skill_cannot_gain_repeat_bonuses": [
+    {
+      "name": "NoRepeatBonuses",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "skill_cold_damage_%_to_convert_to_chaos": [
+    {
+      "name": "SkillColdDamageConvertToChaos",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_cold_damage_%_to_convert_to_fire": [
+    {
+      "name": "SkillColdDamageConvertToFire",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_convert_%_physical_damage_to_random_element": [
+    {
+      "name": "PhysicalDamageConvertToRandom",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_double_hits_when_dual_wielding": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "doubleHitsWhenDualWielding",
+        "value": true
+      }
+    }
+  ],
+  "skill_effect_duration_+%": [
+    {
+      "name": "Duration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_effect_duration_+%_per_removable_frenzy_charge": [
+    {
+      "name": "Duration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "RemovableFrenzyCharge"
+        }
+      ]
+    }
+  ],
+  "skill_fire_damage_%_to_convert_to_chaos": [
+    {
+      "name": "SkillFireDamageConvertToChaos",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_has_trigger_from_unique_item": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByUnique",
+        "value": true
+      }
+    }
+  ],
+  "skill_lightning_damage_%_to_convert_to_chaos": [
+    {
+      "name": "SkillLightningDamageConvertToChaos",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_lightning_damage_%_to_convert_to_cold": [
+    {
+      "name": "SkillLightningDamageConvertToCold",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_lightning_damage_%_to_convert_to_fire": [
+    {
+      "name": "SkillLightningDamageConvertToFire",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_minion_explosion_life_%": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100,
+      "value": {
+        "key": "selfFireExplosionLifeMultiplier"
+      }
+    }
+  ],
+  "skill_physical_damage_%_to_convert_to_chaos": [
+    {
+      "name": "SkillPhysicalDamageConvertToChaos",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_physical_damage_%_to_convert_to_cold": [
+    {
+      "name": "SkillPhysicalDamageConvertToCold",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_physical_damage_%_to_convert_to_fire": [
+    {
+      "name": "SkillPhysicalDamageConvertToFire",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_physical_damage_%_to_convert_to_lightning": [
+    {
+      "name": "SkillPhysicalDamageConvertToLightning",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "skill_repeat_count": [
+    {
+      "name": "RepeatCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 26,
+          "type": "SkillType"
+        }
+      ]
+    }
+  ],
+  "skill_triggered_by_snipe": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredBySnipe",
+        "value": true
+      }
+    }
+  ],
+  "skill_triggered_when_you_focus_chance_%": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        }
+      ],
+      "div": 100,
+      "value": {
+        "key": "chanceToTriggerOnFocus"
+      }
+    }
+  ],
+  "snipe_triggered_skill_ailment_damage_+%_final_per_stage": [
+    {
+      "name": "snipeAilmentMulti",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "snipe_triggered_skill_damage_+%_final": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "snipe_triggered_skill_hit_damage_+%_final_per_stage": [
+    {
+      "name": "snipeHitMulti",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "spell_base_fire_damage_%_maximum_life": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100,
+      "value": {
+        "key": "selfFireExplosionLifeMultiplier"
+      }
+    }
+  ],
+  "spell_cast_time_added_to_cooldown_if_triggered": [
+    {
+      "name": "SpellCastTimeAddedToCooldownIfTriggered",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "spell_cast_time_cannot_be_modified": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "fixedCastTime",
+        "value": true
+      }
+    }
+  ],
+  "spell_critical_strike_chance_+%": [
+    {
+      "name": "CritChance",
+      "type": "INC",
+      "flags": 2,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "spell_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 2,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "spell_damage_+%_per_10_int": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 10,
+          "stat": "Int",
+          "type": "PerStat"
+        }
+      ],
+      "value": {
+        "key": "Damage"
+      }
+    }
+  ],
+  "spell_damage_modifiers_apply_to_skill_dot": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "dotIsSpell",
+        "value": true
+      }
+    }
+  ],
+  "spell_has_trigger_from_crafted_item_mod": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByCraft",
+        "value": true
+      }
+    }
+  ],
+  "spell_impale_on_crit_%_chance": [
+    {
+      "name": "ImpaleChance",
+      "type": "BASE",
+      "flags": 2,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "CriticalStrike"
+        }
+      ]
+    }
+  ],
+  "spell_maximum_added_chaos_damage": [
+    {
+      "name": "ChaosMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 131072,
+      "tags": []
+    }
+  ],
+  "spell_maximum_added_cold_damage": [
+    {
+      "name": "ColdMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 131072,
+      "tags": []
+    }
+  ],
+  "spell_maximum_added_fire_damage": [
+    {
+      "name": "FireMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 131072,
+      "tags": []
+    }
+  ],
+  "spell_maximum_added_lightning_damage": [
+    {
+      "name": "LightningMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 131072,
+      "tags": []
+    }
+  ],
+  "spell_maximum_added_physical_damage": [
+    {
+      "name": "PhysicalMax",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 131072,
+      "tags": []
+    }
+  ],
+  "spell_maximum_base_chaos_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "ChaosMax"
+      }
+    }
+  ],
+  "spell_maximum_base_cold_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "ColdMax"
+      }
+    }
+  ],
+  "spell_maximum_base_cold_damage_+_per_10_intelligence": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 10,
+          "stat": "Int",
+          "type": "PerStat"
+        }
+      ],
+      "value": {
+        "key": "ColdMax"
+      }
+    }
+  ],
+  "spell_maximum_base_cold_damage_per_removable_frenzy_charge": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "RemovableFrenzyCharge"
+        }
+      ],
+      "value": {
+        "key": "ColdMax"
+      }
+    }
+  ],
+  "spell_maximum_base_fire_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "FireMax"
+      }
+    }
+  ],
+  "spell_maximum_base_fire_damage_per_removable_endurance_charge": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "RemovableEnduranceCharge"
+        }
+      ],
+      "value": {
+        "key": "FireMax"
+      }
+    }
+  ],
+  "spell_maximum_base_lightning_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "LightningMax"
+      }
+    }
+  ],
+  "spell_maximum_base_lightning_damage_per_removable_power_charge": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "RemovablePowerCharge"
+        }
+      ],
+      "value": {
+        "key": "LightningMax"
+      }
+    }
+  ],
+  "spell_maximum_base_physical_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "PhysicalMax"
+      }
+    }
+  ],
+  "spell_maximum_base_physical_damage_%_of_ward": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "percent": true,
+          "stat": "Ward",
+          "type": "PercentStat"
+        }
+      ],
+      "value": {
+        "key": "PhysicalMax"
+      }
+    }
+  ],
+  "spell_minimum_added_chaos_damage": [
+    {
+      "name": "ChaosMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 131072,
+      "tags": []
+    }
+  ],
+  "spell_minimum_added_cold_damage": [
+    {
+      "name": "ColdMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 131072,
+      "tags": []
+    }
+  ],
+  "spell_minimum_added_fire_damage": [
+    {
+      "name": "FireMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 131072,
+      "tags": []
+    }
+  ],
+  "spell_minimum_added_lightning_damage": [
+    {
+      "name": "LightningMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 131072,
+      "tags": []
+    }
+  ],
+  "spell_minimum_added_physical_damage": [
+    {
+      "name": "PhysicalMin",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 131072,
+      "tags": []
+    }
+  ],
+  "spell_minimum_base_chaos_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "ChaosMin"
+      }
+    }
+  ],
+  "spell_minimum_base_cold_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "ColdMin"
+      }
+    }
+  ],
+  "spell_minimum_base_cold_damage_+_per_10_intelligence": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "div": 10,
+          "stat": "Int",
+          "type": "PerStat"
+        }
+      ],
+      "value": {
+        "key": "ColdMin"
+      }
+    }
+  ],
+  "spell_minimum_base_cold_damage_per_removable_frenzy_charge": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "RemovableFrenzyCharge"
+        }
+      ],
+      "value": {
+        "key": "ColdMin"
+      }
+    }
+  ],
+  "spell_minimum_base_fire_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "FireMin"
+      }
+    }
+  ],
+  "spell_minimum_base_fire_damage_per_removable_endurance_charge": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "RemovableEnduranceCharge"
+        }
+      ],
+      "value": {
+        "key": "FireMin"
+      }
+    }
+  ],
+  "spell_minimum_base_lightning_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "LightningMin"
+      }
+    }
+  ],
+  "spell_minimum_base_lightning_damage_per_removable_power_charge": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "RemovablePowerCharge"
+        }
+      ],
+      "value": {
+        "key": "LightningMin"
+      }
+    }
+  ],
+  "spell_minimum_base_physical_damage": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "PhysicalMin"
+      }
+    }
+  ],
+  "spell_minimum_base_physical_damage_%_of_ward": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "percent": true,
+          "stat": "Ward",
+          "type": "PercentStat"
+        }
+      ],
+      "value": {
+        "key": "PhysicalMin"
+      }
+    }
+  ],
+  "spell_uncastable_if_triggerable": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggered",
+        "value": true
+      }
+    }
+  ],
+  "spells_impale_on_hit_%_chance": [
+    {
+      "name": "ImpaleChance",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 131072,
+      "tags": []
+    }
+  ],
+  "strong_casting": [
+    {
+      "name": "IronWill",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "stun_duration_+%_vs_enemies_that_are_on_full_life": [
+    {
+      "name": "EnemyStunDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "actor": "enemy",
+          "type": "ActorCondition",
+          "var": "FullLife"
+        }
+      ]
+    }
+  ],
+  "stun_threshold_+%": [
+    {
+      "name": "StunThreshold",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "summon_cold_resistance_+": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "ColdResist",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "summon_fire_resistance_+": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "FireResist",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "summon_lightning_resistance_+": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "LightningResist",
+          "type": "BASE"
+        }
+      }
+    }
+  ],
+  "summon_sacred_wisps_on_hit": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillTypeList": [
+            2,
+            47
+          ],
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredBySacredWisps",
+        "value": true
+      }
+    }
+  ],
+  "summon_totem_cast_speed_+%": [
+    {
+      "name": "TotemPlacementSpeed",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "support_added_cooldown_count_if_not_instant": [
+    {
+      "name": "AdditionalCooldownUses",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "neg": true,
+          "skillType": 74,
+          "type": "SkillType"
+        }
+      ]
+    }
+  ],
+  "support_additional_trap_mine_%_chance_for_1_additional_trap_mine": [
+    {
+      "name": "MineThrowCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    },
+    {
+      "name": "TrapThrowCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    }
+  ],
+  "support_additional_trap_mine_%_chance_for_2_additional_trap_mine": [
+    {
+      "name": "MineThrowCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 50
+    },
+    {
+      "name": "TrapThrowCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 50
+    }
+  ],
+  "support_additional_trap_mine_%_chance_for_3_additional_trap_mine": [
+    {
+      "name": "MineThrowCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 33.333333333333
+    },
+    {
+      "name": "TrapThrowCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 33.333333333333
+    }
+  ],
+  "support_autocast_instant_spells": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillTypeList": [
+            35,
+            2,
+            74
+          ],
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByAutomation"
+      }
+    }
+  ],
+  "support_autocast_warcries": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 73,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByAutoexertion"
+      }
+    }
+  ],
+  "support_barrage_attack_time_+%_per_projectile_fired": [
+    {
+      "name": "SkillAttackTime",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "varList": [
+            "UsingBow",
+            "UsingWand"
+          ]
+        },
+        {
+          "stat": "ProjectileCount",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "support_barrage_trap_and_mine_throwing_time_+%_final_per_projectile_fired": [
+    {
+      "name": "SkillMineThrowingTime",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "stat": "ProjectileCount",
+          "type": "PerStat"
+        }
+      ]
+    },
+    {
+      "name": "SkillTrapThrowingTime",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "stat": "ProjectileCount",
+          "type": "PerStat"
+        }
+      ]
+    }
+  ],
+  "support_cast_on_life_spent": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByFoulbornKitavaThirst",
+        "value": true
+      }
+    }
+  ],
+  "support_cast_on_mana_spent": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByKitavaThirst",
+        "value": true
+      }
+    }
+  ],
+  "support_chain_count_+%_final": [
+    {
+      "name": "ChainCountMax",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "support_makes_skill_mine_pvp_damage_+%_final": [
+    {
+      "name": "PvpDamageMultiplier",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "support_minion_damage_minion_life_+%_final": [
+    {
+      "name": "MinionModifier",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "mod": {
+          "flags": 0,
+          "keywordFlags": 0,
+          "name": "Life",
+          "type": "MORE"
+        }
+      }
+    }
+  ],
+  "support_swift_affliction_skill_effect_and_damaging_ailment_duration_+%_final": [
+    {
+      "name": "Duration",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    },
+    {
+      "name": "DamagingAilmentDuration",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "support_trap_damage_+%_final": [
+    {
+      "name": "Damage",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 4096,
+      "tags": []
+    }
+  ],
+  "supported_active_skill_gem_level_+": [
+    {
+      "name": "SupportedGemProperty",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "level",
+        "keyword": "grants_active_skill"
+      }
+    }
+  ],
+  "supported_active_skill_gem_quality_%": [
+    {
+      "name": "SupportedGemProperty",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "quality",
+        "keyword": "grants_active_skill"
+      }
+    }
+  ],
+  "supported_aura_skill_gem_level_+": [
+    {
+      "name": "SupportedGemProperty",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 43,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "level",
+        "keyword": "grants_active_skill"
+      }
+    }
+  ],
+  "supported_chaos_skill_gem_level_+": [
+    {
+      "name": "SupportedGemProperty",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 49,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "level",
+        "keyword": "grants_active_skill"
+      }
+    }
+  ],
+  "supported_cold_skill_gem_level_+": [
+    {
+      "name": "SupportedGemProperty",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 33,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "level",
+        "keyword": "grants_active_skill"
+      }
+    }
+  ],
+  "supported_curse_skill_gem_level_+": [
+    {
+      "name": "SupportedGemProperty",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 2,
+      "tags": [],
+      "value": {
+        "key": "level",
+        "keyword": "grants_active_skill"
+      }
+    }
+  ],
+  "supported_elemental_skill_gem_level_+": [
+    {
+      "name": "SupportedGemProperty",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 224,
+      "tags": [],
+      "value": {
+        "key": "level",
+        "keyword": "grants_active_skill"
+      }
+    }
+  ],
+  "supported_fire_skill_gem_level_+": [
+    {
+      "name": "SupportedGemProperty",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 32,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "level",
+        "keyword": "grants_active_skill"
+      }
+    }
+  ],
+  "supported_lightning_skill_gem_level_+": [
+    {
+      "name": "SupportedGemProperty",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 34,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "level",
+        "keyword": "grants_active_skill"
+      }
+    }
+  ],
+  "supported_minion_skill_gem_level_+": [
+    {
+      "name": "SupportedGemProperty",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 9,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "level",
+        "keyword": "grants_active_skill"
+      }
+    }
+  ],
+  "supported_physical_skill_gem_level_+": [
+    {
+      "name": "SupportedGemProperty",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 86,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "level",
+        "keyword": "grants_active_skill"
+      }
+    }
+  ],
+  "supported_strike_skill_gem_level_+": [
+    {
+      "name": "SupportedGemProperty",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 25,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "level",
+        "keyword": "grants_active_skill"
+      }
+    }
+  ],
+  "throw_X_additional_traps_if_dual_wielding": [
+    {
+      "name": "TrapThrowCount",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "DualWielding"
+        }
+      ]
+    }
+  ],
+  "totem_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 16384,
+      "tags": []
+    }
+  ],
+  "totem_duration_+%": [
+    {
+      "name": "TotemDuration",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "totem_life_+%": [
+    {
+      "name": "TotemLife",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "totem_life_+%_final": [
+    {
+      "name": "TotemLife",
+      "type": "MORE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "totem_support_gem_level": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": {
+        "key": "totemLevel"
+      }
+    }
+  ],
+  "totems_regenerate_%_life_per_minute": [
+    {
+      "name": "LifeRegenPercent",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 16384,
+      "tags": [],
+      "div": 60
+    }
+  ],
+  "trap_critical_strike_multiplier_+_per_power_charge": [
+    {
+      "name": "CritMultiplier",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 4096,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "PowerCharge"
+        }
+      ]
+    }
+  ],
+  "trap_damage_+%": [
+    {
+      "name": "Damage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 4096,
+      "tags": []
+    }
+  ],
+  "trap_duration_+%": [
+    {
+      "name": "TrapDuration",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "trap_throwing_speed_+%": [
+    {
+      "name": "TrapThrowingSpeed",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "trap_throwing_speed_+%_per_frenzy_charge": [
+    {
+      "name": "TrapThrowingSpeed",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Multiplier",
+          "var": "FrenzyCharge"
+        }
+      ]
+    }
+  ],
+  "trap_throwing_speed_+%_while_wielding_2hand": [
+    {
+      "name": "TrapThrowingSpeed",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "type": "Condition",
+          "var": "UsingTwoHandedWeapon"
+        }
+      ]
+    }
+  ],
+  "trap_trigger_radius_+%": [
+    {
+      "name": "TrapTriggerAreaOfEffect",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "trauma_strike_self_damage_per_trauma": [
+    {
+      "name": "TraumaSelfDamageTakenLife",
+      "type": "BASE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "treat_enemy_resistances_as_negated_on_elemental_damage_hit_%_chance": [
+    {
+      "name": "HitsInvertEleResChance",
+      "type": "CHANCE",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "div": 100
+    }
+  ],
+  "trigger_on_attack_hit_against_rare_or_unique": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 109,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggerMarkOnRareOrUnique",
+        "value": true
+      }
+    }
+  ],
+  "triggered_by_kinetic_instability_support": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 1,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByKineticFlux",
+        "value": true
+      }
+    },
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 1,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggerOnCrit",
+        "value": true
+      }
+    }
+  ],
+  "triggered_by_spiritual_cry": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 24,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 1,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByGeneralsCry",
+        "value": true
+      }
+    }
+  ],
+  "triggered_skill_damage_+%": [
+    {
+      "name": "TriggeredDamage",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 41,
+          "type": "SkillType"
+        }
+      ]
+    }
+  ],
+  "triggered_vicious_hex_explosion": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredWhenHexEnds"
+      }
+    }
+  ],
+  "unique_cospris_malice_cold_spells_triggered": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 33,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByCospris",
+        "value": true
+      }
+    },
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 2,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 33,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggerOnCrit",
+        "value": true
+      }
+    }
+  ],
+  "unique_mjolner_lightning_spells_triggered": [
+    {
+      "name": "SkillData",
+      "type": "LIST",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "skillType": 35,
+          "type": "SkillType"
+        },
+        {
+          "skillType": 34,
+          "type": "SkillType"
+        }
+      ],
+      "value": {
+        "key": "triggeredByMjolner",
+        "value": true
+      }
+    }
+  ],
+  "warcry_cooldown_speed_+%": [
+    {
+      "name": "CooldownRecovery",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 4,
+      "tags": []
+    }
+  ],
+  "warcry_count_power_from_enemies": [
+    {
+      "name": "UsesWarcryPower",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [
+        {
+          "effectType": "Buff",
+          "type": "GlobalEffect"
+        }
+      ],
+      "value": true
+    }
+  ],
+  "warcry_grant_damage_+%_to_exerted_attacks": [
+    {
+      "name": "ExertIncrease",
+      "type": "INC",
+      "flags": 1,
+      "keywordFlags": 0,
+      "tags": []
+    }
+  ],
+  "warcry_speed_+%": [
+    {
+      "name": "WarcrySpeed",
+      "type": "INC",
+      "flags": 0,
+      "keywordFlags": 4,
+      "tags": []
+    }
+  ],
+  "withered_on_hit_chance_%": [
+    {
+      "name": "Condition:CanWither",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ],
+  "withered_on_hit_for_2_seconds_%_chance": [
+    {
+      "name": "Condition:CanWither",
+      "type": "FLAG",
+      "flags": 0,
+      "keywordFlags": 0,
+      "tags": [],
+      "value": true
+    }
+  ]
+}

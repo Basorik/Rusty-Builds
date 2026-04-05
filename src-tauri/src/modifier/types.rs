@@ -1,6 +1,40 @@
+use std::sync::RwLock;
 use bitflags::bitflags;
+use rustc_hash::FxHashSet;
 use smallvec::SmallVec;
 use crate::data::{StatId, SourceId};
+
+// ── String interner ─────────────────────────────────────────────────
+// ModTag strings (condition vars, multiplier vars, stat names, effect names)
+// are a fixed set loaded once from game data. We intern them into a global
+// set so every ModTag stores a `&'static str` — no per-tag heap allocation,
+// cheap Clone (Copy), and O(1) equality via pointer comparison.
+
+static INTERNED: RwLock<Option<FxHashSet<&'static str>>> = RwLock::new(None);
+
+/// Intern a string, returning a `&'static str` that lives for the process lifetime.
+/// Identical strings return the same pointer. Thread-safe.
+pub fn intern(s: &str) -> &'static str {
+    // Fast path: already interned
+    {
+        let guard = INTERNED.read().unwrap();
+        if let Some(set) = guard.as_ref() {
+            if let Some(&existing) = set.get(s) {
+                return existing;
+            }
+        }
+    }
+    // Slow path: allocate and insert
+    let mut guard = INTERNED.write().unwrap();
+    let set = guard.get_or_insert_with(FxHashSet::default);
+    // Double-check after acquiring write lock
+    if let Some(&existing) = set.get(s) {
+        return existing;
+    }
+    let leaked: &'static str = Box::leak(s.to_owned().into_boxed_str());
+    set.insert(leaked);
+    leaked
+}
 
 // General type for mod - controls how the mod is accumulated
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -13,6 +47,7 @@ pub enum ModType {
     List,      // List-type mod (appended, not summed)
     Max,       // Only the highest value takes effect (e.g., "PoisonStackLimit")
     Min,       // Only the lowest value takes effect
+    Chance,    // X% chance (e.g., "20% chance to Poison") — PoB calls this "CHANCE"
 }
 
 // Flags for actions that the mod applies to
@@ -47,14 +82,40 @@ bitflags! {
     }
 }
 
-//Tags that control when the mod is applied on top of the modflags
+/// Tags that control when the mod is applied, on top of the ModFlags.
+/// All string fields are interned via `intern()` — no per-tag heap allocation.
 #[derive(Debug, Clone)]
 pub enum ModTag {
-    Condition(StatId),
-    Multiplier(StatId),
-    SkillType(u32),
-    SlotName(u8)
-
+    Condition(&'static str),            // condition var name, e.g. "LowLife", "Onslaught"
+    ActorCondition {                    // condition on a specific actor (self, enemy, parent, etc.)
+        var: &'static str,
+        actor: Option<&'static str>,
+    },
+    Multiplier(&'static str),           // multiplier var name, e.g. "EnduranceCharge"
+    MultiplierThreshold {               // multiplier that only kicks in above a threshold
+        var: &'static str,
+        threshold: f64,
+    },
+    PerStat {                           // per-X-of-stat scaling (e.g. "1% per 10 Dexterity")
+        stat: &'static str,
+        div: f64,
+    },
+    PercentStat {                       // stat percent contribution (e.g. "X% of Strength added as Y")
+        stat: &'static str,
+        percent: bool,
+    },
+    StatThreshold {                     // mod only active above a stat threshold
+        stat: &'static str,
+        threshold: f64,
+    },
+    SkillType(u32),                     // requires a specific active skill type flag
+    GlobalEffect {                      // applies a named global effect (aura, curse, etc.)
+        effect_name: &'static str,
+        effect_type: Option<&'static str>,
+    },
+    ModFlagOr(u32),                     // alternative ModFlag check (OR instead of AND)
+    DistanceRamp(Vec<[f64; 2]>),        // damage ramp based on projectile distance
+    SlotName(u8),                       // (legacy) item slot identifier
 }
 
 // Main Modifier class

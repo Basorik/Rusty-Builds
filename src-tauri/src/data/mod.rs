@@ -5,6 +5,7 @@ pub mod skills;
 pub mod stat_id;
 pub mod tree;
 pub mod uniques;
+pub mod skill_stat_map;
 
 use rustc_hash::FxHashMap;
 pub use stat_id::StatId;

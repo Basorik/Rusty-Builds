@@ -899,7 +899,194 @@ fn resolve_implicits(base: &BaseItem, mod_db: &ModDefinitionDB, ssm: &SkillStatM
 
 ---
 
-## 7. Implementation Order
+## 7. Pre-Phase-2 Work: Stat Translations Parser
+
+Before moving to Phase 2 (Modifier System), implement a data-driven display-text → stat ID resolver using `repoe/stat_translations.json`. This replaces the ~25-entry hardcoded `TEMPLATE_MAP` in `parser.rs` with a complete, GGG-sourced lookup covering **91% of all passive tree stat lines**, and is immediately usable in `rebuild_tree()`.
+
+### Why Do This First
+
+- **Tree data is already available** (`data/tree/3.27.0g/data.json`), so the resolver can be wired into `rebuild_tree()` as soon as it's built
+- `stat_translations.json` has 11,075 entries vs the 25 in the current `TEMPLATE_MAP` — coverage jumps from ~30% to 91% for tree stats
+- Items and unique text parsing use the same resolver, so building it now unifies tree + items instead of building two separate systems
+- The remaining ~9% of unmatched stat lines (complex multi-line stats, exotic keystones) fall back to the existing `parse_display_text()` — no functionality is lost
+
+### Data Format
+
+Each entry in `repoe/stat_translations.json`:
+```json
+{
+  "ids": ["accuracy_rating_+%"],
+  "English": [{
+    "string": "{0}% increased Accuracy Rating",
+    "condition": [{"min": 1, "max": null, "negated": null}],
+    "format": ["#"],
+    "index_handlers": [[]]
+  }, {
+    "string": "{0}% reduced Accuracy Rating",
+    "condition": [{"min": null, "max": -1, "negated": null}],
+    "format": ["#"],
+    "index_handlers": [["negate"]]
+  }]
+}
+```
+
+- `ids` — one or more internal stat ID strings (e.g. `"accuracy_rating_+%"`)
+- `English[].string` — display template using `{0}`, `{1}` placeholders
+- `English[].condition` — which numeric range each variant applies to (used to pick the right variant when value sign is known)
+- `English[].index_handlers` — value transformations: `"negate"`, `"divide_by_one_hundred"`, `"per_minute_to_per_second"`, etc.
+
+### How Modifier Type Is Derived
+
+SkillStatMap only covers ~3.6% of all stat IDs. For the remaining 96.4%, modifier type is derived from the stat ID naming convention — which is consistent across all of GGG's data:
+
+| Suffix / Pattern | Modifier Type | Examples |
+|---|---|---|
+| `_+%` | `INC` | `accuracy_rating_+%`, `maximum_life_+%` |
+| `_+%_final` | `MORE` | `active_skill_damage_+%_final` |
+| No suffix, `base_` prefix, or `additional_` prefix | `BASE` | `accuracy_rating`, `base_maximum_life` |
+| `set_`, `cannot_`, `is_`, `always_` | `FLAG` | `cannot_be_stunned`, `is_unarmed` |
+
+This is codified in `SkillStatMapDB` already for the 3.6% it handles. The same suffix rules extend to all stat IDs.
+
+### Index Handlers
+
+These tell you how the raw displayed number relates to the internal value stored on the node/mod:
+
+| Handler | Transformation | Use Case |
+|---|---|---|
+| `(none)` | value as-is | Most stats |
+| `negate` | `value * -1` | "reduced" variants |
+| `divide_by_one_hundred` | `value / 100` | Permyriad values stored as integers (e.g., crit) |
+| `per_minute_to_per_second` | `value / 60` | Regen values stored per-minute |
+| `milliseconds_to_seconds` | `value / 1000` | Duration values |
+| `divide_by_ten_1dp_if_required` | `value / 10` | Some flat values |
+| `double` | `value * 2` | Some percentage values |
+| `locations_to_metres` | `value / 10.0` | Range/AoE values (GGG uses "locations") |
+
+For the calc engine, **the displayed number is usually the correct value** — `index_handlers` matter most for tooltip rendering (reversing back from internal storage format). For tree nodes, the `stats: Vec<String>` display text already shows the player-facing number, so parsing it directly gives the correct calc value with only the `negate` handler needing special treatment.
+
+### New Struct: `StatTranslationResolver` (`data/stat_translations.rs`)
+
+This is distinct from the tooltip-focused `StatTranslationDB` in Section 3f. This struct is optimised for the **parse direction** (display text → stat IDs), not the render direction (stat IDs → display text):
+
+```rust
+/// One parsed variant: maps a normalized display template to its stat IDs and value handlers.
+pub struct StatTranslationMatch {
+    pub stat_ids: Vec<String>,                  // e.g. ["accuracy_rating_+%"]
+    pub index_handlers: Vec<Vec<String>>,        // one handler list per stat_id
+    pub condition: Vec<ValueCondition>,          // min/max per stat (for multi-stat entries)
+}
+
+/// Fast lookup: normalized display string → StatTranslationMatch
+///
+/// "Normalized" means: numbers replaced with `#`, whitespace trimmed.
+/// e.g. "+35% increased Accuracy Rating" → "+#% increased Accuracy Rating"
+pub struct StatTranslationResolver {
+    /// Primary lookup: normalized template → match
+    by_template: FxHashMap<String, StatTranslationMatch>,
+}
+
+impl StatTranslationResolver {
+    /// Load from `repoe/stat_translations.json`.
+    /// Builds the normalized template → match map at load time.
+    pub fn load(path: &Path) -> Result<Self, DataError>;
+
+    /// Resolve a display text line to its stat IDs and the extracted numeric value.
+    ///
+    /// Returns `None` if the text does not match any known template (fall through
+    /// to `parse_display_text()` hardcoded fallback).
+    ///
+    /// Returns `Some(Vec<(stat_id, value)>)` — one entry per stat ID in the match.
+    /// For single-stat entries (99% of cases) this is a one-element Vec.
+    pub fn resolve(&self, display_text: &str) -> Option<Vec<(String, f64)>>;
+}
+```
+
+**Template normalization algorithm** (run at load time on all `{0}` templates, and at query time on incoming display text):
+1. Replace all `{N}` / `+{N}` placeholders → `#`  (load time, for templates)
+2. Replace all numeric substrings (including sign) → `#`  (query time, for display text)
+3. Trim whitespace
+
+The extracted number(s) come from step 2 via regex capture groups, in order of appearance, matched positionally to `index_handlers`.
+
+### Wiring Into `rebuild_tree()`
+
+Once `StatTranslationResolver` is built:
+
+```rust
+fn rebuild_tree(build: &BuildInfo, game: &GameData, tree_db: &mut ModDB) {
+    for node_id in &build.selected_nodes.node_ids {
+        let node = game.tree.get_node(*node_id)?;
+        let source = SourceId(/* tree layer */);
+
+        for stat_text in &node.stats {
+            // Primary path: stat_translations lookup
+            if let Some(resolved) = game.stat_translations.resolve(stat_text) {
+                for (stat_id, value) in resolved {
+                    let mods = game.skill_stat_map.resolve(&stat_id, value, source);
+                    if !mods.is_empty() {
+                        for m in mods { tree_db.add(m); }
+                    } else {
+                        // stat_id known but not in SSM → derive modifier type from naming convention
+                        if let Some(m) = modifier_from_stat_id(&stat_id, value, source) {
+                            tree_db.add(m);
+                        }
+                    }
+                }
+            } else {
+                // Fallback: existing parse_display_text() for the ~9% not in stat_translations
+                for m in parser::parse_display_text(stat_text, source) {
+                    tree_db.add(m);
+                }
+            }
+        }
+    }
+}
+```
+
+### `modifier_from_stat_id()` Helper
+
+This encodes the naming convention rules to derive a `Modifier` directly from a stat ID + value, for stats that are in `stat_translations` but not in `SkillStatMap`:
+
+```rust
+/// Derives a Modifier from a RePoE internal stat ID using the naming convention:
+///   - ends with `_+%`        → INC
+///   - ends with `_+%_final`  → MORE
+///   - starts with `set_`     → OVERRIDE (FLAG-like)
+///   - otherwise              → BASE
+///
+/// Returns None for stat IDs that cannot be mapped to a known StatId.
+fn modifier_from_stat_id(stat_id: &str, value: f64, source: SourceId) -> Option<Modifier>;
+```
+
+The `StatId` enum only has 320 variants (PoB calc variables). A stat like `wrath_aura_effect_+%_while_at_maximum_power_charges` will not have a `StatId` variant and `modifier_from_stat_id()` will return `None`. That is expected and correct — those stats don't participate in Phase 2 calculations yet. Coverage expands as `StatId` gains more variants in later phases.
+
+### Coverage Summary
+
+| Stat source | Template coverage | After wiring |
+|---|---|---|
+| Passive tree (`stats: Vec<String>`) | 91% via `stat_translations` | ~30–40% produce a `Modifier` (limited by current 320-variant `StatId`) |
+| Items (display text paste) | Similar | Same pipeline, same coverage |
+| `parse_display_text()` fallback | ~30 templates | Handles the remaining ~9% of stat lines |
+| Gems | N/A | Direct `SkillStatMapDB` path — unaffected |
+
+### Implementation Steps (Pre-Phase-2)
+
+1. **Add `StatTranslationResolver` to `data/stat_translations.rs`** — separate struct from the tooltip `StatTranslationDB` (Section 3f). Load `repoe/stat_translations.json`, build the normalized template map at load time.
+
+2. **Add `modifier_from_stat_id()` to `modifier/parser.rs`** — encodes the `_+%` / `_+%_final` / `base_` naming convention to derive `ModType`. Returns `None` for unmapped `StatId` variants.
+
+3. **Add `stat_translations: StatTranslationResolver` to `GameData`** — loaded in `GameData::load_from_dir()`.
+
+4. **Update `ModDBLayers::rebuild_tree()`** — replace the sole `parse_display_text()` call with the three-stage pipeline above (stat_translations → SkillStatMap → naming convention → parse_display_text fallback).
+
+5. **Snapshot test** — capture `BuildStats` before the change, verify identical output after.
+
+6. **Expand `StatId` enum incrementally** — as new `StatId` variants are added (e.g. `MaximumLife`, `MaximumMana`, `FireResistance`), `modifier_from_stat_id()` picks them up automatically because the naming convention covers them.
+
+---
+
+## 8. Implementation Order
 
 ### Step 1: SkillStatMapDB (foundation for everything else)
 - **New file**: `src-tauri/src/data/skill_stat_map.rs`
@@ -946,7 +1133,7 @@ fn resolve_implicits(base: &BaseItem, mod_db: &ModDefinitionDB, ssm: &SkillStatM
 
 ---
 
-## 8. Validation Strategy
+## 9. Validation Strategy
 
 At each step, verify that calculated values haven't changed:
 
@@ -963,7 +1150,7 @@ At each step, verify that calculated values haven't changed:
 
 ---
 
-## 9. Files Modified Summary
+## 10. Files Modified Summary
 
 | File | Action | Description |
 |---|---|---|
@@ -972,7 +1159,7 @@ At each step, verify that calculated values haven't changed:
 | `data/characters.rs` | **New** | RePoE character class base stats + unarmed |
 | `data/stats_info.rs` | **New** | RePoE stats.json loader (is_local, aliases) |
 | `data/item_classes.rs` | **New** | RePoE item_classes.json loader (influence tags) |
-| `data/stat_translations.rs` | **New** | Stat translation DB for tooltips |
+| `data/stat_translations.rs` | **New** | `StatTranslationResolver` (parse direction, pre-Phase-2) + `StatTranslationDB` (tooltip/render direction, Phase 6) |
 | `data/bases.rs` | **Rewrite** | RePoE base_items.json loader |
 | `data/mods.rs` | **Rewrite** | RePoE mods.json loader |
 | `data/gems.rs` | **Rewrite** | RePoE gems.json loader (replaces GemItem) |
@@ -986,7 +1173,7 @@ At each step, verify that calculated values haven't changed:
 
 ---
 
-## 10. What Stays from PoB
+## 11. What Stays from PoB
 
 | PoB File | Reason |
 |---|---|
@@ -997,13 +1184,13 @@ Everything else migrates to RePoE.
 
 ---
 
-## 11. RePoE Schema Reference & Type Corrections
+## 12. RePoE Schema Reference & Type Corrections
 
 The RePoE repo provides official JSON Schema files at `https://github.com/repoe-fork/repoe/tree/master/RePoE/schema` generated via `datamodel-codegen`. These schemas were cross-referenced against the type definitions in Section 3 to identify discrepancies. This section documents all corrections needed when implementing the Rust structs.
 
 > **Note**: No schema exists for `passive_skill_trees/` — that data format must be inferred from the actual downloaded files.
 
-### 11a. `base_items.json` Schema Corrections
+### 12a. `base_items.json` Schema Corrections
 
 **Root type**: `Dict<String, BaseItemsSchemaValue>` (metadata path keys → item values)
 
@@ -1037,7 +1224,7 @@ pub enum ReleaseState {
 }
 ```
 
-### 11b. `mods.json` Schema Corrections
+### 12b. `mods.json` Schema Corrections
 
 **Root type**: `Dict<String, ModsSchemaValue>` (mod id → mod definition)
 
@@ -1061,7 +1248,7 @@ pub struct GrantsEffect {
 }
 ```
 
-### 11c. `gems.json` Schema Corrections
+### 12c. `gems.json` Schema Corrections
 
 **Root type**: `Dict<String, GemsSchemaValue>` (metadata path → gem)
 
@@ -1160,7 +1347,7 @@ pub enum GemColor {
 }
 ```
 
-### 11d. `characters.json` Schema Corrections
+### 12d. `characters.json` Schema Corrections
 
 **Root type**: `Vec<CharactersSchemaElement>` — **Array, not object!**
 
@@ -1188,7 +1375,7 @@ pub struct UnarmedStats {
 }
 ```
 
-### 11e. `stat_translations.json` Schema Corrections
+### 12e. `stat_translations.json` Schema Corrections
 
 **Root type**: `Vec<StatTranslationsSchemaElement>` — Array
 
@@ -1220,7 +1407,7 @@ pub enum StatFormat {
 }
 ```
 
-### 11f. `stats.json` Schema (→ Section 3h `StatsDB`)
+### 12f. `stats.json` Schema (→ Section 3h `StatsDB`)
 
 **Root type**: `Dict<String, StatsSchemaValue>` (internal stat id → stat info)
 
@@ -1261,7 +1448,7 @@ impl StatsDB {
 
 **Impact**: Add `stats: StatsDB` to `GameData`. Used during item stat resolution (Phase 4) to determine local vs global application.
 
-### 11g. `item_classes.json` Schema (→ Section 3i `ItemClassDB`)
+### 12g. `item_classes.json` Schema (→ Section 3i `ItemClassDB`)
 
 **Root type**: `Dict<String, ItemClassValue>` (item class id → class info)
 
@@ -1285,7 +1472,7 @@ pub struct ItemClassDB {
 
 **Purpose**: Maps item class IDs (from base_items.json `item_class` field) to influence tags (needed for shaper/elder/etc. crafting) and category grouping.
 
-### 11h. `cluster_jewels.json` Schema Summary
+### 12h. `cluster_jewels.json` Schema Summary
 
 Three cluster sizes (Large/Medium/Small), each with:
 - `max_skills`, `min_skills`, `total_indices` (u32)
@@ -1294,7 +1481,7 @@ Three cluster sizes (Large/Medium/Small), each with:
 
 Passive skills within clusters use the same `stats: {stat_id: value}` pattern as the passive tree — these also resolve through `SkillStatMapDB` without text parsing.
 
-### 11i. Schema-Informed Implementation Notes
+### 12i. Schema-Informed Implementation Notes
 
 1. **Use `#[serde(default)]`** liberally — many "required" fields in the schema may have edge cases in practice. Serde's `default` attribute provides resilient deserialization.
 
