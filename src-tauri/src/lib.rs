@@ -8,10 +8,10 @@ use log::info;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use specta_typescript::Typescript;
-use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, RwLock};
 use tauri::{Emitter, Manager};
 use tauri_specta::{collect_commands, Builder};
+use thiserror::Error;
 
 use crate::data::gems::compute_gem_stats;
 use crate::data::gems::GemSummary;
@@ -20,15 +20,47 @@ use crate::data::item_mods::RePoEMod;
 use crate::data::skills::{GemInstance, GemRef, SkillGroup};
 use crate::data::uniques::UniqueItemDef;
 use crate::data::{Bloodline, Class};
-use crate::item::crafter::{build_crafted_item, CraftedItemSpec, CraftedModValue};
+use crate::item::crafter::{build_crafted_item, CraftedItemSpec};
 use crate::item::parser::parse_unique_item;
-use crate::item::types::{InfluenceSet, Item, ItemSlot, ItemType, ModLineSource, Rarity};
+use crate::item::types::{Item, ItemSlot, ItemType, ModLineSource, Rarity};
 use crate::storage::builds::SavedBuildData;
 use crate::storage::manager::{BuildSummary, StorageManager};
-use rustc_hash::FxHashMap;
+use rustc_hash::{FxHashMap, FxHashSet};
+use std::collections::HashMap;
 
 /// Type alias for the game data managed state (initially `None`, filled by the loader thread).
 type GdState = Arc<RwLock<Option<data::GameData>>>;
+
+#[derive(Debug, Error)]
+pub enum AppError {
+    #[error("Lock Poisoned")]
+    LockError,
+    #[error("Game data still loading")]
+    DataLoading,
+    #[error("Item not found: {0}")]
+    NotFound(String),
+}
+
+impl Serialize for AppError {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(self.to_string().as_ref())
+    }
+}
+
+impl<T> From<std::sync::PoisonError<T>> for AppError {
+    fn from(_: std::sync::PoisonError<T>) -> Self {
+        AppError::LockError
+    }
+}
+
+impl From<AppError> for String {
+    fn from(e: AppError) -> Self {
+        e.to_string()
+    }
+}
 
 /// Progress event payload sent to the frontend during startup data loading.
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
@@ -60,7 +92,7 @@ pub const DEFAULT_TREE_VERSION: &str = "3.27.0g";
 /// Tracks which skill-tree nodes the user has selected for the current build.
 #[derive(Debug, Default, Clone, Serialize, Deserialize, Type)]
 pub struct BuildSelection {
-    selected_node_ids: HashSet<u32>,
+    selected_node_ids: std::collections::HashSet<u32>,
 }
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize, Type)]
@@ -1043,7 +1075,7 @@ fn get_debug_stats(
     // Merge all layers and compute final values for each unique stat.
     let combined = build.mod_db_layers.merged();
     let mut computed = HashMap::new();
-    let mut seen_stats = HashSet::new();
+    let mut seen_stats = FxHashSet::default();
     for (stat_id, _) in combined.iter_all() {
         seen_stats.insert(*stat_id);
     }
@@ -1696,7 +1728,7 @@ fn get_base_items(
 fn get_item_classes(game_data: tauri::State<'_, GdState>) -> Result<Vec<String>, String> {
     let gd_lock = game_data.read().map_err(|e| e.to_string())?;
     let game = get_game(&*gd_lock)?;
-    let mut classes: HashSet<String> = HashSet::new();
+    let mut classes: FxHashSet<String> = FxHashSet::default();
     for base in game.bases.values() {
         classes.insert(base.item_class.clone());
     }
@@ -1757,7 +1789,7 @@ fn get_mods_for_base(
         .get(&base_name)
         .ok_or_else(|| format!("Base '{}' not found", base_name))?;
 
-    let base_tags: HashSet<&str> = base.tags.iter().map(|t| t.as_str()).collect();
+    let base_tags: FxHashSet<&str> = base.tags.iter().map(|t| t.as_str()).collect();
 
     // Implicits come from the base item's built-in implicit mod IDs.
     let implicits: Vec<AvailableMod> = base
@@ -2396,7 +2428,7 @@ fn get_mods_for_base_grouped(
         .get(&base_name)
         .ok_or_else(|| format!("Base '{}' not found", base_name))?;
 
-    let mut base_tags: HashSet<&str> = base.tags.iter().map(|t| t.as_str()).collect();
+    let mut base_tags: FxHashSet<&str> = base.tags.iter().map(|t| t.as_str()).collect();
 
     // Inject influence tag so influenced mods become visible.
     if let Some(ref inf) = influence {
