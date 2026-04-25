@@ -13,7 +13,9 @@
     let debugData = $state<DebugStatsResponse | null>(null);
     let error = $state<string | null>(null);
     let loading = $state(false);
-    let activeTab = $state<"tree" | "class" | "gems" | "computed">("computed");
+    let activeTab = $state<"tree" | "class" | "gems" | "items" | "computed">(
+        "computed",
+    );
     let filterText = $state("");
 
     async function refresh() {
@@ -81,10 +83,26 @@
             : debugData.gem_mods;
     });
 
+    let filteredItemsMods = $derived.by(() => {
+        if (!debugData) return [];
+        const f = filterText.toLowerCase();
+        return f
+            ? debugData.items_mods.filter(
+                  (m) =>
+                      m.stat.toLowerCase().includes(f) ||
+                      m.source.toLowerCase().includes(f) ||
+                      m.mod_type.toLowerCase().includes(f),
+              )
+            : debugData.items_mods;
+    });
+
     let filteredComputed = $derived.by((): [string, DebugComputedStat][] => {
         if (!debugData) return [];
         const entries = (
-            Object.entries(debugData.computed) as [string, DebugComputedStat | undefined][]
+            Object.entries(debugData.computed) as [
+                string,
+                DebugComputedStat | undefined,
+            ][]
         ).filter((e): e is [string, DebugComputedStat] => e[1] !== undefined);
         entries.sort((a, b) => a[0].localeCompare(b[0]));
         const f = filterText.toLowerCase();
@@ -129,6 +147,10 @@
                     ></span
                 >
                 <span
+                    >Item mods: <strong>{debugData.items_mods.length}</strong
+                    ></span
+                >
+                <span
                     >Computed stats: <strong
                         >{Object.keys(debugData.computed).length}</strong
                     ></span
@@ -159,6 +181,12 @@
                     onclick={() => (activeTab = "gems")}
                 >
                     Gem Layer
+                </button>
+                <button
+                    class:active={activeTab === "items"}
+                    onclick={() => (activeTab = "items")}
+                >
+                    Items Layer
                 </button>
             </div>
 
@@ -208,7 +236,9 @@
                         ? filteredTreeMods
                         : activeTab === "class"
                           ? filteredClassMods
-                          : filteredGemMods}
+                          : activeTab === "gems"
+                            ? filteredGemMods
+                            : filteredItemsMods}
                 <table class="debug-table">
                     <thead>
                         <tr>

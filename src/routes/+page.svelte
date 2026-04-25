@@ -1,35 +1,73 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { goto } from "$app/navigation";
-    import { resetBuildState } from "$lib/buildState.svelte";
+    import { commands } from "../bindings";
+    import type { BuildSummary } from "../bindings";
+    import { resetBuildState, getBuildState } from "$lib/buildState.svelte";
 
-    // Placeholder saved builds — will be replaced with actual load logic later
-    interface SavedBuild {
-        id: string;
-        name: string;
-        class: string;
-        lastModified: string;
-        nodeCount: number;
+    const build = getBuildState();
+
+    let savedBuilds = $state<BuildSummary[]>([]);
+    let loading = $state(false);
+
+    onMount(async () => {
+        await refreshList();
+    });
+
+    async function refreshList() {
+        const result = await commands.listBuilds();
+        if (result.status === "ok") {
+            savedBuilds = result.data;
+        }
     }
-
-    let savedBuilds = $state<SavedBuild[]>([
-        // Placeholder data — uncomment to preview the list UI:
-        // { id: "1", name: "Lightning Arc Witch", class: "Witch", lastModified: "2026-02-10", nodeCount: 97 },
-        // { id: "2", name: "Cyclone Slayer", class: "Marauder", lastModified: "2026-02-08", nodeCount: 112 },
-    ]);
 
     function newBuild() {
         resetBuildState();
         goto("/skilltree");
     }
 
-    function loadBuild(id: string) {
-        // TODO: load build data from storage, then navigate
-        goto("/skilltree");
+    async function loadBuild(id: string) {
+        loading = true;
+        try {
+            const result = await commands.loadBuild(id);
+            if (result.status === "ok") {
+                const info = result.data;
+                build.characterClass = info.class.class;
+                build.ascendancy = info.class.ascendancy ?? "None";
+                build.bloodline = info.bloodline;
+                build.level = info.level;
+                build.buildStats = info.stats;
+                build.selectedCount =
+                    info.selected_nodes.selected_node_ids.length;
+                build.activeGem = info.active_gem;
+                build.skillGroups = info.skill_groups;
+
+                // Rebuild the node ID sets for the SkillTree component
+                build.selectedNodeIds.clear();
+                for (const id of info.selected_nodes.selected_node_ids) {
+                    build.selectedNodeIds.add(id);
+                }
+
+                // Fetch equipped/inventory items (not part of BuildInfo)
+                const [eqRes, invRes] = await Promise.all([
+                    commands.getEquippedItems(),
+                    commands.getInventoryItems(),
+                ]);
+                if (eqRes.status === "ok") build.equippedItems = eqRes.data;
+                if (invRes.status === "ok") build.inventoryItems = invRes.data;
+
+                goto("/skilltree");
+            }
+        } finally {
+            loading = false;
+        }
     }
 
-    function deleteBuild(id: string) {
-        // TODO: delete from storage
-        savedBuilds = savedBuilds.filter((b) => b.id !== id);
+    async function deleteBuild(id: string) {
+        const result = await commands.deleteBuild(id);
+        if (result.status === "ok") {
+            savedBuilds = savedBuilds.filter((b) => b.id !== id);
+        }
     }
 </script>
 
@@ -46,30 +84,35 @@
     <section class="builds-section">
         <h2>Saved Builds</h2>
 
-        {#if savedBuilds.length === 0}
+        {#if loading}
+            <div class="empty-state">
+                <p>Loading build...</p>
+            </div>
+        {:else if savedBuilds.length === 0}
             <div class="empty-state">
                 <p>No saved builds yet.</p>
                 <p class="hint">Create a new build to get started!</p>
             </div>
         {:else}
             <ul class="build-list">
-                {#each savedBuilds as build (build.id)}
+                {#each savedBuilds as b (b.id)}
                     <li class="build-card">
                         <button
                             class="build-card-body"
-                            onclick={() => loadBuild(build.id)}
+                            onclick={() => loadBuild(b.id)}
                         >
                             <div class="build-info">
-                                <span class="build-name">{build.name}</span>
+                                <span class="build-name">{b.name}</span>
                                 <span class="build-meta"
-                                    >{build.class} &middot; {build.nodeCount} nodes</span
+                                    >{b.class} &middot; Lv{b.level} &middot; {b.node_count}
+                                    nodes</span
                                 >
                             </div>
-                            <span class="build-date">{build.lastModified}</span>
+                            <span class="build-date">{b.last_modified}</span>
                         </button>
                         <button
                             class="btn-delete"
-                            onclick={() => deleteBuild(build.id)}
+                            onclick={() => deleteBuild(b.id)}
                             title="Delete build"
                         >
                             ✕

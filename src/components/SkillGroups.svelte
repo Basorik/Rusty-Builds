@@ -1,15 +1,12 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { commands } from "../bindings";
-    import type {
-        GemSummary,
-        SkillGroup,
-        GemInstance,
-        SupportCompatEntry,
-    } from "../bindings";
+    import type { GemSummary, GemStatLine } from "../bindings";
+    import { getBuildState } from "$lib/buildState.svelte";
+
+    const build = getBuildState();
 
     let allGems = $state<GemSummary[]>([]);
-    let skillGroups = $state<SkillGroup[]>([]);
     let newGroupLabel = $state("");
     let gemSearches = $state<Record<number, string>>({});
     let selectedGemKey = $state<string | null>(null);
@@ -19,7 +16,7 @@
     let selectedGem = $derived.by(() => {
         if (!selectedGemKey) return null;
         const [gid, gi] = selectedGemKey.split("-");
-        const group = skillGroups.find((g) => g.id === Number(gid));
+        const group = build.skillGroups.find((g) => g.id === Number(gid));
         if (!group) return null;
         const gem = group.gems[Number(gi)];
         return gem ?? null;
@@ -30,13 +27,52 @@
         selectedGem ? gemColor(selectedGem.gem_id) : "white",
     );
 
+    /** Stats for the currently selected gem, fetched from Rust */
+    let selectedGemStats = $state<GemStatLine[]>([]);
+    let statsLoading = $state(false);
+
+    $effect(() => {
+        if (!selectedGem) {
+            selectedGemStats = [];
+            return;
+        }
+        // Track gem_id, level, quality so stats refresh when any changes
+        const { gem_id, level, quality } = selectedGem;
+        statsLoading = true;
+        commands.getGemStatsAt(gem_id, level, quality).then((r) => {
+            if (r.status === "ok") selectedGemStats = r.data;
+            statsLoading = false;
+        });
+    });
+
+    /** Format a raw stat_id into a readable label */
+    function formatStatLabel(id: string): string {
+        const isPercent = id.includes("_%") || id.includes("+%");
+        let label = id
+            .replace(/[_+]?%/g, "")
+            .replace(/^(base|spell|active_skill|skill)_/, "")
+            .replace(/_/g, " ");
+        label = label.replace(/\b\w/g, (c) => c.toUpperCase()).trim();
+        if (isPercent) label += " %";
+        return label;
+    }
+
+    /** Format a stat value for display */
+    function formatStatValue(id: string, value: number): string {
+        const isPercent = id.includes("_%") || id.includes("+%");
+        const numStr = Number.isInteger(value)
+            ? String(value)
+            : value.toFixed(1);
+        return isPercent ? numStr + "%" : numStr;
+    }
+
     onMount(async () => {
         const [gemsResult, groupsResult] = await Promise.all([
             commands.getGemList(),
             commands.getSkillGroups(),
         ]);
         if (gemsResult.status === "ok") allGems = gemsResult.data;
-        if (groupsResult.status === "ok") skillGroups = groupsResult.data;
+        if (groupsResult.status === "ok") build.skillGroups = groupsResult.data;
         loading = false;
     });
 
@@ -50,7 +86,7 @@
         const label = newGroupLabel.trim() || "Skill Group";
         const result = await commands.createSkillGroup(label);
         if (result.status === "ok") {
-            skillGroups = [...skillGroups, result.data];
+            build.skillGroups = [...build.skillGroups, result.data];
             newGroupLabel = "";
         }
     }
@@ -58,16 +94,18 @@
     async function deleteGroup(id: number) {
         const result = await commands.deleteSkillGroup(id);
         if (result.status === "ok") {
-            skillGroups = skillGroups.filter((g) => g.id !== id);
+            build.skillGroups = build.skillGroups.filter((g) => g.id !== id);
+            if (build.activeGem?.group_id === id) build.activeGem = null;
         }
     }
 
     async function addGem(groupId: number, gemId: string) {
         const result = await commands.addGemToGroup(groupId, gemId);
         if (result.status === "ok") {
-            skillGroups = skillGroups.map((g) =>
-                g.id === groupId ? result.data : g,
+            build.skillGroups = build.skillGroups.map((g) =>
+                g.id === groupId ? result.data.group : g,
             );
+            build.buildStats = result.data.stats;
             gemSearches[groupId] = "";
         }
     }
@@ -75,12 +113,18 @@
     async function removeGem(groupId: number, gemIndex: number) {
         const result = await commands.removeGemFromGroup(groupId, gemIndex);
         if (result.status === "ok") {
-            skillGroups = skillGroups.map((g) =>
-                g.id === groupId ? result.data : g,
+            build.skillGroups = build.skillGroups.map((g) =>
+                g.id === groupId ? result.data.group : g,
             );
-            // Clear selection if we removed the selected gem
+            build.buildStats = result.data.stats;
             if (selectedGemKey === `${groupId}-${gemIndex}`) {
                 selectedGemKey = null;
+            }
+            const ag = build.activeGem;
+            if (ag?.group_id === groupId) {
+                if (ag.gem_index === gemIndex) build.activeGem = null;
+                else if (ag.gem_index > gemIndex)
+                    build.activeGem = { ...ag, gem_index: ag.gem_index - 1 };
             }
         }
     }
@@ -98,7 +142,7 @@
             quality,
         );
         if (result.status === "ok") {
-            skillGroups = skillGroups.map((g) =>
+            build.skillGroups = build.skillGroups.map((g) =>
                 g.id === groupId ? result.data : g,
             );
         }
@@ -121,53 +165,20 @@
         selectedGemKey = selectedGemKey === key ? null : key;
     }
 
-    /** Check if a support is incompatible with any active in the group */
-    function getIncompatibleActives(
-        group: SkillGroup,
-        supportGemId: string,
-    ): string[] {
-        return group.compatibility
-            .filter((c) => c.support_gem_id === supportGemId && !c.compatible)
-            .map((c) => {
-                const gem = group.gems.find(
-                    (g) => g.gem_id === c.active_gem_id,
-                );
-                return gem?.name ?? c.active_gem_id;
-            });
-    }
-
-    /** Format a stat key for display */
-    function formatStatName(key: string): string {
-        return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    }
-
-    /** Get notable properties to display */
-    function getGemProperties(
-        gem: GemInstance,
-    ): { label: string; value: string }[] {
-        const props: { label: string; value: string }[] = [];
-        if (gem.mana_cost != null)
-            props.push({ label: "Mana Cost", value: gem.mana_cost.toString() });
-        if (gem.crit_chance != null)
-            props.push({ label: "Crit Chance", value: `${gem.crit_chance}%` });
-        if (gem.damage_effectiveness != null)
-            props.push({
-                label: "Damage Effectiveness",
-                value: `${Math.round(gem.damage_effectiveness * 100)}%`,
-            });
-        if (gem.mana_multiplier != null)
-            props.push({
-                label: "Mana Multiplier",
-                value: `${Math.round(gem.mana_multiplier)}%`,
-            });
-        if (gem.cooldown != null)
-            props.push({ label: "Cooldown", value: `${gem.cooldown}s` });
-        if (gem.attack_speed_multiplier != null)
-            props.push({
-                label: "Attack Speed Mult",
-                value: `${gem.attack_speed_multiplier}%`,
-            });
-        return props;
+    async function toggleAlwaysActive(groupId: number, idx: number) {
+        const group = build.skillGroups.find((g) => g.id === groupId);
+        const gem = group?.gems[idx];
+        if (!gem) return;
+        const result = await commands.setGemAlwaysActive(
+            groupId,
+            idx,
+            !gem.always_active,
+        );
+        if (result.status === "ok") {
+            build.skillGroups = build.skillGroups.map((g) =>
+                g.id === groupId ? result.data : g,
+            );
+        }
     }
 </script>
 
@@ -189,7 +200,7 @@
                 >
             </div>
 
-            {#if skillGroups.length === 0}
+            {#if build.skillGroups.length === 0}
                 <div class="empty-state">
                     <p>No skill groups yet.</p>
                     <p class="hint">
@@ -197,7 +208,7 @@
                     </p>
                 </div>
             {:else}
-                {#each skillGroups as group (group.id)}
+                {#each build.skillGroups as group (group.id)}
                     <div class="group-card">
                         <div class="group-header">
                             <h3>{group.label}</h3>
@@ -210,10 +221,6 @@
 
                         <ul class="gem-list">
                             {#each group.gems as gem, idx (idx)}
-                                {@const incompatible = gem.is_support
-                                    ? getIncompatibleActives(group, gem.gem_id)
-                                    : []}
-                                {@const hasWarning = incompatible.length > 0}
                                 {@const isSelected =
                                     selectedGemKey === `${group.id}-${idx}`}
                                 <li class="gem-entry">
@@ -221,8 +228,10 @@
                                         class="gem-item gem-color-{gemColor(
                                             gem.gem_id,
                                         )}"
-                                        class:gem-incompatible={hasWarning}
                                         class:gem-selected={isSelected}
+                                        class:gem-active={build.activeGem
+                                            ?.group_id === group.id &&
+                                            build.activeGem?.gem_index === idx}
                                         onclick={() => selectGem(group.id, idx)}
                                     >
                                         <span class="gem-name">{gem.name}</span>
@@ -277,6 +286,33 @@
                                                 ? "Support"
                                                 : "Active"}</span
                                         >
+                                        {#if !gem.is_support}
+                                            <span
+                                                class="btn-always-active"
+                                                class:always-active-on={gem.always_active}
+                                                role="button"
+                                                tabindex="0"
+                                                title={gem.always_active
+                                                    ? "Always active — click to disable"
+                                                    : "Set as always active (aura/herald)"}
+                                                onclick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleAlwaysActive(
+                                                        group.id,
+                                                        idx,
+                                                    );
+                                                }}
+                                                onkeydown={(e) => {
+                                                    if (e.key === "Enter") {
+                                                        e.stopPropagation();
+                                                        toggleAlwaysActive(
+                                                            group.id,
+                                                            idx,
+                                                        );
+                                                    }
+                                                }}>∞</span
+                                            >
+                                        {/if}
                                         <span
                                             class="btn-remove-gem"
                                             role="button"
@@ -294,13 +330,6 @@
                                             }}>✕</span
                                         >
                                     </button>
-                                    {#if hasWarning}
-                                        <div class="compat-warning">
-                                            ⚠ Cannot support: {incompatible.join(
-                                                ", ",
-                                            )}
-                                        </div>
-                                    {/if}
                                 </li>
                             {/each}
                         </ul>
@@ -373,20 +402,6 @@
 
                     <div class="gem-box-separator"></div>
 
-                    <!-- Properties -->
-                    {#if getGemProperties(selectedGem).length > 0}
-                        <div class="gem-box-section">
-                            {#each getGemProperties(selectedGem) as prop}
-                                <div class="gem-box-row">
-                                    <span>{prop.label}</span>
-                                    <span class="gem-box-val">{prop.value}</span
-                                    >
-                                </div>
-                            {/each}
-                        </div>
-                        <div class="gem-box-separator"></div>
-                    {/if}
-
                     <!-- Description -->
                     {#if gemDescription(selectedGem.gem_id)}
                         <div class="gem-box-desc">
@@ -396,17 +411,21 @@
                     {/if}
 
                     <!-- Stats -->
-                    {#if Object.keys(selectedGem.stats).length > 0}
-                        <div class="gem-box-stats">
-                            {#each Object.entries(selectedGem.stats) as [key, value]}
-                                <div class="gem-box-stat">
-                                    <span>{formatStatName(key)}: </span>
-                                    <span class="gem-box-stat-val">
-                                        {typeof value === "number" &&
-                                        !Number.isInteger(value)
-                                            ? value.toFixed(1)
-                                            : value}
-                                    </span>
+                    {#if statsLoading}
+                        <div class="gem-box-stats-loading">…</div>
+                    {:else if selectedGemStats.length > 0}
+                        <div class="gem-box-section gem-box-stats">
+                            {#each selectedGemStats as stat}
+                                <div class="gem-box-stat-row">
+                                    <span class="gem-stat-label"
+                                        >{formatStatLabel(stat.stat_id)}</span
+                                    >
+                                    <span class="gem-stat-value"
+                                        >{formatStatValue(
+                                            stat.stat_id,
+                                            stat.value,
+                                        )}</span
+                                    >
                                 </div>
                             {/each}
                         </div>
@@ -577,6 +596,12 @@
         border-color: #4a6090;
     }
 
+    .gem-active {
+        background: #1e1a10 !important;
+        border-color: #c8a95e !important;
+        border-left-width: 3px;
+    }
+
     .gem-incompatible {
         border-left-color: #e05555 !important;
         background: #221a1a;
@@ -637,6 +662,23 @@
     .gem-type {
         font-size: 0.75rem;
         color: #6a6458;
+    }
+
+    .btn-always-active {
+        color: #5a5448;
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 0.1em 0.3em;
+        line-height: 1;
+        border-radius: 3px;
+    }
+
+    .btn-always-active:hover {
+        color: #c8a95e;
+    }
+
+    :global(.always-active-on) {
+        color: #c8a95e !important;
     }
 
     .btn-remove-gem {
@@ -840,16 +882,34 @@
     }
 
     .gem-box-stats {
-        padding: 0.5em 0.8em;
+        display: flex;
+        flex-direction: column;
+        gap: 0.1em;
     }
 
-    .gem-box-stat {
-        color: #7f7f7f;
+    .gem-box-stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 0.18em 0;
         font-size: 0.82rem;
-        padding: 0.1em 0;
     }
 
-    .gem-box-stat-val {
+    .gem-stat-label {
+        color: #8a8578;
+        flex: 1;
+        padding-right: 0.5em;
+    }
+
+    .gem-stat-value {
         color: #e0d6c2;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .gem-box-stats-loading {
+        padding: 0.4em 0.8em;
+        color: #5a5448;
+        font-size: 0.8rem;
     }
 </style>

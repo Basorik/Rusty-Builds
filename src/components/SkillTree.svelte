@@ -2,6 +2,7 @@
     import { onMount, onDestroy } from "svelte";
     import { Application, Container, Graphics, Sprite } from "pixi.js";
     import { commands, type BuildStats } from "../bindings";
+    import { getBuildState } from "$lib/buildState.svelte";
 
     // --- Svelte 5: Props ---
     let {
@@ -423,9 +424,12 @@
                     ...Array.from(selectedNodeIds),
                     ...Array.from(selectedAscNodeIds),
                 ];
+                const t0 = performance.now();
                 const result = await commands.updateSelectedNodes(ids);
+                const ipcMs = performance.now() - t0;
                 if (result.status === "ok") {
                     buildStats = result.data;
+                    getBuildState().lastIpcMs = ipcMs;
                 }
             } catch (e) {
                 console.error("Failed to sync selection:", e);

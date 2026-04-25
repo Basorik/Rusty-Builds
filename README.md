@@ -375,3 +375,17 @@ npm run tauri build
 ## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+
+
+1. Build your character in PoB → File → Save Build → save as .xml
+   (or: File → Copy Build Code → paste the XML into tests/fixtures/sources/mybuild.xml)
+
+2. bun run tool:gen-fixtures
+   # writes tests/fixtures/mybuild.json with real PoB values
+
+3. Add to src-tauri/tests/pob_parity.rs:
+   #[test]
+   fn pob_parity_mybuild() { run_fixture("mybuild"); }
+
+4. cargo test --test pob_parity

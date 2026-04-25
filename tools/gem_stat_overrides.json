@@ -1,0 +1,116 @@
+{
+    "_comment": "Manual overrides for gem stat IDs that have no display text or need special handling. Processed by gen_gem_stat_table.ts. Set skip:true for display-only/internal stats that don't produce Modifiers.",
+    "active_skill_area_of_effect_+%_final": {
+        "stat": "AreaOfEffect",
+        "type": "More"
+    },
+    "active_skill_base_area_of_effect_radius": {
+        "stat": "AreaOfEffect",
+        "type": "Base"
+    },
+    "active_skill_base_secondary_area_of_effect_radius": {
+        "stat": "AreaOfEffect",
+        "type": "Base"
+    },
+    "active_skill_base_tertiary_area_of_effect_radius": {
+        "stat": "AreaOfEffect",
+        "type": "Base"
+    },
+    "base_is_projectile": {
+        "stat": "ProjectileCount",
+        "type": "Flag",
+        "skip": true
+    },
+    "is_area_damage": {
+        "stat": "Damage",
+        "type": "Flag",
+        "skip": true
+    },
+    "base_is_attack": {
+        "skip": true
+    },
+    "base_skill_is_trap_skill": {
+        "skip": true
+    },
+    "base_skill_is_mine_skill": {
+        "skip": true
+    },
+    "base_skill_is_totem_skill": {
+        "skip": true
+    },
+    "cast_on_melee_kill_%": {
+        "skip": true
+    },
+    "cast_on_crit_%": {
+        "skip": true
+    },
+    "cast_on_damage_taken_%": {
+        "skip": true
+    },
+    "display_minion_monster_type": {
+        "skip": true
+    },
+    "base_display_minion_actor_level": {
+        "skip": true
+    },
+    "active_skill_minion_from_alternate_gem_index": {
+        "skip": true
+    },
+    "animation_effect_variation": {
+        "skip": true
+    },
+    "base_from_skill_shock_art_variation": {
+        "skip": true
+    },
+    "number_of_monsters_to_summon": {
+        "skip": true
+    },
+    "base_attack_repeat_count": {
+        "stat": "RepeatCount",
+        "type": "Base"
+    },
+    "base_skill_number_of_additional_hits": {
+        "stat": "RepeatCount",
+        "type": "Base"
+    },
+    "skill_level": {
+        "skip": true
+    },
+    "active_skill_projectile_speed_+%_variation_final": {
+        "stat": "ProjectileSpeed",
+        "type": "More"
+    },
+    "projectile_spiral_nova_time_ms": {
+        "skip": true
+    },
+    "projectile_random_angle_based_on_distance_to_target_location_%": {
+        "skip": true
+    },
+    "terrain_arrow_attachment_chance_reduction_+%": {
+        "skip": true
+    },
+    "additional_main_hand_hits_per_combo_average": {
+        "skip": true
+    },
+    "base_attack_speed_+%_per_frenzy_charge": {
+        "stat": "Speed",
+        "type": "Inc",
+        "flags": [
+            "ATTACK"
+        ]
+    },
+    "cast_speed_+%_per_frenzy_charge": {
+        "stat": "Speed",
+        "type": "Inc",
+        "flags": [
+            "SPELL"
+        ]
+    },
+    "support_makes_skill_trap_pvp_damage_+%_final": {
+        "stat": "PvpDamageMultiplier",
+        "type": "More",
+        "flags": [
+            "TRAP"
+        ]
+    }
+}

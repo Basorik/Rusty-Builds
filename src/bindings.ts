@@ -23,7 +23,7 @@ async updateSelectedNodes(nodeIds: number[]) : Promise<Result<BuildStats, string
 /**
  * Receives the build info from the frontend.
  */
-async updateBuildInfo(level: number, characterClass: Class, bloodline: Bloodline) : Promise<Result<null, string>> {
+async updateBuildInfo(level: number, characterClass: Class, bloodline: Bloodline) : Promise<Result<BuildStats, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("update_build_info", { level, characterClass, bloodline }) };
 } catch (e) {
@@ -67,6 +67,18 @@ async getGemList() : Promise<Result<GemSummary[], string>> {
 }
 },
 /**
+ * Returns the computed stats for a specific gem at the given level and quality.
+ * Used by the frontend info panel to show per-stat values.
+ */
+async getGemStatsAt(gemId: string, level: number, quality: number) : Promise<Result<GemStatLine[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_gem_stats_at", { gemId, level, quality }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Returns all skill groups for the current build.
  */
 async getSkillGroups() : Promise<Result<SkillGroup[], string>> {
@@ -100,9 +112,9 @@ async deleteSkillGroup(groupId: number) : Promise<Result<null, string>> {
 }
 },
 /**
- * Adds a gem to a skill group. Validates the gem ID exists, builds a GemInstance with computed stats.
+ * Adds a gem to a skill group.
  */
-async addGemToGroup(groupId: number, gemId: string) : Promise<Result<SkillGroup, string>> {
+async addGemToGroup(groupId: number, gemId: string) : Promise<Result<GemGroupUpdate, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("add_gem_to_group", { groupId, gemId }) };
 } catch (e) {
@@ -113,7 +125,7 @@ async addGemToGroup(groupId: number, gemId: string) : Promise<Result<SkillGroup,
 /**
  * Removes a gem from a skill group by its index in the gem list.
  */
-async removeGemFromGroup(groupId: number, gemIndex: number) : Promise<Result<SkillGroup, string>> {
+async removeGemFromGroup(groupId: number, gemIndex: number) : Promise<Result<GemGroupUpdate, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("remove_gem_from_group", { groupId, gemIndex }) };
 } catch (e) {
@@ -143,6 +155,26 @@ async getGroupEffects(groupId: number) : Promise<Result<SkillGroup, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+async setActiveGem(gemRef: GemRef | null) : Promise<Result<BuildStats, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_active_gem", { gemRef }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Toggles the always_active flag on a gem. Always-active gems (auras, heralds, etc.)
+ * contribute to stat calculations regardless of which main skill is selected.
+ */
+async setGemAlwaysActive(groupId: number, gemIndex: number, alwaysActive: boolean) : Promise<Result<SkillGroup, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_gem_always_active", { groupId, gemIndex, alwaysActive }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 /**
  * Returns all modifiers in the persisted ModDB layers for the debug page.
  * Reads directly from build.mod_db_layers — does NOT recompute anything.
@@ -150,6 +182,281 @@ async getGroupEffects(groupId: number) : Promise<Result<SkillGroup, string>> {
 async getDebugStats() : Promise<Result<DebugStatsResponse, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("get_debug_stats") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Equips a unique item into the given slot, rebuilding the items ModDB layer and
+ * returning updated build stats. Validates slot/type compatibility before equipping.
+ */
+async equipItem(slot: ItemSlot, uniqueName: string, variant: number) : Promise<Result<BuildStats, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("equip_item", { slot, uniqueName, variant }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Removes the item in the given slot and returns updated build stats.
+ */
+async unequipItem(slot: ItemSlot) : Promise<Result<BuildStats, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("unequip_item", { slot }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns a summary of all currently equipped items.
+ */
+async getEquippedItems() : Promise<Result<EquippedItemSummary[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_equipped_items") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Searches unique items by name (case-insensitive substring match).
+ * Returns up to 50 results.
+ */
+async searchUniques(query: string) : Promise<Result<UniqueSearchResult[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("search_uniques", { query }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns all base items of the given item class, sorted by level requirement.
+ */
+async getBaseItems(itemClass: string) : Promise<Result<BaseItemSummary[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_base_items", { itemClass }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns all distinct item classes available for base-item browsing.
+ */
+async getItemClasses() : Promise<Result<string[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_item_classes") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns full properties for a single base item (for the crafting panel).
+ */
+async getBaseItemProps(baseName: string) : Promise<Result<BaseItemProps, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_base_item_props", { baseName }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns grouped available mods for a given base item name.
+ * Implicits are pre-populated from the base's implicit list.
+ * Prefixes/suffixes are filtered by spawn weight against the base's tags.
+ */
+async getModsForBase(baseName: string) : Promise<Result<BaseMods, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_mods_for_base", { baseName }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns the full hierarchical category tree for the crafting base browser.
+ */
+async getBaseCategories() : Promise<Result<BaseCategory[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_base_categories") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns mods for a base item organised into tiered stat groups.
+ * Pass `influence` = "shaper" | "elder" | "crusader" | "hunter" | "redeemer" | "warlord"
+ * (or omit) to include influence-exclusive modifiers.
+ */
+async getModsForBaseGrouped(baseName: string, influence: string | null) : Promise<Result<BaseModGroups, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_mods_for_base_grouped", { baseName, influence }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Builds a crafted item from the given spec and adds it to the build inventory.
+ * The item does NOT become equipped — call `equip_from_inventory` to equip it.
+ */
+async addCraftedItem(spec: CraftedItemSpec) : Promise<Result<BuildStats, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("add_crafted_item", { spec }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns all items in the build (equipped + unequipped inventory).
+ */
+async getInventoryItems() : Promise<Result<InventoryItemSummary[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_inventory_items") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns unequipped inventory items that are compatible with the given slot.
+ */
+async getInventoryForSlot(slot: ItemSlot) : Promise<Result<InventoryItemSummary[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_inventory_for_slot", { slot }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Equips an item from the unequipped inventory into the given slot.
+ * If another item is already in that slot it is moved to inventory.
+ */
+async equipFromInventory(inventoryId: number, slot: ItemSlot) : Promise<Result<BuildStats, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("equip_from_inventory", { inventoryId, slot }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Permanently removes an item from the build inventory (and unequips it first if equipped).
+ */
+async removeInventoryItem(inventoryId: number) : Promise<Result<BuildStats, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("remove_inventory_item", { inventoryId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns all uniques matching the given name query and/or item class filter.
+ * Pass an empty `query` and/or `None` item_class to list uniques broadly.
+ */
+async getUniquesForClass(itemClass: string | null, query: string) : Promise<Result<UniqueListItem[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_uniques_for_class", { itemClass, query }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns full detail for a unique item at its "current" (latest non-historical) variant.
+ * Each display line carries its ranges, mapped status, and source (implicit/explicit).
+ */
+async getUniqueDetail(name: string) : Promise<Result<UniqueDetail, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_unique_detail", { name }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Adds a unique item to the build inventory with user-specified roll values.
+ * 
+ * `rolls` is a flat list of numeric values corresponding to every `(X-Y)` range
+ * that appears across `(implicit_lines ++ explicit_lines)` of the current variant,
+ * in left-to-right / top-to-bottom order matching `get_unique_detail` output.
+ */
+async addUniqueToInventory(name: string, rolls: number[]) : Promise<Result<BuildStats, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("add_unique_to_inventory", { name, rolls }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns the full PoE-style detail for the item equipped in the given slot.
+ */
+async getItemDetailBySlot(slot: ItemSlot) : Promise<Result<ItemDetail, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_item_detail_by_slot", { slot }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Returns the full PoE-style detail for any inventory item by its inventory ID.
+ * Searches both unequipped inventory and equipped slots.
+ */
+async getItemDetailById(inventoryId: number) : Promise<Result<ItemDetail, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_item_detail_by_id", { inventoryId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async listBuilds() : Promise<Result<BuildSummary[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_builds") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async saveBuild(name: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_build", { name }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async loadBuild(id: string) : Promise<Result<BuildInfo, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("load_build", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async deleteBuild(id: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_build", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async renameBuild(id: string, newName: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("rename_build", { id, newName }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -168,16 +475,140 @@ async getDebugStats() : Promise<Result<DebugStatsResponse, string>> {
 /** user-defined types **/
 
 /**
+ * A mod that can be applied to a given base item.
+ */
+export type AvailableMod = { mod_id: string; 
+/**
+ * Human-readable tier/class name, e.g. "of the Ox", "Sturdy".
+ */
+name: string; 
+/**
+ * "prefix", "suffix", "unique", "corrupted", etc.
+ */
+generation_type: string; 
+/**
+ * Mutual-exclusion groups (e.g. cannot have two mods from the same group).
+ */
+groups: string[]; required_level: number; stats: AvailableModStat[] }
+/**
+ * A single stat slot within an available mod.
+ */
+export type AvailableModStat = { stat_id: string; min: number; max: number }
+/**
+ * Top-level category in the base browser, e.g. "Armour".
+ */
+export type BaseCategory = { name: string; subcategories: BaseSubcategory[] }
+/**
+ * Full properties of a single base item, returned when the user selects one
+ * in the crafting panel so they can configure exact value rolls.
+ */
+export type BaseItemProps = { name: string; item_class: string; level_req: number; tags: string[]; phys_damage_min: number | null; phys_damage_max: number | null; attack_time_ms: number | null; crit_chance_permyriad: number | null; armour_min: number | null; armour_max: number | null; evasion_min: number | null; evasion_max: number | null; energy_shield_min: number | null; energy_shield_max: number | null; block: number | null; charges_max: number | null; life_per_use: number | null; mana_per_use: number | null }
+/**
+ * Summary of one base item class returned for the base-item browser.
+ */
+export type BaseItemSummary = { name: string; item_class: string; level_req: number }
+/**
+ * All mods for a base item, tiered and grouped by stat — for the crafting UI.
+ */
+export type BaseModGroups = { implicits: StatModGroup[]; prefixes: StatModGroup[]; suffixes: StatModGroup[]; crafted: StatModGroup[] }
+/**
+ * All mods available for a given base item, grouped by category.
+ */
+export type BaseMods = { 
+/**
+ * Auto-populated from the base item's `implicits` field.
+ */
+implicits: AvailableMod[]; prefixes: AvailableMod[]; suffixes: AvailableMod[]; 
+/**
+ * Master-crafted bench mods.
+ */
+crafted: AvailableMod[] }
+/**
+ * One subcategory within the base-item browser, e.g. "Evasion Boots".
+ */
+export type BaseSubcategory = { label: string; bases: BaseItemSummary[] }
+/**
  * All named bloodlines (alternate ascendancies) from the tree JSON.
  */
 export type Bloodline = "None" | "Aul" | "Breachlord" | "Catarina" | "Delirious" | "Farrul" | "KingInTheMists" | "Lycia" | "Olroth" | "Oshabi" | "Primalist" | "Trialmaster" | "Warden" | "Warlock"
-export type BuildStats = { total_strength: number; total_dexterity: number; total_intelligence: number; node_count: number; life: number; mana: number }
+export type BuildInfo = { name: string; level: number; stats: BuildStats; class: Class; bloodline: Bloodline; selected_nodes: BuildSelection; skill_groups: SkillGroup[]; 
+/**
+ * The specific active gem the user has selected as the main skill for calculations.
+ * Points to a gem by group_id + gem_index. None = no main skill selected.
+ */
+active_gem: GemRef | null; next_group_id: number }
+/**
+ * Tracks which skill-tree nodes the user has selected for the current build.
+ */
+export type BuildSelection = { selected_node_ids: number[] }
+export type BuildStats = { total_strength: number; total_dexterity: number; total_intelligence: number; node_count: number; 
+/**
+ * Full defensive calc results (life, mana, ES, resists, regen, etc.)
+ */
+defence: DefenceResult; 
+/**
+ * Offence calc results — `None` when no active gem is selected.
+ */
+offence: OffenceResult | null; 
+/**
+ * Time taken for `calc::calculate()` alone, in microseconds.
+ * Does not include IPC serialization/deserialization overhead.
+ */
+calc_time_us: number }
+export type BuildSummary = { id: string; name: string; class: string; level: number; node_count: number; last_modified: string }
 /**
  * The seven playable classes, each with an optional ascendancy selection.
  * The tag/content serde representation matches the TypeScript discriminated union
  * generated by tauri-specta.
  */
 export type Class = { class: "Marauder"; ascendancy: MarauderAscendancy | null } | { class: "Ranger"; ascendancy: RangerAscendancy | null } | { class: "Witch"; ascendancy: WitchAscendancy | null } | { class: "Duelist"; ascendancy: DuelistAscendancy | null } | { class: "Templar"; ascendancy: TemplarAscendancy | null } | { class: "Shadow"; ascendancy: ShadowAscendancy | null } | { class: "Scion"; ascendancy: ScionAscendancy | null }
+/**
+ * Full spec for building a custom non-unique item.
+ */
+export type CraftedItemSpec = { base_name: string; 
+/**
+ * Display name for the item.  Empty → use base name (Normal rarity).
+ */
+item_name: string; 
+/**
+ * 0-20 — applied to local stats.
+ */
+quality: number; 
+/**
+ * Item level (determines which tier mods can appear; stored for reference).
+ */
+item_level: number; base_phys_min: number | null; base_phys_max: number | null; base_armour: number | null; base_evasion: number | null; base_energy_shield: number | null; 
+/**
+ * Implicit mods selected from the implicit pool.
+ */
+implicits: CraftedModValue[]; 
+/**
+ * Prefix explicit mods.
+ */
+prefixes: CraftedModValue[]; 
+/**
+ * Suffix explicit mods.
+ */
+suffixes: CraftedModValue[]; 
+/**
+ * Master-crafted bench mods.
+ */
+crafted: CraftedModValue[]; 
+/**
+ * Optional influence on the item: "shaper", "elder", "crusader", "hunter",
+ * "redeemer", or "warlord". `None` = no influence.
+ */
+influence: string | null }
+/**
+ * A single mod selection: which mod is chosen and what value each stat rolls.
+ * Values are in the same order as `AvailableMod.stats`.
+ */
+export type CraftedModValue = { mod_id: string; 
+/**
+ * One value per stat slot in the mod.  If fewer values are provided than
+ * there are stat slots, the midpoint of the legal range is used.
+ */
+values: number[] }
 /**
  * A fully computed stat value (base × inc × more).
  */
@@ -189,41 +620,161 @@ export type DebugModEntry = { stat: string; mod_type: string; value: number; sou
 /**
  * All modifiers from each ModDB layer, for the debug page.
  */
-export type DebugStatsResponse = { tree_mods: DebugModEntry[]; class_mods: DebugModEntry[]; gem_mods: DebugModEntry[]; computed: Partial<{ [key in string]: DebugComputedStat }> }
+export type DebugStatsResponse = { tree_mods: DebugModEntry[]; class_mods: DebugModEntry[]; gem_mods: DebugModEntry[]; items_mods: DebugModEntry[]; computed: Partial<{ [key in string]: DebugComputedStat }> }
+export type DefenceResult = { life: number; mana: number; energy_shield: number; armour: number; evasion: number; ward: number; fire_resist: number; fire_resist_cap: number; fire_resist_overcap: number; cold_resist: number; cold_resist_cap: number; cold_resist_overcap: number; lightning_resist: number; lightning_resist_cap: number; lightning_resist_overcap: number; chaos_resist: number; chaos_resist_cap: number; chaos_resist_overcap: number; block_chance: number; spell_block_chance: number; spell_suppression: number; attack_dodge: number; spell_dodge: number; life_regen: number; mana_regen: number; es_regen: number; es_recharge: number; es_recharge_delay: number; life_leech_rate_max: number; mana_leech_rate_max: number; movement_speed_mod: number; mana_unreserved: number; life_unreserved: number }
 export type DuelistAscendancy = "Slayer" | "Gladiator" | "Champion"
 /**
- * Gem color based on attribute tags.
+ * Summary of one equipped item returned for the equipment panel.
+ */
+export type EquippedItemSummary = { slot: ItemSlot; name: string; base_name: string; item_class: string; total_dps: number | null; armour: number | null; evasion: number | null; energy_shield: number | null; mod_count: number }
+/**
+ * Gem color. RePoE gems.json uses single-letter codes ("r", "g", "b").
+ * GemSummary IPC serializes as full lowercase words ("red", "green", "blue", "white").
  */
 export type GemColor = "red" | "green" | "blue" | "white"
+/**
+ * Combined response for gem add/remove operations — returns both the updated group
+ * (so the frontend can refresh the skill group list) and full recalculated stats.
+ */
+export type GemGroupUpdate = { group: SkillGroup; stats: BuildStats }
 /**
  * A gem placed in a socket group — tracks identity, level, quality, and computed stats.
  */
 export type GemInstance = { gem_id: string; name: string; is_support: boolean; level: number; quality: number; enabled: boolean; 
 /**
- * Computed stats at the current level/quality (stat_id → value).
+ * If true, this gem's stats are always fed into the ModDB regardless of which active
+ * gem the user has selected as their main skill. Intended for auras, heralds, warcries,
+ * and other persistent-effect skills.
  */
-stats: Partial<{ [key in string]: number }>; mana_cost: number | null; crit_chance: number | null; damage_effectiveness: number | null; mana_multiplier: number | null; cooldown: number | null; attack_speed_multiplier: number | null }
+always_active: boolean }
+/**
+ * Points to a specific gem within a skill group.
+ * Used by BuildInfo to identify the user's selected main skill for calculations.
+ */
+export type GemRef = { 
+/**
+ * The skill group this gem belongs to.
+ */
+group_id: number; 
+/**
+ * Index of the gem within `SkillGroup.gems`.
+ */
+gem_index: number }
+/**
+ * A single human-readable stat line returned to the frontend for display.
+ */
+export type GemStatLine = { stat_id: string; value: number }
 /**
  * Lightweight summary for the frontend gem selector dropdown.
  */
 export type GemSummary = { id: string; name: string; tag_string: string; is_support: boolean; color: GemColor; description: string | null }
+/**
+ * Summary of a single item in the build inventory (equipped or not).
+ */
+export type InventoryItemSummary = { inventory_id: number; name: string; base_name: string; item_class: string; rarity: Rarity; total_dps: number | null; armour: number | null; evasion: number | null; energy_shield: number | null; mod_count: number; 
+/**
+ * `Some(slot)` when the item is currently equipped in that slot.
+ */
+equipped_slot: ItemSlot | null }
+/**
+ * Full detail for one item, suitable for a PoE-style tooltip in the inventory preview.
+ */
+export type ItemDetail = { inventory_id: number; name: string; base_name: string; item_class: string; rarity: Rarity; item_level: number; quality: number; corrupted: boolean; mirrored: boolean; synthesised: boolean; fractured: boolean; influences: string[]; req_level: number; req_str: number; req_dex: number; req_int: number; phys_damage_min: number | null; phys_damage_max: number | null; attacks_per_second: number | null; crit_chance: number | null; total_dps: number | null; phys_dps: number | null; ele_dps: number | null; armour: number | null; evasion: number | null; energy_shield: number | null; block: number | null; enchant_lines: ItemModLine[]; implicit_lines: ItemModLine[]; explicit_lines: ItemModLine[] }
+/**
+ * One display line in a built item's tooltip.
+ */
+export type ItemModLine = { text: string; 
+/**
+ * "implicit" | "explicit" | "crafted" | "enchant" | "fractured"
+ */
+kind: string }
+/**
+ * Each equipment slot the player can fill.
+ * Variants are stable integers — stored as u8 in IPC and used as HashMap keys.
+ */
+export type ItemSlot = "Weapon1" | "Weapon2" | "Helmet" | "BodyArmour" | "Gloves" | "Boots" | "Amulet" | "Ring1" | "Ring2" | "Belt" | "Flask1" | "Flask2" | "Flask3" | "Flask4" | "Flask5"
 export type MarauderAscendancy = "Juggernaut" | "Berserker" | "Chieftain"
+/**
+ * One tier of a single logical mod (e.g. T1 life roll).
+ */
+export type ModTierInfo = { mod_id: string; 
+/**
+ * 1 = best tier (highest required level / strongest roll), 2 = second best, …
+ */
+tier: number; required_level: number; stats: AvailableModStat[] }
+export type OffenceResult = { total_dps: number; hit_dps: number; average_hit: number; crit_chance: number; crit_multiplier: number; hit_chance: number; attack_speed: number; cast_speed: number; 
+/**
+ * Damage breakdown per element (after all modifiers)
+ */
+phys_dps: number; fire_dps: number; cold_dps: number; lightning_dps: number; chaos_dps: number; 
+/**
+ * DoT
+ */
+dot_dps: number; bleed_dps: number; poison_dps: number; ignite_dps: number; 
+/**
+ * Speed info
+ */
+speed: number; is_attack: boolean }
 export type RangerAscendancy = "Raider" | "Deadeye" | "Pathfinder"
+export type Rarity = "Normal" | "Magic" | "Rare" | "Unique"
 export type ScionAscendancy = "Ascendant"
 export type ShadowAscendancy = "Assassin" | "Saboteur" | "Trickster"
 /**
  * A group of linked gems — one active skill plus its supports.
  */
-export type SkillGroup = { id: number; label: string; gems: GemInstance[]; enabled: boolean; 
+export type SkillGroup = { id: number; label: string; gems: GemInstance[]; enabled: boolean }
 /**
- * Support compatibility entries (only populated on analysis).
+ * All tiers of one logical modifier grouped together.
+ * e.g. all tiers of "# increased maximum Life" as a suffix.
  */
-compatibility: SupportCompatEntry[] }
+export type StatModGroup = { 
 /**
- * Whether a support gem is compatible with a specific active gem.
+ * Human-readable display name from stat translations, e.g. "#% increased maximum Life".
  */
-export type SupportCompatEntry = { support_gem_id: string; active_gem_id: string; compatible: boolean }
+display_name: string; generation_type: string; 
+/**
+ * First mutual-exclusion group name (items can hold only one mod per group).
+ */
+group: string; 
+/**
+ * Tiers sorted best-first (T1 at index 0).
+ */
+tiers: ModTierInfo[] }
 export type TemplarAscendancy = "Inquisitor" | "Hierophant" | "Guardian"
+/**
+ * Full detail for one unique item variant, suitable for the roll-picker UI.
+ */
+export type UniqueDetail = { name: string; base_name: string; item_class: string; league: string | null; influences: string[]; base_props: BaseItemProps | null; implicit_lines: UniqueModLine[]; explicit_lines: UniqueModLine[] }
+/**
+ * A single unique item search result.
+ * Re-used for both name-search and slot-browsing results.
+ */
+export type UniqueListItem = { name: string; base_name: string; item_class: string; league: string | null }
+/**
+ * One display line in a unique item's tooltip.
+ */
+export type UniqueModLine = { 
+/**
+ * Display text with ranges like "(20-30)" preserved.
+ */
+text: string; 
+/**
+ * Whether the stat translation system successfully resolved this line.
+ * False → show in red in the UI.
+ */
+is_mapped: boolean; 
+/**
+ * True for section headers like "Every 10 seconds:".
+ */
+is_header: boolean; 
+/**
+ * [min, max] for each `(X-Y)` range in this line, in left-to-right order.
+ */
+ranges: ([number, number])[] }
+/**
+ * A unique item search result returned to the frontend.
+ */
+export type UniqueSearchResult = { name: string; base_name: string; item_class: string; variant_count: number; variant_labels: string[]; league: string | null }
 export type WitchAscendancy = "Necromancer" | "Occultist" | "Elementalist"
 
 /** tauri-specta globals **/

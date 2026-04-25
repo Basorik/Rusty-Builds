@@ -1,0 +1,24 @@
+{
+    "_comment": "PoB reference build: Level 90 Marauder, no gear, no tree nodes selected. Pure class base stats only.",
+    "_how_to_verify": "Load PoB 3.27.0g, create Marauder, set level 90, select 0 passive nodes, no items. Check Character panel.",
+    "_pob_version": "3.27.0g",
+    "class": "Marauder",
+    "level": 90,
+    "node_ids": [],
+    "expected": {
+        "_life_derivation": "38 + 12*90 + floor(32/2) = 38+1080+16 = 1134 (Marauder base_str=32 from tree class data)",
+        "life": 1134,
+        "_mana_derivation": "34 + 6*90 + floor(14/2) = 34+540+7 = 581 (Marauder base_int=14)",
+        "mana": 581,
+        "energy_shield": 0,
+        "_resists": "default -60 penalty, no compensating mods",
+        "fire_resist": -60,
+        "cold_resist": -60,
+        "lightning_resist": -60,
+        "chaos_resist": -60,
+        "_attrs": "Marauder class base stats from PassiveTree ClassData (base_str=32, base_dex=14, base_int=14)",
+        "strength": 32,
+        "dexterity": 14,
+        "intelligence": 14
+    }
+}

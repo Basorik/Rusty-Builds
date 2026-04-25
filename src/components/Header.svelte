@@ -15,7 +15,7 @@
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
     import { commands } from "../bindings";
-    import { resetBuildState } from "$lib/buildState.svelte";
+    import { resetBuildState, getBuildState } from "$lib/buildState.svelte";
 
     const classData: Record<string, string[]> = {
         Scion: ["Ascendant"],
@@ -82,15 +82,50 @@
     }
 
     async function UpdateBuildInfo() {
+        // characterClass is always a valid Class string enforced by the UI selectors
         const classArg = {
             class: characterClass,
             ascendancy: ascendancy === "None" ? null : ascendancy,
-        };
+        } as Parameters<typeof commands.updateBuildInfo>[1];
         try {
-            // @ts-ignore
-            await commands.updateBuildInfo(level, classArg, bloodline);
+            const result = await commands.updateBuildInfo(
+                level,
+                classArg,
+                bloodline as Parameters<typeof commands.updateBuildInfo>[2],
+            );
+            if (result.status === "ok") {
+                const build = getBuildState();
+                build.buildStats = result.data;
+            }
         } catch (e) {
             console.error("Failed to update build info:", e);
+        }
+    }
+
+    let saving = $state(false);
+    let saveMessage = $state("");
+
+    async function saveBuild() {
+        saving = true;
+        saveMessage = "";
+        try {
+            const name = prompt("Build name:", "My Build");
+            if (name === null) {
+                saving = false;
+                return;
+            }
+            const result = await commands.saveBuild(name);
+            if (result.status === "ok") {
+                saveMessage = "Saved!";
+            } else {
+                saveMessage = "Error";
+                console.error("Save failed:", result.error);
+            }
+        } finally {
+            saving = false;
+            setTimeout(() => {
+                saveMessage = "";
+            }, 2000);
         }
     }
 </script>
@@ -109,14 +144,18 @@
                 class:active={$page.url.pathname === "/skills"}
                 onclick={() => goto("/skills")}>Skills</button
             >
-            <button class="tab disabled" disabled title="Coming soon"
-                >Items</button
+            <button
+                class="tab"
+                class:active={$page.url.pathname === "/items"}
+                onclick={() => goto("/items")}>Items</button
             >
             <button class="tab disabled" disabled title="Coming soon"
                 >Config</button
             >
-            <button class="tab disabled" disabled title="Coming soon"
-                >Calcs</button
+            <button
+                class="tab"
+                class:active={$page.url.pathname === "/calcs"}
+                onclick={() => goto("/calcs")}>Calcs</button
             >
             <button
                 class="tab"
@@ -162,6 +201,10 @@
                 {/each}
             </select>
         </div>
+
+        <button class="btn-save" onclick={saveBuild} disabled={saving}>
+            {saving ? "Saving..." : saveMessage || "Save"}
+        </button>
     </div>
 </header>
 
@@ -259,5 +302,30 @@
     select:focus {
         outline: none;
         border-color: #c8a95e;
+    }
+
+    .btn-save {
+        padding: 4px 14px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 1px solid #c8a95e;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #c8a95e;
+        background: transparent;
+        white-space: nowrap;
+        transition:
+            background 0.15s,
+            color 0.15s;
+    }
+
+    .btn-save:hover:not(:disabled) {
+        background: #c8a95e;
+        color: #0e0e10;
+    }
+
+    .btn-save:disabled {
+        opacity: 0.5;
+        cursor: default;
     }
 </style>

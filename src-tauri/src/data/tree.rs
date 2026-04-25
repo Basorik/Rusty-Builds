@@ -125,6 +125,57 @@ pub enum Class {
 }
 
 impl Class {
+    /// Returns the base class name as a string (e.g. "Marauder", "Witch").
+    pub fn base_name(&self) -> &'static str {
+        match self {
+            Class::Scion(_) => "Scion",
+            Class::Marauder(_) => "Marauder",
+            Class::Ranger(_) => "Ranger",
+            Class::Witch(_) => "Witch",
+            Class::Duelist(_) => "Duelist",
+            Class::Templar(_) => "Templar",
+            Class::Shadow(_) => "Shadow",
+        }
+    }
+
+    /// Returns the ascendancy name, or "None" if no ascendancy is selected.
+    pub fn ascendancy_name(&self) -> &'static str {
+        match self {
+            Class::Marauder(Some(a)) => match a {
+                MarauderAscendancy::Juggernaut => "Juggernaut",
+                MarauderAscendancy::Berserker => "Berserker",
+                MarauderAscendancy::Chieftain => "Chieftain",
+            },
+            Class::Ranger(Some(a)) => match a {
+                RangerAscendancy::Raider => "Raider",
+                RangerAscendancy::Deadeye => "Deadeye",
+                RangerAscendancy::Pathfinder => "Pathfinder",
+            },
+            Class::Witch(Some(a)) => match a {
+                WitchAscendancy::Necromancer => "Necromancer",
+                WitchAscendancy::Occultist => "Occultist",
+                WitchAscendancy::Elementalist => "Elementalist",
+            },
+            Class::Duelist(Some(a)) => match a {
+                DuelistAscendancy::Slayer => "Slayer",
+                DuelistAscendancy::Gladiator => "Gladiator",
+                DuelistAscendancy::Champion => "Champion",
+            },
+            Class::Templar(Some(a)) => match a {
+                TemplarAscendancy::Inquisitor => "Inquisitor",
+                TemplarAscendancy::Hierophant => "Hierophant",
+                TemplarAscendancy::Guardian => "Guardian",
+            },
+            Class::Shadow(Some(a)) => match a {
+                ShadowAscendancy::Assassin => "Assassin",
+                ShadowAscendancy::Saboteur => "Saboteur",
+                ShadowAscendancy::Trickster => "Trickster",
+            },
+            Class::Scion(Some(ScionAscendancy::Ascendant)) => "Ascendant",
+            _ => "None",
+        }
+    }
+
     /// Returns the index into `PassiveTree::classes` for this class.
     /// Matches the order in the tree JSON (Scion=0, Marauder=1, …).
     pub fn class_index(&self) -> usize {

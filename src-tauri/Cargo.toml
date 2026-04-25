@@ -37,3 +37,32 @@ thiserror = "2.0.18"
 rustc-hash = "2.1.1"
 bitflags = "2.11.0"
 smallvec = "1.15.1"
+uuid = { version = "1.23.1", features = ["v4"] }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "calc_bench"
+harness = false
+
+[[bench]]
+name = "moddb_bench"
+harness = false
+
+# ── Integration test suites (in tests/) ─────────────────────────────────────
+[[test]]
+name = "calc_defence"
+path = "tests/calc/defence.rs"
+
+[[test]]
+name = "calc_attributes"
+path = "tests/calc/attributes.rs"
+
+[[test]]
+name = "calc_offence"
+path = "tests/calc/offence.rs"
+
+[[test]]
+name = "pob_parity"
+path = "tests/pob_parity.rs"

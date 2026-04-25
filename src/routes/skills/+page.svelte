@@ -1,5 +1,6 @@
 <script lang="ts">
     import Header from "../../components/Header.svelte";
+    import Sidebar from "../../components/Sidebar.svelte";
     import SkillGroups from "../../components/SkillGroups.svelte";
     import { getBuildState } from "$lib/buildState.svelte";
 
@@ -7,16 +8,22 @@
 </script>
 
 <main class="skills-page">
-    <Header
-        bind:characterClass={build.characterClass}
-        bind:ascendancy={build.ascendancy}
-        bind:bloodline={build.bloodline}
-        bind:level={build.level}
+    <Sidebar
+        selectedCount={build.selectedCount}
+        ascSelectedCount={build.ascSelectedCount}
+        buildStats={build.buildStats}
     />
-
-    <section class="content">
-        <SkillGroups />
-    </section>
+    <div class="page-body">
+        <Header
+            bind:characterClass={build.characterClass}
+            bind:ascendancy={build.ascendancy}
+            bind:bloodline={build.bloodline}
+            bind:level={build.level}
+        />
+        <section class="content">
+            <SkillGroups />
+        </section>
+    </div>
 </main>
 
 <style>
@@ -29,8 +36,14 @@
 
     .skills-page {
         display: flex;
-        flex-direction: column;
         min-height: 100vh;
+    }
+
+    .page-body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
     }
 
     .content {

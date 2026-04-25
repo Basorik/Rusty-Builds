@@ -357,6 +357,125 @@ pub enum StatId {
     SelfFreezeDuration = 344,
     SelfIgniteDuration = 345,
     SelfShockDuration = 346,
+    // Phase 3.14: gem stat coverage expansion
+    ActionSpeed = 347,
+    BlindChance = 348,
+    CharacterSize = 349,
+    ChillChance = 350,
+    FreezeChance = 351,
+    IgniteChance = 352,
+    KnockbackDistance = 353,
+    ShockChance = 354,
+    Stealth = 355,
+    // SkillData keyed variants — one per SkillStatMap LIST key (Phase 3.14)
+    SdAreaOfEffect = 356,
+    SdChaosMax = 357,
+    SdChaosMin = 358,
+    SdColdMax = 359,
+    SdColdMin = 360,
+    SdCritMultiplier = 361,
+    SdDamage = 362,
+    SdFireMax = 363,
+    SdFireMin = 364,
+    SdLightningMax = 365,
+    SdLightningMin = 366,
+    SdPhysicalMax = 367,
+    SdPhysicalMin = 368,
+    SdArrowSpeedAppliesToAreaOfEffect = 369,
+    SdBleedDurationIsSkillDuration = 370,
+    SdCannotBeEvaded = 371,
+    SdCastTimeOverridesAttackTime = 372,
+    SdChanceToTriggerCounterAttackOnHit = 373,
+    SdChanceToTriggerCounterattackOnBlock = 374,
+    SdChanceToTriggerCurseOnCurse = 375,
+    SdChanceToTriggerOnCrit = 376,
+    SdChanceToTriggerOnMeleeKill = 377,
+    SdChanceToTriggerOnParentAttack = 378,
+    SdChanceToTriggerOnStun = 379,
+    SdDecay = 380,
+    SdDotIsProjectile = 381,
+    SdDotIsSpell = 382,
+    SdDoubleHitsWhenDualWielding = 383,
+    SdFixedCastTime = 384,
+    SdMineDurationAppliesToSkill = 385,
+    SdMinionDamageEffectiveness = 386,
+    SdMinionLevelIsEnemyLevel = 387,
+    SdMinionLevelIsPlayerLevel = 388,
+    SdPoisonDurationIsSkillDuration = 389,
+    SdRadius = 390,
+    SdRadiusExtra = 391,
+    SdRadiusSecondary = 392,
+    SdRadiusTertiary = 393,
+    SdSetOffHandAttackTime = 394,
+    SdSetOffHandColdMax = 395,
+    SdSetOffHandColdMin = 396,
+    SdSetOffHandFireMax = 397,
+    SdSetOffHandFireMin = 398,
+    SdSetOffHandPhysicalMax = 399,
+    SdSetOffHandPhysicalMin = 400,
+    SdShowAverage = 401,
+    SdSkillEffectAppliesToSoulGainPrevention = 402,
+    SdTotemLevel = 403,
+    SdTriggerMarkOnRareOrUnique = 404,
+    SdTriggerOnCrit = 405,
+    SdTriggered = 406,
+    SdTriggeredByAutoexertion = 407,
+    SdTriggeredByAutomation = 408,
+    SdTriggeredByCoc = 409,
+    SdTriggeredByCospris = 410,
+    SdTriggeredByCraft = 411,
+    SdTriggeredByDamageTaken = 412,
+    SdTriggeredByFoulbornKitavaThirst = 413,
+    SdTriggeredByGeneralsCry = 414,
+    SdTriggeredByKineticFlux = 415,
+    SdTriggeredByKitavaThirst = 416,
+    SdTriggeredByMeleeKill = 417,
+    SdTriggeredByMirageArcher = 418,
+    SdTriggeredByMjolner = 419,
+    SdTriggeredBySacredWisps = 420,
+    SdTriggeredBySaviour = 421,
+    SdTriggeredBySnipe = 422,
+    SdTriggeredBySquirmingTerror = 423,
+    SdTriggeredByTrapTrigger = 424,
+    SdTriggeredByUnique = 425,
+    SdTriggeredWhenHexEnds = 426,
+    SdTriggeredWhileChannelling = 427,
+    // Per-stat tag runtime values (calc phase)
+    Ward = 428,
+    EnergyShieldOnWeapon2 = 429,
+    EvasionOnWeapon2 = 430,
+    ArmourOnWeapon2 = 431,
+    Chain = 432,
+    ChainRemaining = 433,
+    PiercedCount = 434,
+    // Phase 5: CalcSetup base values
+    ChaosResistMax = 435,
+    BlockChanceMax = 436,
+    SpellBlockChanceMax = 437,
+    MaxManaLeechRate = 438,
+    MaxLifeLeechInstance = 439,
+    MaxManaLeechInstance = 440,
+    MaxEnergyShieldLeechInstance = 441,
+    DamageReductionMax = 442,
+    // Phase 5.5: Defence calc stats
+    ChaosInoculation = 443,
+    IronReflexes = 444,
+    ZealotsOath = 445,
+    SpellSuppressionChance = 446,
+    SpellSuppressionEffect = 447,
+    LifeRecoveryRate = 448,
+    ManaRecoveryRate = 449,
+    EnergyShieldRecoveryRate = 450,
+    EnergyShieldRechargeFaster = 451,
+    SpellDodgeChanceMax = 452,
+    ManaRegenPercent = 453,
+    EnergyShieldRegenPercent = 454,
+    LightningDamageConvertToCold = 455,
+    LightningDamageConvertToFire = 456,
+    LightningDamageConvertToChaos = 457,
+    ColdDamageConvertToFire = 458,
+    ColdDamageConvertToChaos = 459,
+    FireDamageConvertToChaos = 460,
 }
 
 impl StatId {
@@ -371,13 +490,25 @@ impl StatId {
             m.insert("ActiveGolemLimit", Self::ActiveGolemLimit);
             m.insert("ActiveHivebornLimit", Self::ActiveHivebornLimit);
             m.insert("ActiveHolyRelicLimit", Self::ActiveHolyRelicLimit);
-            m.insert("ActiveHolyStrikeMinionLimit", Self::ActiveHolyStrikeMinionLimit);
-            m.insert("ActiveLivingLightningLimit", Self::ActiveLivingLightningLimit);
+            m.insert(
+                "ActiveHolyStrikeMinionLimit",
+                Self::ActiveHolyStrikeMinionLimit,
+            );
+            m.insert(
+                "ActiveLivingLightningLimit",
+                Self::ActiveLivingLightningLimit,
+            );
             m.insert("ActiveMineLimit", Self::ActiveMineLimit);
             m.insert("ActiveRagingSpiritLimit", Self::ActiveRagingSpiritLimit);
             m.insert("ActiveReaperLimit", Self::ActiveReaperLimit);
-            m.insert("ActiveSentinelOfAbsolutionLimit", Self::ActiveSentinelOfAbsolutionLimit);
-            m.insert("ActiveSentinelOfPurityLimit", Self::ActiveSentinelOfPurityLimit);
+            m.insert(
+                "ActiveSentinelOfAbsolutionLimit",
+                Self::ActiveSentinelOfAbsolutionLimit,
+            );
+            m.insert(
+                "ActiveSentinelOfPurityLimit",
+                Self::ActiveSentinelOfPurityLimit,
+            );
             m.insert("ActiveSkeletonLimit", Self::ActiveSkeletonLimit);
             m.insert("ActiveSpectreLimit", Self::ActiveSpectreLimit);
             m.insert("ActiveSpiderLimit", Self::ActiveSpiderLimit);
@@ -388,10 +519,19 @@ impl StatId {
             m.insert("ActiveWolfLimit", Self::ActiveWolfLimit);
             m.insert("ActiveZombieLimit", Self::ActiveZombieLimit);
             m.insert("AddedDamage", Self::AddedDamage);
-            m.insert("AdditionalChainsAddSplitsInstead", Self::AdditionalChainsAddSplitsInstead);
+            m.insert(
+                "AdditionalChainsAddSplitsInstead",
+                Self::AdditionalChainsAddSplitsInstead,
+            );
             m.insert("AdditionalCooldownUses", Self::AdditionalCooldownUses);
-            m.insert("AdditionalProjectilesAddChainsInstead", Self::AdditionalProjectilesAddChainsInstead);
-            m.insert("AdditionalProjectilesAddSplitsInstead", Self::AdditionalProjectilesAddSplitsInstead);
+            m.insert(
+                "AdditionalProjectilesAddChainsInstead",
+                Self::AdditionalProjectilesAddChainsInstead,
+            );
+            m.insert(
+                "AdditionalProjectilesAddSplitsInstead",
+                Self::AdditionalProjectilesAddSplitsInstead,
+            );
             m.insert("AdditionalStrikeTarget", Self::AdditionalStrikeTarget);
             m.insert("AlwaysPierceSelf", Self::AlwaysPierceSelf);
             m.insert("AreaOfEffect", Self::AreaOfEffect);
@@ -452,7 +592,10 @@ impl StatId {
             m.insert("Condition:CanGainRage", Self::ConditionCanGainRage);
             m.insert("Condition:CanWither", Self::ConditionCanWither);
             m.insert("Condition:CannotBeDamaged", Self::ConditionCannotBeDamaged);
-            m.insert("Condition:CannotRecallBrand", Self::ConditionCannotRecallBrand);
+            m.insert(
+                "Condition:CannotRecallBrand",
+                Self::ConditionCannotRecallBrand,
+            );
             m.insert("Condition:NonPoisonedOnly", Self::ConditionNonPoisonedOnly);
             m.insert("ConsecratedGroundEffect", Self::ConsecratedGroundEffect);
             m.insert("CooldownRecovery", Self::CooldownRecovery);
@@ -466,7 +609,10 @@ impl StatId {
             m.insert("CurseImmune", Self::CurseImmune);
             m.insert("Damage", Self::Damage);
             m.insert("DamageTaken", Self::DamageTaken);
-            m.insert("DamageTakenConsecratedGround", Self::DamageTakenConsecratedGround);
+            m.insert(
+                "DamageTakenConsecratedGround",
+                Self::DamageTakenConsecratedGround,
+            );
             m.insert("DamageTakenOverTime", Self::DamageTakenOverTime);
             m.insert("DamagingAilmentDuration", Self::DamagingAilmentDuration);
             m.insert("DealNoChaos", Self::DealNoChaos);
@@ -476,7 +622,10 @@ impl StatId {
             m.insert("Dexterity", Self::Dexterity);
             m.insert("DotMultiplier", Self::DotMultiplier);
             m.insert("DoubleDamageChance", Self::DoubleDamageChance);
-            m.insert("DoubleEnemyStunDurationChance", Self::DoubleEnemyStunDurationChance);
+            m.insert(
+                "DoubleEnemyStunDurationChance",
+                Self::DoubleEnemyStunDurationChance,
+            );
             m.insert("Duration", Self::Duration);
             m.insert("ElementalDamage", Self::ElementalDamage);
             m.insert("ElementalPenetration", Self::ElementalPenetration);
@@ -491,7 +640,10 @@ impl StatId {
             m.insert("EnemyChillDuration", Self::EnemyChillDuration);
             m.insert("EnemyChillEffect", Self::EnemyChillEffect);
             m.insert("EnemyCurseLimit", Self::EnemyCurseLimit);
-            m.insert("EnemyElementalAilmentDuration", Self::EnemyElementalAilmentDuration);
+            m.insert(
+                "EnemyElementalAilmentDuration",
+                Self::EnemyElementalAilmentDuration,
+            );
             m.insert("EnemyFreezeChance", Self::EnemyFreezeChance);
             m.insert("EnemyFreezeDuration", Self::EnemyFreezeDuration);
             m.insert("EnemyFreezeEffect", Self::EnemyFreezeEffect);
@@ -533,12 +685,21 @@ impl StatId {
             m.insert("FreezeAsThoughDealing", Self::FreezeAsThoughDealing);
             m.insert("FrenzyChargeCount", Self::FrenzyChargeCount);
             m.insert("FrenzyChargesMax", Self::FrenzyChargesMax);
-            m.insert("HybridManaAndLifeCost_Life", Self::HybridManaAndLifeCost_Life);
+            m.insert(
+                "HybridManaAndLifeCost_Life",
+                Self::HybridManaAndLifeCost_Life,
+            );
             m.insert("IgniteBurnFaster", Self::IgniteBurnFaster);
             m.insert("ImpaleChance", Self::ImpaleChance);
             m.insert("ImpaleEffect", Self::ImpaleEffect);
-            m.insert("ImprovedMinionDamageAppliesToPlayer", Self::ImprovedMinionDamageAppliesToPlayer);
-            m.insert("ImprovedSpellDamageAppliesToAttacks", Self::ImprovedSpellDamageAppliesToAttacks);
+            m.insert(
+                "ImprovedMinionDamageAppliesToPlayer",
+                Self::ImprovedMinionDamageAppliesToPlayer,
+            );
+            m.insert(
+                "ImprovedSpellDamageAppliesToAttacks",
+                Self::ImprovedSpellDamageAppliesToAttacks,
+            );
             m.insert("Intelligence", Self::Intelligence);
             m.insert("IronGrip", Self::IronGrip);
             m.insert("IronWill", Self::IronWill);
@@ -556,7 +717,10 @@ impl StatId {
             m.insert("LightningCanIgnite", Self::LightningCanIgnite);
             m.insert("LightningCannotShock", Self::LightningCannotShock);
             m.insert("LightningDamage", Self::LightningDamage);
-            m.insert("LightningDamageGainAsChaos", Self::LightningDamageGainAsChaos);
+            m.insert(
+                "LightningDamageGainAsChaos",
+                Self::LightningDamageGainAsChaos,
+            );
             m.insert("LightningDamageTaken", Self::LightningDamageTaken);
             m.insert("LightningExposureChance", Self::LightningExposureChance);
             m.insert("LightningMax", Self::LightningMax);
@@ -580,35 +744,68 @@ impl StatId {
             m.insert("MaxEnergyShieldLeechRate", Self::MaxEnergyShieldLeechRate);
             m.insert("MaxLifeLeechRate", Self::MaxLifeLeechRate);
             m.insert("MeleeWeaponRange", Self::MeleeWeaponRange);
-            m.insert("MineDetonationAreaOfEffect", Self::MineDetonationAreaOfEffect);
+            m.insert(
+                "MineDetonationAreaOfEffect",
+                Self::MineDetonationAreaOfEffect,
+            );
             m.insert("MineDuration", Self::MineDuration);
             m.insert("MineLayingSpeed", Self::MineLayingSpeed);
             m.insert("MineThrowCount", Self::MineThrowCount);
-            m.insert("MinionDamageAppliesToPlayer", Self::MinionDamageAppliesToPlayer);
+            m.insert(
+                "MinionDamageAppliesToPlayer",
+                Self::MinionDamageAppliesToPlayer,
+            );
             m.insert("MinionModifier", Self::MinionModifier);
             m.insert("MinionPerCastCount", Self::MinionPerCastCount);
             m.insert("MovementSpeed", Self::MovementSpeed);
-            m.insert("NightbladeElusiveCritMultiplier", Self::NightbladeElusiveCritMultiplier);
+            m.insert(
+                "NightbladeElusiveCritMultiplier",
+                Self::NightbladeElusiveCritMultiplier,
+            );
             m.insert("NoAdditionalChains", Self::NoAdditionalChains);
             m.insert("NoAdditionalProjectiles", Self::NoAdditionalProjectiles);
-            m.insert("NoCooldownRecoveryInDuration", Self::NoCooldownRecoveryInDuration);
+            m.insert(
+                "NoCooldownRecoveryInDuration",
+                Self::NoCooldownRecoveryInDuration,
+            );
             m.insert("NoCritMultiplier", Self::NoCritMultiplier);
             m.insert("NoRepeatBonuses", Self::NoRepeatBonuses);
             m.insert("PhysicalCanFreeze", Self::PhysicalCanFreeze);
             m.insert("PhysicalCanIgnite", Self::PhysicalCanIgnite);
             m.insert("PhysicalCanShock", Self::PhysicalCanShock);
             m.insert("PhysicalDamage", Self::PhysicalDamage);
-            m.insert("PhysicalDamageConvertToChaos", Self::PhysicalDamageConvertToChaos);
-            m.insert("PhysicalDamageConvertToCold", Self::PhysicalDamageConvertToCold);
-            m.insert("PhysicalDamageConvertToFire", Self::PhysicalDamageConvertToFire);
-            m.insert("PhysicalDamageConvertToLightning", Self::PhysicalDamageConvertToLightning);
-            m.insert("PhysicalDamageConvertToRandom", Self::PhysicalDamageConvertToRandom);
+            m.insert(
+                "PhysicalDamageConvertToChaos",
+                Self::PhysicalDamageConvertToChaos,
+            );
+            m.insert(
+                "PhysicalDamageConvertToCold",
+                Self::PhysicalDamageConvertToCold,
+            );
+            m.insert(
+                "PhysicalDamageConvertToFire",
+                Self::PhysicalDamageConvertToFire,
+            );
+            m.insert(
+                "PhysicalDamageConvertToLightning",
+                Self::PhysicalDamageConvertToLightning,
+            );
+            m.insert(
+                "PhysicalDamageConvertToRandom",
+                Self::PhysicalDamageConvertToRandom,
+            );
             m.insert("PhysicalDamageGainAsChaos", Self::PhysicalDamageGainAsChaos);
             m.insert("PhysicalDamageGainAsCold", Self::PhysicalDamageGainAsCold);
             m.insert("PhysicalDamageGainAsFire", Self::PhysicalDamageGainAsFire);
-            m.insert("PhysicalDamageGainAsLightning", Self::PhysicalDamageGainAsLightning);
+            m.insert(
+                "PhysicalDamageGainAsLightning",
+                Self::PhysicalDamageGainAsLightning,
+            );
             m.insert("PhysicalDamageTaken", Self::PhysicalDamageTaken);
-            m.insert("PhysicalDamageTakenOverTime", Self::PhysicalDamageTakenOverTime);
+            m.insert(
+                "PhysicalDamageTakenOverTime",
+                Self::PhysicalDamageTakenOverTime,
+            );
             m.insert("PhysicalMax", Self::PhysicalMax);
             m.insert("PhysicalMin", Self::PhysicalMin);
             m.insert("PierceAllTargets", Self::PierceAllTargets);
@@ -645,23 +842,59 @@ impl StatId {
             m.insert("ShockMax", Self::ShockMax);
             m.insert("ShockMinimum", Self::ShockMinimum);
             m.insert("SkillAttackTime", Self::SkillAttackTime);
-            m.insert("SkillColdDamageConvertToChaos", Self::SkillColdDamageConvertToChaos);
-            m.insert("SkillColdDamageConvertToFire", Self::SkillColdDamageConvertToFire);
+            m.insert(
+                "SkillColdDamageConvertToChaos",
+                Self::SkillColdDamageConvertToChaos,
+            );
+            m.insert(
+                "SkillColdDamageConvertToFire",
+                Self::SkillColdDamageConvertToFire,
+            );
             m.insert("SkillData", Self::SkillData);
-            m.insert("SkillFireDamageConvertToChaos", Self::SkillFireDamageConvertToChaos);
-            m.insert("SkillLightningDamageConvertToChaos", Self::SkillLightningDamageConvertToChaos);
-            m.insert("SkillLightningDamageConvertToCold", Self::SkillLightningDamageConvertToCold);
-            m.insert("SkillLightningDamageConvertToFire", Self::SkillLightningDamageConvertToFire);
+            m.insert(
+                "SkillFireDamageConvertToChaos",
+                Self::SkillFireDamageConvertToChaos,
+            );
+            m.insert(
+                "SkillLightningDamageConvertToChaos",
+                Self::SkillLightningDamageConvertToChaos,
+            );
+            m.insert(
+                "SkillLightningDamageConvertToCold",
+                Self::SkillLightningDamageConvertToCold,
+            );
+            m.insert(
+                "SkillLightningDamageConvertToFire",
+                Self::SkillLightningDamageConvertToFire,
+            );
             m.insert("SkillMineThrowingTime", Self::SkillMineThrowingTime);
-            m.insert("SkillPhysicalDamageConvertToChaos", Self::SkillPhysicalDamageConvertToChaos);
-            m.insert("SkillPhysicalDamageConvertToCold", Self::SkillPhysicalDamageConvertToCold);
-            m.insert("SkillPhysicalDamageConvertToFire", Self::SkillPhysicalDamageConvertToFire);
-            m.insert("SkillPhysicalDamageConvertToLightning", Self::SkillPhysicalDamageConvertToLightning);
+            m.insert(
+                "SkillPhysicalDamageConvertToChaos",
+                Self::SkillPhysicalDamageConvertToChaos,
+            );
+            m.insert(
+                "SkillPhysicalDamageConvertToCold",
+                Self::SkillPhysicalDamageConvertToCold,
+            );
+            m.insert(
+                "SkillPhysicalDamageConvertToFire",
+                Self::SkillPhysicalDamageConvertToFire,
+            );
+            m.insert(
+                "SkillPhysicalDamageConvertToLightning",
+                Self::SkillPhysicalDamageConvertToLightning,
+            );
             m.insert("SkillTrapThrowingTime", Self::SkillTrapThrowingTime);
             m.insert("Speed", Self::Speed);
             m.insert("SpellBlockChance", Self::SpellBlockChance);
-            m.insert("SpellCastTimeAddedToCooldownIfTriggered", Self::SpellCastTimeAddedToCooldownIfTriggered);
-            m.insert("SpellDamageAppliesToAttacks", Self::SpellDamageAppliesToAttacks);
+            m.insert(
+                "SpellCastTimeAddedToCooldownIfTriggered",
+                Self::SpellCastTimeAddedToCooldownIfTriggered,
+            );
+            m.insert(
+                "SpellDamageAppliesToAttacks",
+                Self::SpellDamageAppliesToAttacks,
+            );
             m.insert("SpellDodgeChance", Self::SpellDodgeChance);
             m.insert("SplitCount", Self::SplitCount);
             m.insert("Strength", Self::Strength);
@@ -695,8 +928,14 @@ impl StatId {
             m.insert("DamageManaLeech", Self::DamageManaLeech);
             m.insert("ElementalDamageManaLeech", Self::ElementalDamageManaLeech);
             m.insert("ElementalResistMax", Self::ElementalResistMax);
-            m.insert("EnemyImpalePhysicalDamageReduction", Self::EnemyImpalePhysicalDamageReduction);
-            m.insert("EnemyPhysicalDamageReduction", Self::EnemyPhysicalDamageReduction);
+            m.insert(
+                "EnemyImpalePhysicalDamageReduction",
+                Self::EnemyImpalePhysicalDamageReduction,
+            );
+            m.insert(
+                "EnemyPhysicalDamageReduction",
+                Self::EnemyPhysicalDamageReduction,
+            );
             m.insert("EnemyStunThreshold", Self::EnemyStunThreshold);
             m.insert("FireDamageLeech", Self::FireDamageLeech);
             m.insert("FireDegen", Self::FireDegen);
@@ -714,7 +953,73 @@ impl StatId {
             m.insert("SelfFreezeDuration", Self::SelfFreezeDuration);
             m.insert("SelfIgniteDuration", Self::SelfIgniteDuration);
             m.insert("SelfShockDuration", Self::SelfShockDuration);
+            // Phase 3.14: gem stat coverage expansion
+            m.insert("ActionSpeed", Self::ActionSpeed);
+            m.insert("BlindChance", Self::BlindChance);
+            m.insert("CharacterSize", Self::CharacterSize);
+            m.insert("ChillChance", Self::ChillChance);
+            m.insert("FreezeChance", Self::FreezeChance);
+            m.insert("IgniteChance", Self::IgniteChance);
+            m.insert("KnockbackDistance", Self::KnockbackDistance);
+            m.insert("ShockChance", Self::ShockChance);
+            m.insert("Stealth", Self::Stealth);
+            // Per-stat tag runtime values
+            m.insert("Ward", Self::Ward);
+            m.insert("EnergyShieldOnWeapon2", Self::EnergyShieldOnWeapon2);
+            m.insert("EvasionOnWeapon2", Self::EvasionOnWeapon2);
+            m.insert("ArmourOnWeapon2", Self::ArmourOnWeapon2);
+            m.insert("Chain", Self::Chain);
+            m.insert("ChainRemaining", Self::ChainRemaining);
+            m.insert("PiercedCount", Self::PiercedCount);
+            // Phase 5: CalcSetup base values
+            m.insert("ChaosResistMax", Self::ChaosResistMax);
+            m.insert("BlockChanceMax", Self::BlockChanceMax);
+            m.insert("SpellBlockChanceMax", Self::SpellBlockChanceMax);
+            m.insert("MaxManaLeechRate", Self::MaxManaLeechRate);
+            m.insert("MaxLifeLeechInstance", Self::MaxLifeLeechInstance);
+            m.insert("MaxManaLeechInstance", Self::MaxManaLeechInstance);
+            m.insert(
+                "MaxEnergyShieldLeechInstance",
+                Self::MaxEnergyShieldLeechInstance,
+            );
+            m.insert("DamageReductionMax", Self::DamageReductionMax);
+            // Phase 5.5: Defence calc stats
+            m.insert("ChaosInoculation", Self::ChaosInoculation);
+            m.insert("IronReflexes", Self::IronReflexes);
+            m.insert("ZealotsOath", Self::ZealotsOath);
+            m.insert("SpellSuppressionChance", Self::SpellSuppressionChance);
+            m.insert("SpellSuppressionEffect", Self::SpellSuppressionEffect);
+            m.insert("LifeRecoveryRate", Self::LifeRecoveryRate);
+            m.insert("ManaRecoveryRate", Self::ManaRecoveryRate);
+            m.insert("EnergyShieldRecoveryRate", Self::EnergyShieldRecoveryRate);
+            m.insert(
+                "EnergyShieldRechargeFaster",
+                Self::EnergyShieldRechargeFaster,
+            );
+            m.insert("SpellDodgeChanceMax", Self::SpellDodgeChanceMax);
+            m.insert("ManaRegenPercent", Self::ManaRegenPercent);
+            m.insert("ManaRegenPercent", Self::ManaRegenPercent);
+            m.insert("ManaRegenerationPercent", Self::ManaRegenPercent);
+            m.insert("EnergyShieldRegenPercent", Self::EnergyShieldRegenPercent);
+            m.insert("EnergyShieldRegen", Self::EnergyShieldRegenPercent);
+            m.insert(
+                "LightningDamageConvertToCold",
+                Self::LightningDamageConvertToCold,
+            );
+            m.insert(
+                "LightningDamageConvertToFire",
+                Self::LightningDamageConvertToFire,
+            );
+            m.insert(
+                "LightningDamageConvertToChaos",
+                Self::LightningDamageConvertToChaos,
+            );
+            m.insert("ColdDamageConvertToFire", Self::ColdDamageConvertToFire);
+            m.insert("ColdDamageConvertToChaos", Self::ColdDamageConvertToChaos);
+            m.insert("FireDamageConvertToChaos", Self::FireDamageConvertToChaos);
             m
-        }).get(name).copied()
+        })
+        .get(name)
+        .copied()
     }
 }
