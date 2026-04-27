@@ -5,7 +5,7 @@
 ///
 /// Run with:
 ///   cargo bench --bench moddb_bench
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use rustc_hash::FxHashMap;
 use rusty_builds_lib::{
     data::{Class, GameData},
@@ -13,16 +13,23 @@ use rusty_builds_lib::{
     modifier::ModDBLayers,
 };
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
 fn resource_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+}
+
+/// Loads GameData once for all benchmarks to avoid I/O bottlenecks
+fn game_data() -> &'static GameData {
+    static GD: OnceLock<GameData> = OnceLock::new();
+    GD.get_or_init(|| GameData::load_from_dir(resource_dir()).expect("bench data load failed"))
 }
 
 // ---------------------------------------------------------------------------
 // Benchmark: rebuild_tree at different node counts
 // ---------------------------------------------------------------------------
 fn bench_rebuild_tree(c: &mut Criterion) {
-    let game_data = GameData::load_from_dir(resource_dir()).expect("bench data load failed");
+    let game_data = game_data();
     let class = Class::Marauder(None);
 
     // Pre-collect node ID sets at different sizes.
@@ -47,7 +54,7 @@ fn bench_rebuild_tree(c: &mut Criterion) {
         layers.rebuild_class(&class, &game_data.tree);
 
         group.bench_with_input(BenchmarkId::from_parameter(n), &ids, |b, node_ids| {
-            b.iter(|| layers.rebuild_tree(node_ids, &game_data))
+            b.iter(|| layers.rebuild_tree(black_box(node_ids), black_box(game_data)))
         });
     }
     group.finish();
@@ -57,11 +64,16 @@ fn bench_rebuild_tree(c: &mut Criterion) {
 // Benchmark: rebuild_class
 // ---------------------------------------------------------------------------
 fn bench_rebuild_class(c: &mut Criterion) {
-    let game_data = GameData::load_from_dir(resource_dir()).expect("bench data load failed");
+    let game_data = game_data();
     let mut layers = ModDBLayers::default();
 
     c.bench_function("moddb/rebuild_class", |b| {
-        b.iter(|| layers.rebuild_class(&Class::Marauder(None), &game_data.tree))
+        b.iter(|| {
+            layers.rebuild_class(
+                black_box(&Class::Marauder(None)),
+                black_box(&game_data.tree),
+            )
+        })
     });
 }
 
@@ -73,7 +85,7 @@ fn bench_rebuild_items_empty(c: &mut Criterion) {
     let mut layers = ModDBLayers::default();
 
     c.bench_function("moddb/rebuild_items_empty", |b| {
-        b.iter(|| layers.rebuild_items(&equipped))
+        b.iter(|| layers.rebuild_items(black_box(&equipped)))
     });
 }
 
@@ -81,7 +93,7 @@ fn bench_rebuild_items_empty(c: &mut Criterion) {
 // Benchmark: layers.merged() — how long does flattening all layers take?
 // ---------------------------------------------------------------------------
 fn bench_moddb_merge(c: &mut Criterion) {
-    let game_data = GameData::load_from_dir(resource_dir()).expect("bench data load failed");
+    let game_data = game_data();
     let class = Class::Marauder(None);
     let ids: Vec<u32> = game_data
         .repoe_tree
@@ -101,7 +113,9 @@ fn bench_moddb_merge(c: &mut Criterion) {
     layers.rebuild_class(&class, &game_data.tree);
     layers.rebuild_tree(&ids, &game_data);
 
-    c.bench_function("moddb/merge_100_nodes", |b| b.iter(|| layers.merged()));
+    c.bench_function("moddb/merge_100_nodes", |b| {
+        b.iter(|| black_box(layers.merged()))
+    });
 }
 
 criterion_group!(

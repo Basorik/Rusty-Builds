@@ -5,7 +5,7 @@
 ///   cargo bench --bench calc_bench -- --output-format bencher   # for CI
 ///
 /// HTML reports are written to target/criterion/  
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use rustc_hash::FxHashMap;
 use rusty_builds_lib::{
     calc::calculate,
@@ -17,9 +17,16 @@ use rusty_builds_lib::{
     modifier::ModDBLayers,
 };
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
 fn resource_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+}
+
+/// Loads GameData once for all benchmarks to avoid I/O bottlenecks during bench suite startup
+fn game_data() -> &'static GameData {
+    static GD: OnceLock<GameData> = OnceLock::new();
+    GD.get_or_init(|| GameData::load_from_dir(resource_dir()).expect("bench data load failed"))
 }
 
 /// Build a ModDBLayers with class + N tree nodes seeded.
@@ -58,7 +65,7 @@ fn first_active_gem_id(game_data: &GameData) -> Option<String> {
 // Benchmark: full calculate() — no active gem
 // ---------------------------------------------------------------------------
 fn bench_full_calc_no_gem(c: &mut Criterion) {
-    let game_data = GameData::load_from_dir(resource_dir()).expect("bench data load failed");
+    let game_data = game_data();
     let class = Class::Marauder(None);
     let equipped: FxHashMap<ItemSlot, Item> = FxHashMap::default();
 
@@ -66,7 +73,17 @@ fn bench_full_calc_no_gem(c: &mut Criterion) {
     for n_nodes in [0usize, 50, 100, 300] {
         let layers = setup_layers(&game_data, &class, n_nodes);
         group.bench_with_input(BenchmarkId::new("no_gem", n_nodes), &n_nodes, |b, _| {
-            b.iter(|| calculate(&layers, 90, &class, None, &[], &equipped, &game_data))
+            b.iter(|| {
+                black_box(calculate(
+                    black_box(&layers),
+                    black_box(90),
+                    black_box(&class),
+                    black_box(None),
+                    black_box(&[]),
+                    black_box(&equipped),
+                    black_box(game_data),
+                ))
+            })
         });
     }
     group.finish();
@@ -76,7 +93,7 @@ fn bench_full_calc_no_gem(c: &mut Criterion) {
 // Benchmark: full calculate() — with active gem (offense pipeline included)
 // ---------------------------------------------------------------------------
 fn bench_full_calc_with_gem(c: &mut Criterion) {
-    let game_data = GameData::load_from_dir(resource_dir()).expect("bench data load failed");
+    let game_data = game_data();
     let class = Class::Marauder(None);
     let equipped: FxHashMap<ItemSlot, Item> = FxHashMap::default();
     let layers = setup_layers(&game_data, &class, 100);
@@ -107,15 +124,15 @@ fn bench_full_calc_with_gem(c: &mut Criterion) {
 
     c.bench_function("full_calc/with_gem_100_nodes", |b| {
         b.iter(|| {
-            calculate(
-                &layers,
-                90,
-                &class,
-                Some(&gem_ref),
-                &skill_groups,
-                &equipped,
-                &game_data,
-            )
+            black_box(calculate(
+                black_box(&layers),
+                black_box(90),
+                black_box(&class),
+                black_box(Some(&gem_ref)),
+                black_box(&skill_groups),
+                black_box(&equipped),
+                black_box(game_data),
+            ))
         })
     });
 }
